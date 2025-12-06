@@ -7,7 +7,7 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import LiquidEther from "../animations/LiquidEther/LiquidEther";
+import BackgroundVideo from "../animations/BackgroundVideo/BackgroundVideo";
 
 export default function ContactPage() {
   return (
@@ -26,26 +26,36 @@ const ContactHeroSection = () => {
   return (
     <section className="relative w-full h-screen overflow-hidden">
       <div className="absolute inset-0">
-        <LiquidEther />
+        <BackgroundVideo videoPath="/Videos/background.mp4" opacity={0.7} />
       </div>
 
-      <div className={`relative z-10 h-full flex flex-col justify-center items-center text-center px-6 ${
-        isDark ? "text-white" : "text-gray-900"
-      }`}>
+      <div
+        className={`relative z-10 h-full flex flex-col justify-center items-center text-center px-6 ${
+          isDark ? "text-white" : "text-gray-900"
+        }`}
+      >
         <motion.h1
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
           className="font-bold text-5xl md:text-6xl lg:text-7xl mb-6"
         >
-          <span className={`bg-gradient-to-r ${
-            isDark ? "from-blue-400 to-purple-600" : "from-blue-600 to-purple-700"
-          } bg-clip-text text-transparent`}>
+          <span
+            className={`bg-gradient-to-r ${
+              isDark
+                ? "from-blue-400 to-purple-600"
+                : "from-blue-600 to-purple-700"
+            } bg-clip-text text-transparent`}
+          >
             Contact
           </span>{" "}
-          <span className={`bg-gradient-to-r ${
-            isDark ? "from-green-400 to-cyan-600" : "from-green-600 to-cyan-700"
-          } bg-clip-text text-transparent`}>
+          <span
+            className={`bg-gradient-to-r ${
+              isDark
+                ? "from-green-400 to-cyan-600"
+                : "from-green-600 to-cyan-700"
+            } bg-clip-text text-transparent`}
+          >
             Us
           </span>
         </motion.h1>
@@ -58,7 +68,8 @@ const ContactHeroSection = () => {
             isDark ? "text-gray-300" : "text-gray-700"
           }`}
         >
-          We’d love to hear from you! Reach out for inquiries, feedback, or just to say hello. Our team is here to help.
+          We’d love to hear from you! Reach out for inquiries, feedback, or just
+          to say hello. Our team is here to help.
         </motion.p>
       </div>
     </section>
@@ -72,17 +83,18 @@ const ContactFormSection = () => {
   const [submitted, setSubmitted] = useState(false);
 
   const sectionBg = isDark
-    ? "bg-gradient-to-br from-slate-900 via-blue-900/20 to-slate-900"
-    : "bg-gradient-to-br from-gray-50 via-blue-50/50 to-gray-50";
+    ? "bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900"
+    : "bg-gradient-to-br from-gray-50 via-blue-50 to-gray-50";
 
   const cardBg = isDark
-    ? "bg-white/5 backdrop-blur-sm border-white/10 hover:border-blue-400/30"
-    : "bg-white/80 backdrop-blur-sm border-gray-200 hover:border-blue-400/30";
+    ? "bg-white backdrop-blur-sm border-white hover:border-blue-400"
+    : "bg-white backdrop-blur-sm border-gray-200 hover:border-blue-400";
 
   const titleColor = isDark ? "text-white" : "text-gray-900";
   const textColor = isDark ? "text-gray-300" : "text-gray-700";
 
-  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+  const handleChange = (e) =>
+    setForm({ ...form, [e.target.name]: e.target.value });
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log("Form submitted", form);
@@ -91,7 +103,10 @@ const ContactFormSection = () => {
   };
 
   return (
-    <section className={`relative w-full min-h-screen flex items-center justify-center ${sectionBg} py-20`} id="form">
+    <section
+      className={`relative w-full min-h-screen flex items-center justify-center ${sectionBg} py-20`}
+      id="form"
+    >
       <div className="relative z-10 px-4 max-w-3xl w-full">
         <motion.h2
           className={`text-4xl md:text-5xl font-bold text-center mb-12 ${titleColor}`}
@@ -100,7 +115,14 @@ const ContactFormSection = () => {
           transition={{ duration: 0.7 }}
           viewport={{ once: true, margin: "-100px" }}
         >
-          Send Us a <span className={`bg-gradient-to-r ${isDark ? "from-blue-400 to-cyan-400" : "from-blue-600 to-cyan-600"} bg-clip-text text-transparent`}>Message</span>
+          Send Us a{" "}
+          <span
+            className={`bg-gradient-to-r ${
+              isDark ? "from-blue-400 to-cyan-400" : "from-blue-600 to-cyan-600"
+            } bg-clip-text text-transparent`}
+          >
+            Message
+          </span>
         </motion.h2>
 
         <motion.form
@@ -144,7 +166,11 @@ const ContactFormSection = () => {
           </Button>
 
           {submitted && (
-            <p className={`mt-2 text-center font-medium ${isDark ? "text-green-400" : "text-green-700"}`}>
+            <p
+              className={`mt-2 text-center font-medium ${
+                isDark ? "text-green-400" : "text-green-700"
+              }`}
+            >
               Your message has been sent! ✅
             </p>
           )}
@@ -159,8 +185,8 @@ const ContactInfoSection = () => {
   const isDark = theme === "dark";
 
   const sectionBg = isDark
-    ? "bg-gradient-to-br from-slate-900 via-purple-900/20 to-slate-900"
-    : "bg-gradient-to-br from-purple-50/80 via-pink-50/50 to-rose-50/80";
+    ? "bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900"
+    : "bg-gradient-to-br from-purple-50 via-pink-50 to-rose-50";
 
   const cardBg = isDark
     ? "bg-white/5 backdrop-blur-sm border-white/10 hover:border-purple-400/30"
@@ -192,7 +218,9 @@ const ContactInfoSection = () => {
   ];
 
   return (
-    <section className={`relative w-full min-h-screen flex items-center justify-center py-20 ${sectionBg}`}>
+    <section
+      className={`relative w-full min-h-screen flex items-center justify-center py-20 ${sectionBg}`}
+    >
       <div className="relative z-10 px-4 max-w-5xl mx-auto">
         <motion.h2
           className={`text-4xl md:text-5xl font-bold text-center mb-16 ${titleColor}`}
@@ -201,7 +229,16 @@ const ContactInfoSection = () => {
           transition={{ duration: 0.7 }}
           viewport={{ once: true, margin: "-100px" }}
         >
-          Our <span className={`bg-gradient-to-r ${isDark ? "from-purple-400 to-pink-400" : "from-purple-600 to-pink-600"} bg-clip-text text-transparent`}>Contact Info</span>
+          Our{" "}
+          <span
+            className={`bg-gradient-to-r ${
+              isDark
+                ? "from-purple-400 to-pink-400"
+                : "from-purple-600 to-pink-600"
+            } bg-clip-text text-transparent`}
+          >
+            Contact Info
+          </span>
         </motion.h2>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -214,10 +251,14 @@ const ContactInfoSection = () => {
               viewport={{ once: true, margin: "-100px" }}
               className={`rounded-2xl p-8 border transition-all duration-300 hover:shadow-lg ${cardBg} text-center`}
             >
-              <div className={`w-12 h-12 rounded-lg bg-gradient-to-r ${item.gradient} mb-4 flex items-center justify-center text-white text-xl`}>
+              <div
+                className={`w-12 h-12 rounded-lg bg-gradient-to-r ${item.gradient} mb-4 flex items-center justify-center text-white text-xl`}
+              >
                 {item.icon}
               </div>
-              <h3 className={`text-xl font-bold mb-2 ${accentColor}`}>{item.type}</h3>
+              <h3 className={`text-xl font-bold mb-2 ${accentColor}`}>
+                {item.type}
+              </h3>
               <p className={textColor}>{item.value}</p>
             </motion.div>
           ))}

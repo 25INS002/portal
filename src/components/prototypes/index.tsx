@@ -3,10 +3,10 @@
 
 import { motion } from "framer-motion";
 import { useTheme } from "next-themes";
-import LiquidEther from "../animations/LiquidEther/LiquidEther";
 import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import BackgroundVideo from "../animations/BackgroundVideo/BackgroundVideo";
 import {
   Card,
   CardContent,
@@ -69,14 +69,16 @@ const PrototypesHeroSection = () => {
 
   const heroContent = content?.all_prototypes?.hero || {};
   const title = heroContent.title || ["Student", "Prototypes"];
-  const subtitle = heroContent.subtitle || "Explore innovative prototypes developed by our student community.";
+  const subtitle =
+    heroContent.subtitle ||
+    "Explore innovative prototypes developed by our student community.";
   const cta = heroContent.cta || {};
 
   return (
     <section className="relative w-full h-screen overflow-hidden">
       {/* Background */}
       <div className="absolute inset-0">
-        <LiquidEther />
+        <BackgroundVideo videoPath="/Videos/background.mp4" opacity={0.7} />
       </div>
 
       {/* Content */}
@@ -203,7 +205,10 @@ const FeaturedPrototypesSection = () => {
   // Safe data access
   const featuredContent = content?.all_prototypes?.featured || {};
   const prototypes = useMemo(
-    () => Array.isArray(featuredContent.prototypes) ? featuredContent.prototypes : [],
+    () =>
+      Array.isArray(featuredContent.prototypes)
+        ? featuredContent.prototypes
+        : [],
     [featuredContent.prototypes]
   );
 
@@ -220,46 +225,51 @@ const FeaturedPrototypesSection = () => {
 
   // Use statusMap from content or fallback
   const statusColors = featuredContent.statusMap || {
-    completed: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
-    "in-progress": "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
-    planning: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300",
+    completed:
+      "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
+    "in-progress":
+      "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
+    planning:
+      "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300",
   };
 
   // Categories based on actual prototype categories
   const categories = useMemo(() => {
     const allCategories = [
-      { id: "all", name: "All Projects", count: prototypes.length }
+      { id: "all", name: "All Projects", count: prototypes.length },
     ];
 
     // Extract unique categories from prototypes
-    const uniqueCategories = [...new Set(prototypes
-      .map(p => p?.category)
-      .filter(Boolean)
-    )];
+    const uniqueCategories = [
+      ...new Set(prototypes.map((p) => p?.category).filter(Boolean)),
+    ];
 
     // Create category entries
-    const categoryEntries = uniqueCategories.map(category => ({
+    const categoryEntries = uniqueCategories.map((category) => ({
       id: category,
       name: category.charAt(0).toUpperCase() + category.slice(1),
-      count: prototypes.filter(p => p?.category === category).length
+      count: prototypes.filter((p) => p?.category === category).length,
     }));
 
     return [...allCategories, ...categoryEntries];
   }, [prototypes]);
 
   // Filtered prototypes with safe access
-  const filteredPrototypes = useMemo(() => 
-    prototypes.filter((prototype) => {
-      if (!prototype) return false;
-      
-      const matchesSearch =
-        prototype.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        prototype.description?.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesCategory =
-        selectedCategory === "all" || prototype.category === selectedCategory;
-      return matchesSearch && matchesCategory;
-    }),
-  [prototypes, searchTerm, selectedCategory]
+  const filteredPrototypes = useMemo(
+    () =>
+      prototypes.filter((prototype) => {
+        if (!prototype) return false;
+
+        const matchesSearch =
+          prototype.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          prototype.description
+            ?.toLowerCase()
+            .includes(searchTerm.toLowerCase());
+        const matchesCategory =
+          selectedCategory === "all" || prototype.category === selectedCategory;
+        return matchesSearch && matchesCategory;
+      }),
+    [prototypes, searchTerm, selectedCategory]
   );
 
   const openOverlay = (prototype) => {
@@ -277,9 +287,13 @@ const FeaturedPrototypesSection = () => {
   // No data state
   if (prototypes.length === 0) {
     return (
-      <section className={`min-h-screen py-20 flex items-center justify-center ${sectionBg}`}>
+      <section
+        className={`min-h-screen py-20 flex items-center justify-center ${sectionBg}`}
+      >
         <div className="text-center">
-          <p className={`text-lg ${isDark ? "text-gray-300" : "text-gray-700"}`}>
+          <p
+            className={`text-lg ${isDark ? "text-gray-300" : "text-gray-700"}`}
+          >
             No projects available at the moment.
           </p>
         </div>
@@ -288,7 +302,10 @@ const FeaturedPrototypesSection = () => {
   }
 
   return (
-    <section className={`relative w-full min-h-screen py-20 ${sectionBg}`} id="projects">
+    <section
+      className={`relative w-full min-h-screen py-20 ${sectionBg}`}
+      id="projects"
+    >
       <div className="relative z-10 px-4 max-w-7xl mx-auto">
         <motion.h2
           className={`text-4xl md:text-5xl font-bold text-center mb-4 ${titleColor}`}
@@ -314,7 +331,8 @@ const FeaturedPrototypesSection = () => {
           transition={{ duration: 0.7, delay: 0.2 }}
           viewport={{ once: true, margin: "-100px" }}
         >
-          {featuredContent.subheading || "Explore groundbreaking prototypes developed by our talented student innovators"}
+          {featuredContent.subheading ||
+            "Explore groundbreaking prototypes developed by our talented student innovators"}
         </motion.p>
 
         {/* Search and Filter Bar */}
@@ -328,7 +346,9 @@ const FeaturedPrototypesSection = () => {
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
             <Input
-              placeholder={featuredContent.searchPlaceholder || "Search projects..."}
+              placeholder={
+                featuredContent.searchPlaceholder || "Search projects..."
+              }
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
@@ -338,7 +358,9 @@ const FeaturedPrototypesSection = () => {
             {categories.map((category) => (
               <Button
                 key={category.id}
-                variant={selectedCategory === category.id ? "default" : "outline"}
+                variant={
+                  selectedCategory === category.id ? "default" : "outline"
+                }
                 onClick={() => setSelectedCategory(category.id)}
                 className="whitespace-nowrap"
               >
@@ -373,7 +395,11 @@ const FeaturedPrototypesSection = () => {
                     className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
                   />
                   <div className="absolute top-3 right-3">
-                    <Badge className={statusColors[prototype.status] || statusColors.planning}>
+                    <Badge
+                      className={
+                        statusColors[prototype.status] || statusColors.planning
+                      }
+                    >
                       {prototype.status?.replace("-", " ") || "Unknown"}
                     </Badge>
                   </div>
@@ -475,7 +501,8 @@ const FeaturedPrototypesSection = () => {
             viewport={{ once: true, margin: "-100px" }}
           >
             <p className={`text-lg ${textColor}`}>
-              {featuredContent.noResults || "No projects found matching your criteria. Try adjusting your search filters."}
+              {featuredContent.noResults ||
+                "No projects found matching your criteria. Try adjusting your search filters."}
             </p>
           </motion.div>
         )}
@@ -524,10 +551,12 @@ const FeaturedPrototypesSection = () => {
                       <div key={index} className="rounded-lg overflow-hidden">
                         <img
                           src={image}
-                          alt={`${selectedPrototype.title || "Project"} - Image ${index + 1}`}
+                          alt={`${
+                            selectedPrototype.title || "Project"
+                          } - Image ${index + 1}`}
                           className="w-full h-48 object-cover hover:scale-105 transition-transform duration-300 cursor-pointer"
                           onError={(e) => {
-                            e.target.style.display = 'none';
+                            e.target.style.display = "none";
                           }}
                         />
                       </div>
@@ -602,7 +631,9 @@ const FeaturedPrototypesSection = () => {
                       ),
                     }}
                   >
-                    {selectedPrototype.longDescription || selectedPrototype.long_description || "No detailed description available."}
+                    {selectedPrototype.longDescription ||
+                      selectedPrototype.long_description ||
+                      "No detailed description available."}
                   </ReactMarkdown>
                 </div>
 
@@ -641,7 +672,9 @@ const FeaturedPrototypesSection = () => {
                           {tech}
                         </Badge>
                       )) || (
-                        <Badge variant="secondary">No technologies listed</Badge>
+                        <Badge variant="secondary">
+                          No technologies listed
+                        </Badge>
                       )}
                     </div>
                   </div>
@@ -779,7 +812,8 @@ const ShowcaseSection = () => {
 
   return (
     <section
-      className={`relative w-full min-h-screen flex items-center justify-center py-20 ${sectionBg}`} id="stats"
+      className={`relative w-full min-h-screen flex items-center justify-center py-20 ${sectionBg}`}
+      id="stats"
     >
       <div className="relative z-10 px-4 max-w-6xl mx-auto">
         <motion.h2
@@ -925,7 +959,11 @@ const GetInvolvedSection = () => {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             {getInvolvedContent.primaryCta && (
-              <Button size="lg" className="bg-orange-600 hover:bg-orange-700" asChild>
+              <Button
+                size="lg"
+                className="bg-orange-600 hover:bg-orange-700"
+                asChild
+              >
                 <Link href={getInvolvedContent.primaryCta.href || "#"}>
                   {getInvolvedContent.primaryCta.label || "Start Your Project"}
                 </Link>

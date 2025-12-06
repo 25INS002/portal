@@ -6,7 +6,7 @@ export default function Home() {
   return (
     <main className="relative font-sans min-h-screen">
       <BackgroundVideo 
-        videoPath="/videos/Background.mp4"
+        videoPath="/Videos/background.mp4"
         opacity={0.7}
       />
       

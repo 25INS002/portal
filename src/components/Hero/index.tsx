@@ -32,69 +32,6 @@ export default function HomePage() {
     return () => window.removeEventListener("resize", updateSections);
   }, []);
 
-  // Handle scroll + keyboard
-  useEffect(() => {
-    const handleWheel = (e: WheelEvent) => {
-      e.preventDefault();
-      if (isScrolling.current) return;
-
-      isScrolling.current = true;
-
-      if (e.deltaY > 0) {
-        setCurrentSection((prev) =>
-          Math.min(prev + 1, sections.current.length - 1)
-        );
-      } else {
-        setCurrentSection((prev) => Math.max(prev - 1, 0));
-      }
-
-      setTimeout(() => {
-        isScrolling.current = false;
-      }, 100);
-    };
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (isScrolling.current) return;
-
-      if (e.key === "ArrowDown" || e.key === "PageDown") {
-        e.preventDefault();
-        isScrolling.current = true;
-        setCurrentSection((prev) =>
-          Math.min(prev + 1, sections.current.length - 1)
-        );
-        setTimeout(() => (isScrolling.current = false), 200);
-      } else if (e.key === "ArrowUp" || e.key === "PageUp") {
-        e.preventDefault();
-        isScrolling.current = true;
-        setCurrentSection((prev) => Math.max(prev - 1, 0));
-        setTimeout(() => (isScrolling.current = false), 200);
-      }
-    };
-
-    window.addEventListener("wheel", handleWheel, { passive: false });
-    window.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      window.removeEventListener("wheel", handleWheel);
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, []);
-
-  // Scroll to the current section
-  useEffect(() => {
-    if (sections.current.length > 0 && sections.current[currentSection]) {
-      isScrolling.current = true;
-      window.scrollTo({
-        top: sections.current[currentSection].offsetTop,
-        behavior: "smooth",
-      });
-
-      setTimeout(() => {
-        isScrolling.current = false;
-      }, 200);
-    }
-  }, [currentSection]);
-
   return (
     <div className="relative">
       <HeroSection />
