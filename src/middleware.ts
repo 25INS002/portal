@@ -42,7 +42,7 @@ export function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     // Protect all except explicitly public paths
-    '/((?!api|_next/static|_next/image|favicon.ico|.*\\..*|$|pages/home|pages/about|pages/contact|auth|pages/services).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico|.*\\..*|$|pages/home|pages/about|pages/contact|auth|pages/services|pages/events|pages/prototypes).*)',
     '/profile/:path*',
   ],
 }

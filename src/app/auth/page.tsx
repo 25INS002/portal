@@ -3,9 +3,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
-import api from '@/lib/api';
+import api from '@/lib/api'; // Ensure this path is correct for your project
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
+
+// --- SHADER & BACKGROUND COMPONENTS (Unchanged visual effects) ---
 
 type Uniforms = {
   [key: string]: {
@@ -236,35 +238,37 @@ const Shader: React.FC<ShaderProps> = ({ source, uniforms, maxFps = 60 }) => {
   );
 };
 
+// --- AUTH PAGE LOGIC ---
+
 export default function AuthPage() {
   const router = useRouter();
-  const [step, setStep] = useState('email');
+  
+  // Steps: 'email' -> 'form' (login/signup details) -> 'otp' -> 'success'
+  const [step, setStep] = useState('email'); 
+  
+  // Data State
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
+  const [otpCode, setOtpCode] = useState('');
+  
+  // UI State
   const [loading, setLoading] = useState(false);
-  const [isSignUp, setIsSignUp] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(false); // Controls if we show Login or Signup form
   const [initialCanvasVisible, setInitialCanvasVisible] = useState(true);
   const [reverseCanvasVisible, setReverseCanvasVisible] = useState(false);
 
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const action = new URLSearchParams(window.location.search).get('action');
-      setIsSignUp(action === 'signup');
-      if (action === 'signup') {
-        setStep('signup');
-      }
-    }
-  }, []);
-
+  // 1. Initial Email Continue
   const handleEmailContinue = () => {
     if (email) {
-      setStep('signup');
-      setIsSignUp(true);
+      setStep('form');
+    } else {
+      toast.error("Please enter a valid email");
     }
   };
 
+  // 2. Sign In (Login)
   const handleSignIn = async () => {
     if (!email || !password) {
       toast.error('Please fill in all fields');
@@ -272,32 +276,23 @@ export default function AuthPage() {
     }
     setLoading(true);
     try {
-      console.log('🔵 Attempting login with:', { email }); // Debug log
       const response = await api.post('/accounts/login/', { email, password });
-      console.log('✅ Login response:', response); // Debug log
       
       if (response.status === 200) {
-        setReverseCanvasVisible(true);
-        setTimeout(() => setInitialCanvasVisible(false), 50);
+        triggerSuccessAnimation();
         setTimeout(() => {
-          setStep('success');
-          toast.success('Welcome back!');
-          setTimeout(() => router.push('/'), 2000);
-        }, 1500);
+            router.push('/'); // Redirect to dashboard
+        }, 2000);
       }
     } catch (error: any) {
-      console.error('❌ Login error:', error); // Debug log
-      console.error('Error details:', {
-        message: error.message,
-        response: error?.response?.data,
-        status: error?.response?.status
-      });
-      toast.error(error?.response?.data?.error || error?.message || 'Sign-in failed. Please check console for details.');
+      console.error('Login error:', error);
+      toast.error(error?.response?.data?.error || 'Sign-in failed.');
     } finally {
       setLoading(false);
     }
   };
 
+  // 3. Sign Up (Register)
   const handleSignUp = async () => {
     if (!firstName || !lastName || !email || !password) {
       toast.error('Please fill in all fields');
@@ -305,7 +300,6 @@ export default function AuthPage() {
     }
     setLoading(true);
     try {
-      console.log('🔵 Attempting signup with:', { email, firstName, lastName }); // Debug log
       const response = await api.post('/accounts/signup/', {
         username: email,
         email,
@@ -313,61 +307,89 @@ export default function AuthPage() {
         first_name: firstName,
         last_name: lastName,
       });
-      console.log('✅ Signup response:', response); // Debug log
       
       if (response.status === 200 || response.status === 201) {
-        localStorage.setItem('i2dcUsername@#12', response.data?.username || email);
-        setReverseCanvasVisible(true);
-        setTimeout(() => setInitialCanvasVisible(false), 50);
-        setTimeout(() => {
-          toast.success('Account created! Please verify your email');
-          router.push('/auth/verify-otp');
-        }, 1500);
+        toast.success('Account created! Please enter OTP sent to your email.');
+        // Move to OTP step
+        setStep('otp');
       }
     } catch (error: any) {
-      console.error('❌ Signup error:', error); // Debug log
-      console.error('Error details:', {
-        message: error.message,
-        response: error?.response?.data,
-        status: error?.response?.status
-      });
-      toast.error(error?.response?.data?.error || error?.message || 'Sign-up failed. Please check console for details.');
+      console.error('Signup error:', error);
+      toast.error(error?.response?.data?.error || 'Sign-up failed.');
     } finally {
       setLoading(false);
     }
   };
 
+  // 4. Verify OTP
+  const handleVerifyOtp = async () => {
+    if (!otpCode) {
+      toast.error("Please enter the OTP code");
+      return;
+    }
+    setLoading(true);
+    try {
+        // Assuming your backend endpoint is /accounts/verify/ or similar
+        const response = await api.post('/accounts/verify-otp/', { 
+            username: email, 
+            otp: otpCode 
+        });
+
+        if (response.status === 200) {
+            triggerSuccessAnimation();
+            setTimeout(() => {
+                router.push('/');
+            }, 2000);
+        }
+    } catch (error: any) {
+        console.error('OTP Error:', error);
+        toast.error(error?.response?.data?.error || "Invalid OTP");
+    } finally {
+        setLoading(false);
+    }
+  }
+
+  // Animation Trigger Helper
+  const triggerSuccessAnimation = () => {
+    setReverseCanvasVisible(true);
+    setTimeout(() => setInitialCanvasVisible(false), 50);
+    setTimeout(() => {
+      setStep('success');
+      toast.success(isSignUp ? 'Verification Successful!' : 'Welcome back!');
+    }, 1500);
+  }
+
   const handleBack = () => {
-    if (step === 'signup') {
+    if (step === 'form') {
       setStep('email');
-      setIsSignUp(false);
-      router.push('/auth');
+    } else if (step === 'otp') {
+      // If backing out of OTP, maybe go back to form to fix email?
+      setStep('form');
     }
   };
 
   return (
-    <div className="flex w-full flex-col min-h-screen bg-white relative">
-      <div className="absolute inset-0 z-0">
-        {/* 🎨 COLOR CHANGE LOCATION 1: Initial Canvas - Change colors prop below */}
+    <div className="flex w-full flex-col min-h-screen bg-white relative overflow-hidden">
+      {/* --- BACKGROUND ANIMATION LAYER --- */}
+      <div className="absolute inset-0 z-0 pointer-events-none">
         {initialCanvasVisible && (
           <div className="absolute inset-0">
             <CanvasRevealEffect
               animationSpeed={3}
               containerClassName="bg-white"
-              colors={[[59, 130, 246], [147, 51, 234]]} // Blue to Purple gradient
+              colors={[[59, 130, 246], [147, 51, 234]]}
               dotSize={6}
               reverse={false}
             />
           </div>
         )}
         
-        {/* 🎨 COLOR CHANGE LOCATION 2: Reverse Canvas - Change colors prop below */}
         {reverseCanvasVisible && (
           <div className="absolute inset-0">
             <CanvasRevealEffect
               animationSpeed={4}
               containerClassName="bg-white"
-              colors={[[59, 130, 246], [147, 51, 234]]} // Blue to Purple gradient
+              colors={[[59, 130, 246], [147, 51, 234]]}
               dotSize={6}
               reverse={true}
             />
@@ -378,11 +400,14 @@ export default function AuthPage() {
         <div className="absolute top-0 left-0 right-0 h-1/3 bg-gradient-to-b from-white to-transparent" />
       </div>
 
+      {/* --- CONTENT LAYER --- */}
       <div className="relative z-10 flex flex-col flex-1">
         <div className="flex flex-1 flex-col lg:flex-row">
           <div className="flex-1 flex flex-col justify-center items-center px-4">
-            <div className="w-full mt-[150px] max-w-sm">
+            <div className="w-full mt-[100px] max-w-sm">
               <AnimatePresence mode="wait">
+                
+                {/* STEP 1: EMAIL ENTRY */}
                 {step === 'email' ? (
                   <motion.div
                     key="email-step"
@@ -396,21 +421,12 @@ export default function AuthPage() {
                       <h1 className="text-[2.5rem] font-bold leading-[1.1] tracking-tight text-black">
                         Welcome To I2EDC
                       </h1>
-                      <p className="text-[1.8rem] text-black/70 font-light">Sign-in to your account</p>
+                      <p className="text-[1.8rem] text-black/70 font-light">
+                        {isSignUp ? 'Create an account' : 'Sign-in to your account'}
+                      </p>
                     </div>
 
-                    <div className="space-y-4">
-                      <button className="backdrop-blur-[2px] w-full flex items-center justify-center gap-2 bg-black/5 hover:bg-black/10 text-black border border-black/10 rounded-full py-3 px-4 transition-colors">
-                        <span className="text-lg">G</span>
-                        <span>Sign in with Google</span>
-                      </button>
-
-                      <div className="flex items-center gap-4">
-                        <div className="h-px bg-black/10 flex-1" />
-                        <span className="text-black/40 text-sm">or</span>
-                        <div className="h-px bg-black/10 flex-1" />
-                      </div>
-
+                    <div className="space-y-4 pt-4">
                       <div className="relative">
                         <input
                           type="email"
@@ -425,29 +441,29 @@ export default function AuthPage() {
                           className="absolute right-1.5 top-1.5 text-black w-9 h-9 flex items-center justify-center rounded-full bg-black/10 hover:bg-black/20 transition-colors group overflow-hidden"
                         >
                           <span className="relative w-full h-full block overflow-hidden">
-                            <span className="absolute inset-0 flex items-center justify-center transition-transform duration-300 group-hover:translate-x-full">
-                              →
-                            </span>
-                            <span className="absolute inset-0 flex items-center justify-center transition-transform duration-300 -translate-x-full group-hover:translate-x-0">
-                              →
-                            </span>
+                            <span className="absolute inset-0 flex items-center justify-center transition-transform duration-300 group-hover:translate-x-full">→</span>
+                            <span className="absolute inset-0 flex items-center justify-center transition-transform duration-300 -translate-x-full group-hover:translate-x-0">→</span>
                           </span>
                         </button>
                       </div>
-                    </div>
 
-                    <p className="text-xs text-black/40 pt-10">
-                      By signing up, you agree to the{' '}
-                      <a href="#" className="underline hover:text-black/60">MSA</a>,{' '}
-                      <a href="#" className="underline hover:text-black/60">Product Terms</a>,{' '}
-                      <a href="#" className="underline hover:text-black/60">Policies</a>,{' '}
-                      <a href="#" className="underline hover:text-black/60">Privacy Notice</a>, and{' '}
-                      <a href="#" className="underline hover:text-black/60">Cookie Notice</a>.
-                    </p>
+                      {/* Toggle Login/Signup Mode */}
+                      <div className="pt-4">
+                         <button 
+                            onClick={() => setIsSignUp(!isSignUp)}
+                            className="text-sm text-black/60 hover:text-black hover:underline transition-all"
+                         >
+                            {isSignUp ? "Already have an account? Sign In" : "Don't have an account? Sign Up"}
+                         </button>
+                      </div>
+                    </div>
                   </motion.div>
-                ) : step === 'signup' ? (
+                ) 
+                
+                /* STEP 2: DETAILS (Password / Names) */
+                : step === 'form' ? (
                   <motion.div
-                    key="signup-step"
+                    key="form-step"
                     initial={{ opacity: 0, x: 100 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: 100 }}
@@ -456,7 +472,7 @@ export default function AuthPage() {
                   >
                     <div className="space-y-1">
                       <h1 className="text-[2.5rem] font-bold leading-[1.1] tracking-tight text-black">
-                        {isSignUp ? 'Complete Your Profile' : 'Enter Your Password'}
+                        {isSignUp ? 'Complete Profile' : 'Enter Password'}
                       </h1>
                       <p className="text-[1.25rem] text-black/50 font-light">{email}</p>
                     </div>
@@ -505,23 +521,66 @@ export default function AuthPage() {
                             loading ? 'bg-gray-200 text-black/50 border-black/10 cursor-not-allowed' : 'bg-black text-white border-transparent hover:bg-black/90 cursor-pointer'
                           }`}
                         >
-                          {loading ? 'Loading...' : isSignUp ? 'Sign Up' : 'Sign In'}
+                          {loading ? 'Processing...' : isSignUp ? 'Sign Up' : 'Sign In'}
                         </motion.button>
                       </div>
                     </div>
+                  </motion.div>
+                ) 
 
-                    <div className="pt-16">
-                      <p className="text-xs text-black/40">
-                        By signing up, you agree to the{' '}
-                        <a href="#" className="underline hover:text-black/60">MSA</a>,{' '}
-                        <a href="#" className="underline hover:text-black/60">Product Terms</a>,{' '}
-                        <a href="#" className="underline hover:text-black/60">Policies</a>,{' '}
-                        <a href="#" className="underline hover:text-black/60">Privacy Notice</a>, and{' '}
-                        <a href="#" className="underline hover:text-black/60">Cookie Notice</a>.
-                      </p>
+                /* STEP 3: OTP VERIFICATION */
+                : step === 'otp' ? (
+                  <motion.div
+                    key="otp-step"
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                    transition={{ duration: 0.4, ease: 'easeOut' }}
+                    className="space-y-6 text-center"
+                  >
+                    <div className="space-y-1">
+                        <h1 className="text-[2.5rem] font-bold leading-[1.1] tracking-tight text-black">
+                            Verify Email
+                        </h1>
+                        <p className="text-[1.25rem] text-black/50 font-light">
+                            Enter the code sent to {email}
+                        </p>
+                    </div>
+
+                    <div className="space-y-4">
+                        <input
+                            type="text"
+                            placeholder="000000"
+                            maxLength={6}
+                            value={otpCode}
+                            onChange={(e) => setOtpCode(e.target.value.replace(/[^0-9]/g, ''))}
+                            onKeyPress={(e) => e.key === 'Enter' && handleVerifyOtp()}
+                            className="w-full backdrop-blur-[1px] text-black border border-black/10 rounded-full py-3 px-4 focus:outline-none focus:border-black/30 text-center bg-transparent tracking-widest text-xl"
+                        />
+                        
+                        <div className="flex w-full gap-3 pt-4">
+                            <motion.button
+                                onClick={() => setStep('email')}
+                                className="rounded-full bg-gray-100 text-black font-medium px-8 py-3 hover:bg-gray-200 transition-colors w-[30%]"
+                            >
+                                Cancel
+                            </motion.button>
+                            <motion.button
+                                onClick={handleVerifyOtp}
+                                disabled={loading}
+                                className={`flex-1 rounded-full font-medium py-3 border transition-all duration-300 ${
+                                    loading ? 'bg-gray-200 text-black/50 border-black/10' : 'bg-black text-white hover:bg-black/90'
+                                }`}
+                            >
+                                {loading ? 'Verifying...' : 'Verify Code'}
+                            </motion.button>
+                        </div>
                     </div>
                   </motion.div>
-                ) : (
+                )
+                
+                /* STEP 4: SUCCESS */
+                : (
                   <motion.div
                     key="success-step"
                     initial={{ opacity: 0, y: 50 }}
@@ -564,12 +623,24 @@ export default function AuthPage() {
                       transition={{ delay: 1 }}
                       className="w-full rounded-full bg-black text-white font-medium py-3 hover:bg-black/90 transition-colors"
                     >
-                      Continue to Dashboard
+                      Redirecting...
                     </motion.button>
                   </motion.div>
                 )}
               </AnimatePresence>
             </div>
+            
+            {/* FOOTER LINKS (Only show if not success) */}
+            {step !== 'success' && (
+                <div className="mt-16 text-center">
+                    <p className="text-xs text-black/40">
+                    By proceeding, you agree to the{' '}
+                    <a href="#" className="underline hover:text-black/60">MSA</a>,{' '}
+                    <a href="#" className="underline hover:text-black/60">Privacy</a>, and{' '}
+                    <a href="#" className="underline hover:text-black/60">Cookie Notice</a>.
+                    </p>
+                </div>
+            )}
           </div>
         </div>
       </div>

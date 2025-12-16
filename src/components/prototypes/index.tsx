@@ -137,8 +137,8 @@ const PrototypesHeroSection = () => {
                 whileTap={{ scale: 0.95 }}
                 className={`px-8 py-4 rounded-lg font-semibold transition-all duration-300 border ${
                   isDark
-                    ? "bg-gradient-to-r from-blue-500 to-purple-600 text-white border-blue-400/30 shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40"
-                    : "bg-gradient-to-r from-blue-600 to-purple-700 text-white border-blue-500/30 shadow-lg shadow-blue-500/30 hover:shadow-blue-600/40"
+                    ? "bg-gradient-to-r from-blue-500 to-purple-600 text-white border-blue-400 shadow-lg shadow-blue-500  hover:shadow-blue-500"
+                    : "bg-gradient-to-r from-blue-600 to-purple-700 text-white border-blue-500 shadow-lg shadow-blue-500 hover:shadow-blue-600"
                 }`}
               >
                 {cta.primary.label || "View Projects"}
@@ -152,8 +152,8 @@ const PrototypesHeroSection = () => {
                 whileTap={{ scale: 0.95 }}
                 className={`px-8 py-4 rounded-lg font-semibold border transition-all duration-300 ${
                   isDark
-                    ? "bg-transparent text-white border-white/30 hover:bg-white/10"
-                    : "bg-transparent text-gray-800 border-gray-400 hover:bg-gray-100/50"
+                    ? "bg-transparent text-white border-white hover:bg-white "
+                    : "bg-transparent text-gray-800 border-gray-400 hover:bg-gray-100 "
                 }`}
               >
                 {cta.secondary.label || "Our Track Record"}
@@ -177,14 +177,14 @@ const PrototypesHeroSection = () => {
           animate={{ y: [0, 10, 0] }}
           transition={{ repeat: Infinity, duration: 1.5 }}
           className={`w-6 h-10 border-2 rounded-full flex justify-center ${
-            isDark ? "border-white/50" : "border-gray-400"
+            isDark ? "border-white " : "border-gray-400"
           }`}
         >
           <motion.div
             animate={{ y: [0, 12, 0] }}
             transition={{ duration: 2, repeat: Infinity }}
             className={`w-1 h-3 rounded-full mt-2 ${
-              isDark ? "bg-white/70" : "bg-gray-600"
+              isDark ? "bg-white" : "bg-gray-600"
             }`}
           />
         </motion.div>
@@ -213,12 +213,12 @@ const FeaturedPrototypesSection = () => {
   );
 
   const sectionBg = isDark
-    ? "bg-gradient-to-br from-slate-900 via-blue-900/20 to-slate-900"
-    : "bg-gradient-to-br from-gray-50 via-blue-50/50 to-gray-50";
+    ? "bg-gradient-to-br from-slate-900 via-blue-900  to-slate-900"
+    : "bg-gradient-to-br from-gray-50 via-blue-50  to-gray-50";
 
   const cardBg = isDark
-    ? "bg-white/5 backdrop-blur-sm border-white/10 hover:border-blue-400/30"
-    : "bg-white/80 backdrop-blur-sm border-gray-200 hover:border-blue-400/30";
+    ? "bg-white  backdrop-blur-sm border-white  hover:border-blue-400 "
+    : "bg-white  backdrop-blur-sm border-gray-200 hover:border-blue-400 ";
 
   const titleColor = isDark ? "text-white" : "text-gray-900";
   const textColor = isDark ? "text-gray-300" : "text-gray-700";
@@ -226,11 +226,11 @@ const FeaturedPrototypesSection = () => {
   // Use statusMap from content or fallback
   const statusColors = featuredContent.statusMap || {
     completed:
-      "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
+      "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
     "in-progress":
-      "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
+      "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300",
     planning:
-      "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300",
+      "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300",
   };
 
   // Categories based on actual prototype categories
@@ -513,7 +513,7 @@ const FeaturedPrototypesSection = () => {
         <div
           className={`fixed inset-0 z-50 flex items-center justify-center p-4 transition-all duration-300 ${
             isOverlayOpen
-              ? "bg-black/50 backdrop-blur-sm"
+              ? "bg-black  backdrop-blur-sm"
               : "bg-black/0 backdrop-blur-0"
           }`}
         >
@@ -526,7 +526,7 @@ const FeaturedPrototypesSection = () => {
             <div className="relative bg-gradient-to-r from-blue-600 to-purple-600 p-6 text-white">
               <button
                 onClick={closeOverlay}
-                className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+                className="absolute top-4 right-4 p-2 rounded-full bg-white  hover:bg-white  transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -639,7 +639,7 @@ const FeaturedPrototypesSection = () => {
 
                 {/* Project Metadata */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                  <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-6">
+                  <div className="bg-gray-50 dark:bg-gray-800  rounded-xl p-6">
                     <h3 className="font-semibold text-lg mb-4 flex items-center gap-2 text-gray-900 dark:text-white">
                       <Users className="w-5 h-5 text-blue-600" />
                       Team Members
@@ -661,7 +661,7 @@ const FeaturedPrototypesSection = () => {
                     </div>
                   </div>
 
-                  <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-6">
+                  <div className="bg-gray-50 dark:bg-gray-800  rounded-xl p-6">
                     <h3 className="font-semibold text-lg mb-4 flex items-center gap-2 text-gray-900 dark:text-white">
                       <Tag className="w-5 h-5 text-green-600" />
                       Technologies Used
@@ -683,7 +683,7 @@ const FeaturedPrototypesSection = () => {
             </div>
 
             {/* Footer Actions */}
-            <div className="border-t border-gray-200 dark:border-gray-700 p-6 bg-gray-50 dark:bg-gray-800/50">
+            <div className="border-t border-gray-200 dark:border-gray-700 p-6 bg-gray-50 dark:bg-gray-800 ">
               <div className="flex flex-col sm:flex-row gap-4 justify-between items-center">
                 <div className="flex items-center gap-4">
                   {selectedPrototype.github && (
@@ -731,12 +731,12 @@ const CategoriesSection = () => {
   const categories = categoriesContent.cards || [];
 
   const sectionBg = isDark
-    ? "bg-gradient-to-br from-slate-900 via-purple-900/20 to-slate-900"
-    : "bg-gradient-to-br from-purple-50/80 via-pink-50/50 to-rose-50/80";
+    ? "bg-gradient-to-br from-slate-900 via-purple-900  to-slate-900"
+    : "bg-gradient-to-br from-purple-50 via-pink-50  to-rose-50 ";
 
   const cardBg = isDark
-    ? "bg-white/5 backdrop-blur-sm border-white/10 hover:border-purple-400/30"
-    : "bg-white/80 backdrop-blur-sm border-gray-200 hover:border-purple-400/30";
+    ? "bg-white  backdrop-blur-sm border-white  hover:border-purple-400 "
+    : "bg-white  backdrop-blur-sm border-gray-200 hover:border-purple-400 ";
 
   const titleColor = isDark ? "text-white" : "text-gray-900";
   const textColor = isDark ? "text-gray-300" : "text-gray-700";
@@ -804,8 +804,8 @@ const ShowcaseSection = () => {
   const summary = showcaseContent.summary || "";
 
   const sectionBg = isDark
-    ? "bg-gradient-to-br from-slate-900 via-green-900/20 to-slate-900"
-    : "bg-gradient-to-br from-green-50/80 via-cyan-50/50 to-blue-50/80";
+    ? "bg-gradient-to-br from-slate-900 via-green-900  to-slate-900"
+    : "bg-gradient-to-br from-green-50  via-cyan-50  to-blue-50 ";
 
   const titleColor = isDark ? "text-white" : "text-gray-900";
   const textColor = isDark ? "text-gray-300" : "text-gray-700";
@@ -891,12 +891,12 @@ const GetInvolvedSection = () => {
   const summary = getInvolvedContent.summary || "";
 
   const sectionBg = isDark
-    ? "bg-gradient-to-br from-slate-900 via-orange-900/20 to-slate-900"
-    : "bg-gradient-to-br from-orange-50/80 via-red-50/50 to-pink-50/80";
+    ? "bg-gradient-to-br from-slate-900 via-orange-900  to-slate-900"
+    : "bg-gradient-to-br from-orange-50  via-red-50  to-pink-50";
 
   const cardBg = isDark
-    ? "bg-white/5 backdrop-blur-sm border-white/10 hover:border-orange-400/30"
-    : "bg-white/80 backdrop-blur-sm border-gray-200 hover:border-orange-400/30";
+    ? "bg-white  backdrop-blur-sm border-white  hover:border-orange-400 "
+    : "bg-whited  backdrop-blur-sm border-gray-200 hover:border-orange-400 ";
 
   const titleColor = isDark ? "text-white" : "text-gray-900";
   const textColor = isDark ? "text-gray-300" : "text-gray-700";

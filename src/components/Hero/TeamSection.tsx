@@ -33,7 +33,7 @@ const TeamSection = () => {
             onClick={() => window.location.reload()}
             className={`px-6 py-3 rounded-lg font-semibold ${
               isDark 
-                ? "bg-white/10 text-white border border-white/30" 
+                ? "bg-white text-white border border-white" 
                 : "bg-gray-100 text-gray-800 border border-gray-300"
             }`}
           >
