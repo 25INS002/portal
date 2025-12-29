@@ -1,18 +1,19 @@
 'use client';
+
 import HeroPage from "@/components/Hero";
-import BackgroundVideo from "@/components/animations/BackgroundVideo/BackgroundVideo";
 
 export default function Home() {
   return (
-    <main className="relative font-sans min-h-screen">
-      <BackgroundVideo 
-        videoPath="/Videos/background.mp4"
-        opacity={0.7}
-      />
-      
-      <div className="relative z-10">
-        <HeroPage />
-      </div>
+    <main className="relative w-full overflow-x-hidden">
+      {/* HERO OWNS ITS BACKGROUND */}
+      <HeroPage />
+
+      {/* Other sections come AFTER */}
+      {/* 
+      <section className="mx-auto max-w-7xl px-6 py-20">
+        <h2 className="h2">Workshops & Labs</h2>
+      </section>
+      */}
     </main>
   );
 }

@@ -1,269 +1,446 @@
-// contact.jsx
 "use client";
 
 import { motion } from "framer-motion";
 import { useTheme } from "next-themes";
-import { useState } from "react";
+import { useMounted } from "@/hooks/useMounted";
+import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import BackgroundVideo from "../animations/BackgroundVideo/BackgroundVideo";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
+import type { Icon } from "leaflet";
+
+import { MapPin, Mail, Phone, Clock, Send, CheckCircle } from "lucide-react";
+import SectionDivider from "../SectionDivider";
 
 export default function ContactPage() {
   return (
-    <div className="relative">
+    <div className="relative w-full overflow-x-hidden">
       <ContactHeroSection />
+      <SectionDivider />
       <ContactFormSection />
+      <SectionDivider />
       <ContactInfoSection />
     </div>
   );
 }
 
+/* --------------------------------------------------
+   HERO SECTION — CONTACT
+-------------------------------------------------- */
+
 const ContactHeroSection = () => {
   const { theme } = useTheme();
-  const isDark = theme === "dark";
+  const mounted = useMounted();
+  const isDark = mounted && theme === "dark";
 
   return (
-    <section className="relative w-full h-screen overflow-hidden">
-      <div className="absolute inset-0">
-        <BackgroundVideo videoPath="/Videos/background.mp4" opacity={0.7} />
+    <section className="relative min-h-screen w-full overflow-hidden">
+      {/* 🌈 Gradient background (both themes) */}
+      <div
+        className={`
+          absolute inset-0
+          ${
+            isDark
+              ? "bg-[radial-gradient(ellipse_at_top_left,rgba(99,102,241,0.18),transparent_60%)]"
+              : "bg-[radial-gradient(ellipse_at_top_left,rgba(99,102,241,0.12),transparent_60%)]"
+          }
+        `}
+      />
+
+      {/* CONTENT */}
+      <div className="relative z-10 min-h-screen flex items-end">
+        <div className="w-full pb-[20vh]">
+          <div
+            className="
+              max-w-7xl
+              pl-10
+              sm:pl-16
+              md:pl-24
+              lg:pl-32
+              pr-8
+            "
+          >
+            <motion.div
+              initial={{ opacity: 0, y: 32 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, ease: "easeOut" }}
+              className="max-w-3xl"
+            >
+              <p
+                className={`
+                  uppercase tracking-widest text-xs mb-6
+                  ${isDark ? "text-indigo-400" : "text-indigo-600"}
+                `}
+              >
+                Get in Touch · I2EDC · IIT Jammu
+              </p>
+
+              <h1
+                className={`
+                  text-5xl md:text-6xl xl:text-7xl font-extrabold leading-tight mb-8
+                  ${isDark ? "text-white" : "text-gray-900"}
+                `}
+              >
+                Contact
+                <br />
+                <span className="bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent">
+                  Us
+                </span>
+              </h1>
+
+              <p
+                className={`
+                  text-lg md:text-xl mb-10
+                  ${isDark ? "text-slate-300" : "text-gray-600"}
+                `}
+              >
+                We'd love to hear from you! Reach out for inquiries, feedback,
+                or collaborations. Our team is here to help bring your
+                innovative ideas to life.
+              </p>
+
+              <div className="flex flex-col sm:flex-row gap-4">
+                <button
+                  onClick={() =>
+                    document
+                      .getElementById("form")
+                      ?.scrollIntoView({ behavior: "smooth" })
+                  }
+                  className="
+                    px-8 py-4 rounded-full font-semibold
+                    bg-black text-white
+                    hover:bg-gray-800 transition
+                  "
+                >
+                  Send Message
+                </button>
+
+                <button
+                  onClick={() =>
+                    document
+                      .getElementById("info")
+                      ?.scrollIntoView({ behavior: "smooth" })
+                  }
+                  className={`
+                    px-8 py-4 rounded-full font-semibold border transition
+                    ${
+                      isDark
+                        ? "border-white/30 text-white hover:bg-white/10"
+                        : "border-gray-300 text-gray-900 hover:bg-gray-100"
+                    }
+                  `}
+                >
+                  Find Us
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        </div>
       </div>
 
-      <div
-        className={`relative z-10 h-full flex flex-col justify-center items-center text-center px-6 ${
-          isDark ? "text-white" : "text-gray-900"
-        }`}
-      >
-        <motion.h1
-          initial={{ opacity: 0, y: 40 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          className="font-bold text-5xl md:text-6xl lg:text-7xl mb-6"
-        >
-          <span
-            className={`bg-gradient-to-r ${
-              isDark
-                ? "from-blue-400 to-purple-600"
-                : "from-blue-600 to-purple-700"
-            } bg-clip-text text-transparent`}
-          >
-            Contact
-          </span>{" "}
-          <span
-            className={`bg-gradient-to-r ${
-              isDark
-                ? "from-green-400 to-cyan-600"
-                : "from-green-600 to-cyan-700"
-            } bg-clip-text text-transparent`}
-          >
-            Us
-          </span>
-        </motion.h1>
-
-        <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 0.8 }}
-          className={`text-xl md:text-2xl mb-10 max-w-3xl mx-auto leading-relaxed ${
-            isDark ? "text-gray-300" : "text-gray-700"
-          }`}
-        >
-          We’d love to hear from you! Reach out for inquiries, feedback, or just
-          to say hello. Our team is here to help.
-        </motion.p>
+      {/* HERO → NEXT SECTION TRANSITION */}
+      <div className="absolute bottom-0 left-0 w-full h-64 pointer-events-none">
+        <div className="absolute inset-0 hidden dark:block bg-gradient-to-t from-background via-background/80 to-transparent" />
+        <div className="absolute inset-0 block dark:hidden bg-gradient-to-t from-background to-background" />
       </div>
     </section>
   );
 };
 
+/* --------------------------------------------------
+   CONTACT FORM SECTION
+-------------------------------------------------- */
+
 const ContactFormSection = () => {
   const { theme } = useTheme();
-  const isDark = theme === "dark";
-  const [form, setForm] = useState({ name: "", email: "", message: "" });
+  const mounted = useMounted();
+  const isDark = mounted && theme === "dark";
+
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    subject: "",
+    message: "",
+  });
   const [submitted, setSubmitted] = useState(false);
-
-  const sectionBg = isDark
-    ? "bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900"
-    : "bg-gradient-to-br from-gray-50 via-blue-50 to-gray-50";
-
-  const cardBg = isDark
-    ? "bg-white backdrop-blur-sm border-white hover:border-blue-400"
-    : "bg-white backdrop-blur-sm border-gray-200 hover:border-blue-400";
-
-  const titleColor = isDark ? "text-white" : "text-gray-900";
-  const textColor = isDark ? "text-gray-300" : "text-gray-700";
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
-  const handleSubmit = (e) => {
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+
+    // Simulate API call
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
     console.log("Form submitted", form);
     setSubmitted(true);
-    setForm({ name: "", email: "", message: "" });
+    setForm({ name: "", email: "", subject: "", message: "" });
+    setLoading(false);
   };
 
   return (
     <section
-      className={`relative w-full min-h-screen flex items-center justify-center ${sectionBg} py-20`}
       id="form"
+      className="relative py-32 px-6 bg-background flex justify-center"
     >
-      <div className="relative z-10 px-4 max-w-3xl w-full">
+      <div className="max-w-3xl w-full">
         <motion.h2
-          className={`text-4xl md:text-5xl font-bold text-center mb-12 ${titleColor}`}
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7 }}
-          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+          className="text-4xl md:text-5xl font-bold mb-4 text-center"
         >
-          Send Us a{" "}
-          <span
-            className={`bg-gradient-to-r ${
-              isDark ? "from-blue-400 to-cyan-400" : "from-blue-600 to-cyan-600"
-            } bg-clip-text text-transparent`}
-          >
-            Message
-          </span>
+          Send Us a Message
         </motion.h2>
 
-        <motion.form
-          onSubmit={handleSubmit}
+        <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-16 text-center">
+          Have questions or want to collaborate? Fill out the form below and
+          we'll get back to you as soon as possible.
+        </p>
+
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.2 }}
-          viewport={{ once: true, margin: "-100px" }}
-          className={`p-8 rounded-2xl ${cardBg} flex flex-col gap-4`}
+          transition={{ duration: 0.6, delay: 0.2 }}
+          viewport={{ once: true }}
         >
-          <Input
-            placeholder="Your Name"
-            name="name"
-            value={form.name}
-            onChange={handleChange}
-            required
-            className="px-4 py-3"
-          />
-          <Input
-            placeholder="Email Address"
-            type="email"
-            name="email"
-            value={form.email}
-            onChange={handleChange}
-            required
-            className="px-4 py-3"
-          />
-          <Textarea
-            placeholder="Your Message"
-            name="message"
-            value={form.message}
-            onChange={handleChange}
-            required
-            className="px-4 py-3 h-40 resize-none"
-          />
-          <Button
-            type="submit"
-            className="mt-4 w-full bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-semibold hover:from-blue-700 hover:to-cyan-600"
-          >
-            Send Message
-          </Button>
+          <Card className="glass">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Send className="w-5 h-5 text-indigo-600" />
+                Contact Form
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">
+                      Your Name *
+                    </label>
+                    <Input
+                      placeholder="Enter your full name"
+                      name="name"
+                      value={form.name}
+                      onChange={handleChange}
+                      required
+                      className="glass"
+                    />
+                  </div>
 
-          {submitted && (
-            <p
-              className={`mt-2 text-center font-medium ${
-                isDark ? "text-green-400" : "text-green-700"
-              }`}
-            >
-              Your message has been sent! ✅
-            </p>
-          )}
-        </motion.form>
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">
+                      Email Address *
+                    </label>
+                    <Input
+                      placeholder="Enter your email"
+                      type="email"
+                      name="email"
+                      value={form.email}
+                      onChange={handleChange}
+                      required
+                      className="glass"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium mb-2 block">
+                    Subject *
+                  </label>
+                  <Input
+                    placeholder="What is this regarding?"
+                    name="subject"
+                    value={form.subject}
+                    onChange={handleChange}
+                    required
+                    className="glass"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium mb-2 block">
+                    Message *
+                  </label>
+                  <Textarea
+                    placeholder="Tell us about your inquiry, project idea, or collaboration proposal..."
+                    name="message"
+                    value={form.message}
+                    onChange={handleChange}
+                    required
+                    className="glass min-h-[160px] resize-none"
+                  />
+                </div>
+
+                <Button
+                  type="submit"
+                  className="w-full bg-black hover:bg-gray-800 text-white"
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Sending...
+                    </>
+                  ) : (
+                    <>
+                      <Send className="w-4 h-4 mr-2" />
+                      Send Message
+                    </>
+                  )}
+                </Button>
+
+                {submitted && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    className="flex items-center justify-center gap-2 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800"
+                  >
+                    <CheckCircle className="w-5 h-5 text-green-600" />
+                    <p className="text-green-700 dark:text-green-300 font-medium">
+                      Thank you! Your message has been sent successfully.
+                    </p>
+                  </motion.div>
+                )}
+              </form>
+            </CardContent>
+          </Card>
+        </motion.div>
       </div>
     </section>
   );
 };
 
-const ContactInfoSection = () => {
+/* --------------------------------------------------
+   CONTACT INFO SECTION
+-------------------------------------------------- */
+function ContactInfoSection() {
   const { theme } = useTheme();
-  const isDark = theme === "dark";
+  const mounted = useMounted();
+  const isDark = mounted && theme === "dark";
 
-  const sectionBg = isDark
-    ? "bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900"
-    : "bg-gradient-to-br from-purple-50 via-pink-50 to-rose-50";
+  const [glowIcon, setGlowIcon] = useState<Icon | null>(null);
 
-  const cardBg = isDark
-    ? "bg-white/5 backdrop-blur-sm border-white/10 hover:border-purple-400/30"
-    : "bg-white/80 backdrop-blur-sm border-gray-200 hover:border-purple-400/30";
+  useEffect(() => {
+    (async () => {
+      const L = await import("leaflet");
 
-  const titleColor = isDark ? "text-white" : "text-gray-900";
-  const textColor = isDark ? "text-gray-300" : "text-gray-700";
-  const accentColor = isDark ? "text-purple-400" : "text-purple-600";
+      const icon = L.divIcon({
+        className: "", // important: avoid default styles
+        html: `<div class="leaflet-glow-marker"></div>`,
+        iconSize: [22, 22],
+        iconAnchor: [11, 11], // center
+        popupAnchor: [0, -12],
+      });
 
-  const info = [
+      setGlowIcon(icon);
+    })();
+  }, []);
+
+  const position: [number, number] = [32.801135, 74.890469];
+  const contactInfo = [
     {
-      type: "Email",
-      value: "contact@i2edc.in",
-      icon: "📧",
-      gradient: "from-blue-500 to-cyan-500",
+      title: "Address",
+      value:
+        "I2EDC Office, Academic Block\nIndian Institute of Technology Jammu\nJagti, NH-44, Jammu & Kashmir – 181221",
+      icon: <MapPin />,
     },
     {
-      type: "Phone",
-      value: "+91 98765 43210",
-      icon: "📞",
-      gradient: "from-green-500 to-teal-500",
+      title: "Email",
+      value: "i2edc@iitjammu.ac.in",
+      icon: <Mail />,
     },
     {
-      type: "Address",
-      value: "Institute Campus, Innovation Block, City, State",
-      icon: "🏢",
-      gradient: "from-purple-500 to-pink-500",
+      title: "Phone",
+      value: "+91 123 456 7890",
+      icon: <Phone />,
+    },
+    {
+      title: "Office Hours",
+      value: "Monday – Friday\n9:00 AM – 5:00 PM",
+      icon: <Clock />,
     },
   ];
+  const tileUrl = isDark
+    ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+    : "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
 
+  const attribution = isDark
+    ? '&copy; <a href="https://carto.com/">CARTO</a>'
+    : '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>';
   return (
-    <section
-      className={`relative w-full min-h-screen flex items-center justify-center py-20 ${sectionBg}`}
-    >
-      <div className="relative z-10 px-4 max-w-5xl mx-auto">
+    <section className="relative py-32 px-6 bg-background">
+      <div className="max-w-7xl mx-auto">
+        {/* Heading */}
         <motion.h2
-          className={`text-4xl md:text-5xl font-bold text-center mb-16 ${titleColor}`}
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7 }}
-          viewport={{ once: true, margin: "-100px" }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="h2 text-center mb-4"
         >
-          Our{" "}
-          <span
-            className={`bg-gradient-to-r ${
-              isDark
-                ? "from-purple-400 to-pink-400"
-                : "from-purple-600 to-pink-600"
-            } bg-clip-text text-transparent`}
-          >
-            Contact Info
-          </span>
+          Find Us
         </motion.h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {info.map((item, index) => (
+        <p className="p text-center max-w-2xl mx-auto mb-20">
+          Visit our campus office or reach out through any of the channels
+          below.
+        </p>
+
+        {/* Contact Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-20">
+          {contactInfo.map((item, i) => (
             <motion.div
-              key={index}
-              initial={{ opacity: 0, y: 30 }}
+              key={i}
+              initial={{ opacity: 0, y: 24 }}
               whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: index * 0.1 }}
-              viewport={{ once: true, margin: "-100px" }}
-              className={`rounded-2xl p-8 border transition-all duration-300 hover:shadow-lg ${cardBg} text-center`}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.08 }}
             >
-              <div
-                className={`w-12 h-12 rounded-lg bg-gradient-to-r ${item.gradient} mb-4 flex items-center justify-center text-white text-xl`}
-              >
-                {item.icon}
-              </div>
-              <h3 className={`text-xl font-bold mb-2 ${accentColor}`}>
-                {item.type}
-              </h3>
-              <p className={textColor}>{item.value}</p>
+              <Card className="glass glass-hover h-full">
+                <CardContent className="p-6 flex gap-4">
+                  <div className="h-12 w-12 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-500 flex items-center justify-center text-white">
+                    {item.icon}
+                  </div>
+
+                  <div>
+                    <h3 className="text-lg font-semibold mb-1">{item.title}</h3>
+                    <p className="text-sm text-muted-foreground whitespace-pre-line">
+                      {item.value}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
             </motion.div>
           ))}
+        </div>
+        {/* Map Container */}
+        <div className="rounded-xl overflow-hidden border border-white/10 glass">
+          <MapContainer
+            center={position}
+            zoom={15}
+            scrollWheelZoom={false}
+            className="h-[420px] w-full"
+          >
+            <TileLayer attribution={attribution} url={tileUrl} />
+            {glowIcon && (
+              <Marker position={position} icon={glowIcon}>
+                <Popup>
+                  <strong>IIT Jammu Campus</strong>
+                  <br />
+                  I2EDC Office
+                </Popup>
+              </Marker>
+            )}
+          </MapContainer>
         </div>
       </div>
     </section>
   );
-};
+}

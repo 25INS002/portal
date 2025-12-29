@@ -1,8 +1,8 @@
-// prototypes.jsx
 "use client";
 
 import { motion } from "framer-motion";
 import { useTheme } from "next-themes";
+import { useMounted } from "@/hooks/useMounted";
 import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -24,48 +24,66 @@ import {
   Tag,
   X,
   ArrowRight,
+  Sparkles,
+  Zap,
+  Target,
+  Wrench,
+  Rocket,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import Link from "next/link";
 import { useContent } from "@/context/ContentContext";
+import SectionDivider from "../SectionDivider";
 
 export default function PrototypesPage() {
   const { content, loading, error } = useContent();
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
+      <section className="relative py-32 px-6 bg-background flex justify-center">
+        <div className="max-w-7xl w-full text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading prototypes...</p>
+        </div>
+      </section>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
+      <section className="relative py-32 px-6 bg-background flex justify-center">
+        <div className="max-w-7xl w-full text-center">
           <p className="text-lg text-red-600 mb-4">Error loading content</p>
           <Button onClick={() => window.location.reload()}>Try Again</Button>
         </div>
-      </div>
+      </section>
     );
   }
 
   return (
-    <div className="relative">
+    <div className="relative w-full overflow-x-hidden">
       <PrototypesHeroSection />
+      <SectionDivider />
       <FeaturedPrototypesSection />
+      <SectionDivider />
       <CategoriesSection />
+      <SectionDivider />
       <ShowcaseSection />
+      <SectionDivider />
       <GetInvolvedSection />
     </div>
   );
 }
 
+/* --------------------------------------------------
+   HERO SECTION — PROTOTYPES
+-------------------------------------------------- */
+
 const PrototypesHeroSection = () => {
   const { theme } = useTheme();
+  const mounted = useMounted();
+  const isDark = mounted && theme === "dark";
   const { content } = useContent();
-  const isDark = theme === "dark";
 
   const heroContent = content?.all_prototypes?.hero || {};
   const title = heroContent.title || ["Student", "Prototypes"];
@@ -75,128 +93,138 @@ const PrototypesHeroSection = () => {
   const cta = heroContent.cta || {};
 
   return (
-    <section className="relative w-full h-screen overflow-hidden">
-      {/* Background */}
-      <div className="absolute inset-0">
-        <BackgroundVideo videoPath="/Videos/background.mp4" opacity={0.7} />
-      </div>
-
-      {/* Content */}
+    <section className="relative min-h-screen w-full overflow-hidden">
+      {/* 🎥 VIDEO — always rendered (hydration-safe) */}
       <div
-        className={`relative z-10 h-full flex flex-col justify-center items-center text-center px-6 ${
-          isDark ? "text-white" : "text-gray-900"
-        }`}
+        className={`
+          absolute inset-0 transition-opacity duration-500
+          ${isDark ? "opacity-100" : "opacity-0"}
+        `}
       >
-        <motion.h1
-          initial={{ opacity: 0, y: 40 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          className="font-bold text-5xl md:text-6xl lg:text-7xl mb-6"
-        >
-          <span
-            className={`bg-gradient-to-r ${
-              isDark
-                ? "from-blue-400 to-purple-600"
-                : "from-blue-600 to-purple-700"
-            } bg-clip-text text-transparent`}
-          >
-            {title[0]}
-          </span>{" "}
-          <span
-            className={`bg-gradient-to-r ${
-              isDark
-                ? "from-green-400 to-cyan-600"
-                : "from-green-600 to-cyan-700"
-            } bg-clip-text text-transparent`}
-          >
-            {title[1]}
-          </span>
-        </motion.h1>
-
-        <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 0.8 }}
-          className={`text-xl md:text-2xl mb-10 max-w-3xl mx-auto leading-relaxed ${
-            isDark ? "text-gray-300" : "text-gray-700"
-          }`}
-        >
-          {subtitle}
-        </motion.p>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5, duration: 0.8 }}
-          className="flex flex-col sm:flex-row gap-4 justify-center mt-8"
-        >
-          {cta.primary && (
-            <Link href={cta.primary.href || "#projects"}>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className={`px-8 py-4 rounded-lg font-semibold transition-all duration-300 border ${
-                  isDark
-                    ? "bg-gradient-to-r from-blue-500 to-purple-600 text-white border-blue-400 shadow-lg shadow-blue-500  hover:shadow-blue-500"
-                    : "bg-gradient-to-r from-blue-600 to-purple-700 text-white border-blue-500 shadow-lg shadow-blue-500 hover:shadow-blue-600"
-                }`}
-              >
-                {cta.primary.label || "View Projects"}
-              </motion.button>
-            </Link>
-          )}
-          {cta.secondary && (
-            <Link href={cta.secondary.href || "#stats"}>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className={`px-8 py-4 rounded-lg font-semibold border transition-all duration-300 ${
-                  isDark
-                    ? "bg-transparent text-white border-white hover:bg-white "
-                    : "bg-transparent text-gray-800 border-gray-400 hover:bg-gray-100 "
-                }`}
-              >
-                {cta.secondary.label || "Our Track Record"}
-              </motion.button>
-            </Link>
-          )}
-        </motion.div>
+        <BackgroundVideo videoPath="/Videos/background.mp4" opacity={0.22} />
+        <div className="absolute inset-0 bg-black/65" />
       </div>
 
-      {/* Scroll Indicator */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1 }}
-        className={`absolute bottom-8 left-1/2 transform -translate-x-1/2 flex flex-col items-center ${
-          isDark ? "text-white" : "text-gray-600"
-        }`}
-      >
-        <span className="text-sm mb-2">Explore Projects</span>
-        <motion.div
-          animate={{ y: [0, 10, 0] }}
-          transition={{ repeat: Infinity, duration: 1.5 }}
-          className={`w-6 h-10 border-2 rounded-full flex justify-center ${
-            isDark ? "border-white " : "border-gray-400"
-          }`}
-        >
-          <motion.div
-            animate={{ y: [0, 12, 0] }}
-            transition={{ duration: 2, repeat: Infinity }}
-            className={`w-1 h-3 rounded-full mt-2 ${
-              isDark ? "bg-white" : "bg-gray-600"
-            }`}
-          />
-        </motion.div>
-      </motion.div>
+      {/* 🌈 Gradient background (both themes) */}
+      <div
+        className={`
+          absolute inset-0
+          ${
+            isDark
+              ? "bg-[radial-gradient(ellipse_at_top_left,rgba(99,102,241,0.18),transparent_60%)]"
+              : "bg-[radial-gradient(ellipse_at_top_left,rgba(99,102,241,0.12),transparent_60%)]"
+          }
+        `}
+      />
+
+      {/* CONTENT */}
+      <div className="relative z-10 min-h-screen flex items-end">
+        <div className="w-full pb-[20vh]">
+          <div
+            className="
+              max-w-7xl
+              pl-10
+              sm:pl-16
+              md:pl-24
+              lg:pl-32
+              pr-8
+            "
+          >
+            <motion.div
+              initial={{ opacity: 0, y: 32 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, ease: "easeOut" }}
+              className="max-w-3xl"
+            >
+              <p
+                className={`
+                  uppercase tracking-widest text-xs mb-6
+                  ${isDark ? "text-indigo-400" : "text-indigo-600"}
+                `}
+              >
+                Innovation Showcase · I2EDC · IIT Jammu
+              </p>
+
+              <h1
+                className={`
+                  text-5xl md:text-6xl xl:text-7xl font-extrabold leading-tight mb-8
+                  ${isDark ? "text-white" : "text-gray-900"}
+                `}
+              >
+                {title[0]}
+                <br />
+                <span className="bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent">
+                  {title[1]}
+                </span>
+              </h1>
+
+              <p
+                className={`
+                  text-lg md:text-xl mb-10
+                  ${isDark ? "text-slate-300" : "text-gray-600"}
+                `}
+              >
+                {subtitle}
+              </p>
+
+              <div className="flex flex-col sm:flex-row gap-4">
+                <button
+                  onClick={() =>
+                    document
+                      .getElementById("projects")
+                      ?.scrollIntoView({ behavior: "smooth" })
+                  }
+                  className="
+                    px-8 py-4 rounded-full font-semibold
+                    bg-black text-white
+                    hover:bg-gray-800 transition
+                  "
+                >
+                  {cta.primary?.label || "View Projects"}
+                </button>
+
+                <button
+                  onClick={() =>
+                    document
+                      .getElementById("stats")
+                      ?.scrollIntoView({ behavior: "smooth" })
+                  }
+                  className={`
+                    px-8 py-4 rounded-full font-semibold border transition
+                    ${
+                      isDark
+                        ? "border-white/30 text-white hover:bg-white/10"
+                        : "border-gray-300 text-gray-900 hover:bg-gray-100"
+                    }
+                  `}
+                >
+                  {cta.secondary?.label || "Our Track Record"}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </div>
+
+      {/* HERO → NEXT SECTION TRANSITION */}
+      <div className="absolute bottom-0 left-0 w-full h-64 pointer-events-none">
+        <div className="absolute inset-0 hidden dark:block bg-gradient-to-t from-background via-background/80 to-transparent" />
+        <div className="absolute inset-0 block dark:hidden bg-gradient-to-t from-background to-background" />
+      </div>
     </section>
   );
 };
 
+/* --------------------------------------------------
+   FEATURED PROTOTYPES SECTION
+-------------------------------------------------- */
+
 const FeaturedPrototypesSection = () => {
   const { theme } = useTheme();
+  const mounted = useMounted();
+  const isDark = mounted && theme === "dark";
   const { content } = useContent();
-  const isDark = theme === "dark";
+  
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedPrototype, setSelectedPrototype] = useState(null);
@@ -211,17 +239,6 @@ const FeaturedPrototypesSection = () => {
         : [],
     [featuredContent.prototypes]
   );
-
-  const sectionBg = isDark
-    ? "bg-gradient-to-br from-slate-900 via-blue-900  to-slate-900"
-    : "bg-gradient-to-br from-gray-50 via-blue-50  to-gray-50";
-
-  const cardBg = isDark
-    ? "bg-white  backdrop-blur-sm border-white  hover:border-blue-400 "
-    : "bg-white  backdrop-blur-sm border-gray-200 hover:border-blue-400 ";
-
-  const titleColor = isDark ? "text-white" : "text-gray-900";
-  const textColor = isDark ? "text-gray-300" : "text-gray-700";
 
   // Use statusMap from content or fallback
   const statusColors = featuredContent.statusMap || {
@@ -287,13 +304,9 @@ const FeaturedPrototypesSection = () => {
   // No data state
   if (prototypes.length === 0) {
     return (
-      <section
-        className={`min-h-screen py-20 flex items-center justify-center ${sectionBg}`}
-      >
-        <div className="text-center">
-          <p
-            className={`text-lg ${isDark ? "text-gray-300" : "text-gray-700"}`}
-          >
+      <section id="projects" className="relative py-32 px-6 bg-background flex justify-center">
+        <div className="max-w-7xl w-full text-center">
+          <p className="text-muted-foreground">
             No projects available at the moment.
           </p>
         </div>
@@ -302,38 +315,21 @@ const FeaturedPrototypesSection = () => {
   }
 
   return (
-    <section
-      className={`relative w-full min-h-screen py-20 ${sectionBg}`}
-      id="projects"
-    >
-      <div className="relative z-10 px-4 max-w-7xl mx-auto">
+    <section id="projects" className="relative py-32 px-6 bg-background flex justify-center">
+      <div className="max-w-7xl w-full">
         <motion.h2
-          className={`text-4xl md:text-5xl font-bold text-center mb-4 ${titleColor}`}
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7 }}
-          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+          className="text-4xl md:text-5xl font-bold mb-4 text-center"
         >
-          {featuredContent.heading || "Featured Projects"}{" "}
-          <span
-            className={`bg-gradient-to-r ${
-              isDark ? "from-blue-400 to-cyan-400" : "from-blue-600 to-cyan-600"
-            } bg-clip-text text-transparent`}
-          >
-            Projects
-          </span>
+          {featuredContent.heading || "Featured Projects"}
         </motion.h2>
 
-        <motion.p
-          className={`text-lg text-center mb-12 max-w-2xl mx-auto ${textColor}`}
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.2 }}
-          viewport={{ once: true, margin: "-100px" }}
-        >
+        <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-16 text-center">
           {featuredContent.subheading ||
             "Explore groundbreaking prototypes developed by our talented student innovators"}
-        </motion.p>
+        </p>
 
         {/* Search and Filter Bar */}
         <motion.div
@@ -341,17 +337,17 @@ const FeaturedPrototypesSection = () => {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.3 }}
-          viewport={{ once: true, margin: "-100px" }}
+          viewport={{ once: true }}
         >
           <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
             <Input
               placeholder={
                 featuredContent.searchPlaceholder || "Search projects..."
               }
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
+              className="pl-10 glass"
             />
           </div>
           <div className="flex gap-2 overflow-x-auto pb-2 lg:pb-0">
@@ -362,7 +358,7 @@ const FeaturedPrototypesSection = () => {
                   selectedCategory === category.id ? "default" : "outline"
                 }
                 onClick={() => setSelectedCategory(category.id)}
-                className="whitespace-nowrap"
+                className={`whitespace-nowrap ${selectedCategory === category.id ? 'bg-black hover:bg-gray-800 text-white' : 'border-gray-300 dark:border-gray-600'}`}
               >
                 {category.name}
                 <Badge variant="secondary" className="ml-2">
@@ -380,11 +376,11 @@ const FeaturedPrototypesSection = () => {
               key={prototype.id}
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: index * 0.1 }}
-              viewport={{ once: true, margin: "-100px" }}
+              transition={{ delay: index * 0.1, duration: 0.6 }}
+              viewport={{ once: true }}
             >
               <Card
-                className={`h-full transition-all duration-300 hover:shadow-xl cursor-pointer pt-0 ${cardBg}`}
+                className="glass glass-hover h-full cursor-pointer group"
                 onClick={() => openOverlay(prototype)}
               >
                 {/* Project Image */}
@@ -392,7 +388,7 @@ const FeaturedPrototypesSection = () => {
                   <img
                     src={prototype.images?.[0]}
                     alt={prototype.title || "Project image"}
-                    className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                   />
                   <div className="absolute top-3 right-3">
                     <Badge
@@ -406,10 +402,10 @@ const FeaturedPrototypesSection = () => {
                 </div>
 
                 <CardHeader className="pb-3">
-                  <CardTitle className={`text-xl mb-2 ${titleColor}`}>
+                  <CardTitle className="text-xl mb-2 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
                     {prototype.title || "Untitled Project"}
                   </CardTitle>
-                  <CardDescription className={textColor}>
+                  <CardDescription className="text-muted-foreground">
                     {prototype.description || "No description available"}
                   </CardDescription>
                 </CardHeader>
@@ -426,24 +422,24 @@ const FeaturedPrototypesSection = () => {
                   {/* Technologies */}
                   <div className="flex flex-wrap gap-1">
                     {prototype.technologies?.map((tech) => (
-                      <Badge key={tech} variant="outline" className="text-xs">
+                      <Badge key={tech} variant="outline" className="text-xs border-gray-300 dark:border-gray-600">
                         <Tag className="w-3 h-3 mr-1" />
                         {tech}
                       </Badge>
                     )) || (
-                      <Badge variant="outline" className="text-xs">
+                      <Badge variant="outline" className="text-xs border-gray-300 dark:border-gray-600">
                         No technologies listed
                       </Badge>
                     )}
                   </div>
                 </CardContent>
 
-                <CardFooter className="flex gap-2 pt-3 border-t">
+                <CardFooter className="flex gap-2 pt-3 border-t border-gray-100 dark:border-gray-700">
                   {prototype.github && (
                     <Button
                       variant="outline"
                       size="sm"
-                      className="flex-1"
+                      className="flex-1 border-gray-300 dark:border-gray-600"
                       onClick={(e) => {
                         e.stopPropagation();
                         window.open(prototype.github, "_blank");
@@ -456,7 +452,7 @@ const FeaturedPrototypesSection = () => {
                   {prototype.demo && (
                     <Button
                       size="sm"
-                      className="flex-1"
+                      className="flex-1 bg-black hover:bg-gray-800 text-white"
                       onClick={(e) => {
                         e.stopPropagation();
                         window.open(prototype.demo, "_blank");
@@ -470,7 +466,7 @@ const FeaturedPrototypesSection = () => {
                     <Button
                       variant="outline"
                       size="sm"
-                      className="flex-1"
+                      className="flex-1 border-gray-300 dark:border-gray-600"
                       disabled
                     >
                       Details Coming Soon
@@ -479,6 +475,7 @@ const FeaturedPrototypesSection = () => {
                   <Button
                     variant="ghost"
                     size="sm"
+                    className="opacity-0 group-hover:opacity-100 transition-opacity"
                     onClick={(e) => {
                       e.stopPropagation();
                       openOverlay(prototype);
@@ -498,9 +495,9 @@ const FeaturedPrototypesSection = () => {
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             transition={{ duration: 0.6 }}
-            viewport={{ once: true, margin: "-100px" }}
+            viewport={{ once: true }}
           >
-            <p className={`text-lg ${textColor}`}>
+            <p className="text-muted-foreground">
               {featuredContent.noResults ||
                 "No projects found matching your criteria. Try adjusting your search filters."}
             </p>
@@ -511,22 +508,22 @@ const FeaturedPrototypesSection = () => {
       {/* Project Detail Overlay */}
       {selectedPrototype && (
         <div
-          className={`fixed inset-0 z-50 flex items-center justify-center p-4 transition-all duration-300 ${
-            isOverlayOpen
-              ? "bg-black  backdrop-blur-sm"
-              : "bg-black/0 backdrop-blur-0"
+          className={`fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm transition-all duration-300 ${
+            isOverlayOpen ? "opacity-100" : "opacity-0 pointer-events-none"
           }`}
+          onClick={closeOverlay}
         >
           <div
             className={`bg-white dark:bg-gray-900 rounded-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden shadow-2xl transform transition-all duration-300 ${
               isOverlayOpen ? "scale-100 opacity-100" : "scale-95 opacity-0"
             }`}
+            onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="relative bg-gradient-to-r from-blue-600 to-purple-600 p-6 text-white">
+            <div className="relative bg-gradient-to-r from-indigo-500 to-purple-500 p-6 text-white">
               <button
                 onClick={closeOverlay}
-                className="absolute top-4 right-4 p-2 rounded-full bg-white  hover:bg-white  transition-colors"
+                className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -535,7 +532,7 @@ const FeaturedPrototypesSection = () => {
                 <h2 className="text-3xl font-bold mb-2">
                   {selectedPrototype.title || "Untitled Project"}
                 </h2>
-                <p className="text-blue-100 text-lg">
+                <p className="text-indigo-100 text-lg">
                   {selectedPrototype.description || "No description available"}
                 </p>
               </div>
@@ -551,9 +548,7 @@ const FeaturedPrototypesSection = () => {
                       <div key={index} className="rounded-lg overflow-hidden">
                         <img
                           src={image}
-                          alt={`${
-                            selectedPrototype.title || "Project"
-                          } - Image ${index + 1}`}
+                          alt={`${selectedPrototype.title || "Project"} - Image ${index + 1}`}
                           className="w-full h-48 object-cover hover:scale-105 transition-transform duration-300 cursor-pointer"
                           onError={(e) => {
                             e.target.style.display = "none";
@@ -562,7 +557,7 @@ const FeaturedPrototypesSection = () => {
                       </div>
                     )) || (
                       <div className="col-span-3 text-center py-8">
-                        <p className="text-gray-500">No images available</p>
+                        <p className="text-muted-foreground">No images available</p>
                       </div>
                     )}
                   </div>
@@ -573,52 +568,28 @@ const FeaturedPrototypesSection = () => {
                   <ReactMarkdown
                     components={{
                       h1: ({ node, ...props }) => (
-                        <h1
-                          className="text-2xl font-bold text-gray-900 dark:text-white mb-4 mt-6"
-                          {...props}
-                        />
+                        <h1 className="text-2xl font-bold mb-4 mt-6 border-b pb-2" {...props} />
                       ),
                       h2: ({ node, ...props }) => (
-                        <h2
-                          className="text-xl font-bold text-gray-900 dark:text-white mb-3 mt-5"
-                          {...props}
-                        />
+                        <h2 className="text-xl font-bold mb-3 mt-5" {...props} />
                       ),
                       h3: ({ node, ...props }) => (
-                        <h3
-                          className="text-lg font-bold text-gray-800 dark:text-gray-200 mb-2 mt-4"
-                          {...props}
-                        />
+                        <h3 className="text-lg font-bold mb-2 mt-4" {...props} />
                       ),
                       p: ({ node, ...props }) => (
-                        <p
-                          className="text-gray-700 dark:text-gray-300 mb-4 leading-relaxed"
-                          {...props}
-                        />
+                        <p className="mb-4 leading-relaxed" {...props} />
                       ),
                       ul: ({ node, ...props }) => (
-                        <ul
-                          className="list-disc list-inside text-gray-700 dark:text-gray-300 mb-4 space-y-1"
-                          {...props}
-                        />
+                        <ul className="list-disc list-inside mb-4 space-y-2" {...props} />
                       ),
                       ol: ({ node, ...props }) => (
-                        <ol
-                          className="list-decimal list-inside text-gray-700 dark:text-gray-300 mb-4 space-y-1"
-                          {...props}
-                        />
+                        <ol className="list-decimal list-inside mb-4 space-y-2" {...props} />
                       ),
                       li: ({ node, ...props }) => (
-                        <li
-                          className="text-gray-700 dark:text-gray-300"
-                          {...props}
-                        />
+                        <li {...props} />
                       ),
                       strong: ({ node, ...props }) => (
-                        <strong
-                          className="font-bold text-gray-900 dark:text-white"
-                          {...props}
-                        />
+                        <strong className="font-bold" {...props} />
                       ),
                       a: ({ node, ...props }) => (
                         <a
@@ -639,30 +610,27 @@ const FeaturedPrototypesSection = () => {
 
                 {/* Project Metadata */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                  <div className="bg-gray-50 dark:bg-gray-800  rounded-xl p-6">
-                    <h3 className="font-semibold text-lg mb-4 flex items-center gap-2 text-gray-900 dark:text-white">
-                      <Users className="w-5 h-5 text-blue-600" />
+                  <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6 glass">
+                    <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
+                      <Users className="w-5 h-5 text-indigo-600" />
                       Team Members
                     </h3>
                     <div className="space-y-2">
                       {selectedPrototype.team?.map((member, index) => (
-                        <div
-                          key={index}
-                          className="flex items-center gap-2 text-sm"
-                        >
-                          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                          <span className="text-gray-700 dark:text-gray-300">
+                        <div key={index} className="flex items-center gap-2 text-sm">
+                          <div className="w-2 h-2 bg-indigo-500 rounded-full"></div>
+                          <span className="text-muted-foreground">
                             {member}
                           </span>
                         </div>
                       )) || (
-                        <p className="text-gray-500">No team members listed</p>
+                        <p className="text-muted-foreground">No team members listed</p>
                       )}
                     </div>
                   </div>
 
-                  <div className="bg-gray-50 dark:bg-gray-800  rounded-xl p-6">
-                    <h3 className="font-semibold text-lg mb-4 flex items-center gap-2 text-gray-900 dark:text-white">
+                  <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6 glass">
+                    <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
                       <Tag className="w-5 h-5 text-green-600" />
                       Technologies Used
                     </h3>
@@ -683,12 +651,13 @@ const FeaturedPrototypesSection = () => {
             </div>
 
             {/* Footer Actions */}
-            <div className="border-t border-gray-200 dark:border-gray-700 p-6 bg-gray-50 dark:bg-gray-800 ">
+            <div className="border-t border-gray-200 dark:border-gray-700 p-6 bg-gray-50 dark:bg-gray-800/50">
               <div className="flex flex-col sm:flex-row gap-4 justify-between items-center">
                 <div className="flex items-center gap-4">
                   {selectedPrototype.github && (
                     <Button
                       variant="outline"
+                      className="border-gray-300 dark:border-gray-600"
                       onClick={() =>
                         window.open(selectedPrototype.github, "_blank")
                       }
@@ -699,6 +668,7 @@ const FeaturedPrototypesSection = () => {
                   )}
                   {selectedPrototype.demo && (
                     <Button
+                      className="bg-black hover:bg-gray-800 text-white"
                       onClick={() =>
                         window.open(selectedPrototype.demo, "_blank")
                       }
@@ -709,7 +679,7 @@ const FeaturedPrototypesSection = () => {
                   )}
                 </div>
                 <div className="flex gap-3">
-                  <Button variant="outline" onClick={closeOverlay}>
+                  <Button variant="outline" onClick={closeOverlay} className="border-gray-300 dark:border-gray-600">
                     Close
                   </Button>
                 </div>
@@ -722,70 +692,64 @@ const FeaturedPrototypesSection = () => {
   );
 };
 
+/* --------------------------------------------------
+   CATEGORIES SECTION
+-------------------------------------------------- */
+
 const CategoriesSection = () => {
-  const { theme } = useTheme();
   const { content } = useContent();
-  const isDark = theme === "dark";
 
   const categoriesContent = content?.all_prototypes?.categories || {};
   const categories = categoriesContent.cards || [];
 
-  const sectionBg = isDark
-    ? "bg-gradient-to-br from-slate-900 via-purple-900  to-slate-900"
-    : "bg-gradient-to-br from-purple-50 via-pink-50  to-rose-50 ";
-
-  const cardBg = isDark
-    ? "bg-white  backdrop-blur-sm border-white  hover:border-purple-400 "
-    : "bg-white  backdrop-blur-sm border-gray-200 hover:border-purple-400 ";
-
-  const titleColor = isDark ? "text-white" : "text-gray-900";
-  const textColor = isDark ? "text-gray-300" : "text-gray-700";
-
   return (
-    <section
-      className={`relative w-full min-h-screen flex items-center justify-center py-20 ${sectionBg}`}
-    >
-      <div className="relative z-10 px-4 max-w-6xl mx-auto">
+    <section className="relative py-32 px-6 bg-background flex justify-center">
+      <div className="max-w-7xl w-full text-center">
         <motion.h2
-          className={`text-4xl md:text-5xl font-bold text-center mb-16 ${titleColor}`}
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7 }}
-          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+          className="text-4xl md:text-5xl font-bold mb-4"
         >
-          {categoriesContent.heading || "Project"}{" "}
-          <span
-            className={`bg-gradient-to-r ${
-              isDark
-                ? "from-purple-400 to-pink-400"
-                : "from-purple-600 to-pink-600"
-            } bg-clip-text text-transparent`}
-          >
-            Categories
-          </span>
+          {categoriesContent.heading || "Project Categories"}
         </motion.h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-16">
+          Discover projects across various domains and technologies
+        </p>
+
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {categories.map((category, index) => (
             <motion.div
               key={index}
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: index * 0.1 }}
-              viewport={{ once: true, margin: "-100px" }}
-              whileHover={{ y: -5, scale: 1.02 }}
-              className={`rounded-2xl p-6 border transition-all duration-300 hover:shadow-lg ${cardBg}`}
+              transition={{ delay: index * 0.1, duration: 0.6 }}
+              className="glass glass-hover p-6 text-left"
             >
               <div
-                className={`w-12 h-12 rounded-lg bg-gradient-to-r ${category.gradient} mb-4 flex items-center justify-center text-white text-xl`}
+                className={`
+                  mb-4
+                  inline-flex
+                  h-11 w-11
+                  items-center justify-center
+                  rounded-xl
+                  bg-gradient-to-r ${category.gradient || "from-indigo-500 to-purple-500"}
+                  shadow-lg
+                `}
               >
                 {category.icon}
               </div>
-              <h3 className={`text-xl font-bold mb-2 ${titleColor}`}>
-                {category.title}
-              </h3>
-              <p className={`mb-3 ${textColor}`}>{category.description}</p>
-              <Badge variant="secondary">{category.count}</Badge>
+
+              <h3 className="text-xl font-bold mb-2">{category.title}</h3>
+
+              <p className="text-sm text-muted-foreground mb-3">
+                {category.description}
+              </p>
+
+              <Badge variant="secondary" className="bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300">
+                {category.count || "0"} projects
+              </Badge>
             </motion.div>
           ))}
         </div>
@@ -794,46 +758,32 @@ const CategoriesSection = () => {
   );
 };
 
+/* --------------------------------------------------
+   SHOWCASE SECTION
+-------------------------------------------------- */
+
 const ShowcaseSection = () => {
-  const { theme } = useTheme();
   const { content } = useContent();
-  const isDark = theme === "dark";
 
   const showcaseContent = content?.all_prototypes?.showcase || {};
   const stats = showcaseContent.stats || [];
   const summary = showcaseContent.summary || "";
 
-  const sectionBg = isDark
-    ? "bg-gradient-to-br from-slate-900 via-green-900  to-slate-900"
-    : "bg-gradient-to-br from-green-50  via-cyan-50  to-blue-50 ";
-
-  const titleColor = isDark ? "text-white" : "text-gray-900";
-  const textColor = isDark ? "text-gray-300" : "text-gray-700";
-
   return (
-    <section
-      className={`relative w-full min-h-screen flex items-center justify-center py-20 ${sectionBg}`}
-      id="stats"
-    >
-      <div className="relative z-10 px-4 max-w-6xl mx-auto">
+    <section id="stats" className="relative py-32 px-6 bg-background flex justify-center">
+      <div className="max-w-7xl w-full text-center">
         <motion.h2
-          className={`text-4xl md:text-5xl font-bold text-center mb-16 ${titleColor}`}
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7 }}
-          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+          className="text-4xl md:text-5xl font-bold mb-4"
         >
-          {showcaseContent.heading || "Innovation"}{" "}
-          <span
-            className={`bg-gradient-to-r ${
-              isDark
-                ? "from-green-400 to-cyan-400"
-                : "from-green-600 to-cyan-600"
-            } bg-clip-text text-transparent`}
-          >
-            Showcase
-          </span>
+          Innovation Showcase
         </motion.h2>
+
+        <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-16">
+          Our impact and achievements in student innovation
+        </p>
 
         {/* Stats */}
         <motion.div
@@ -841,18 +791,14 @@ const ShowcaseSection = () => {
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
-          viewport={{ once: true, margin: "-100px" }}
+          viewport={{ once: true }}
         >
           {stats.map((stat, index) => (
             <div key={index} className="text-center">
-              <div
-                className={`text-3xl md:text-4xl font-bold mb-2 ${
-                  isDark ? "text-white" : "text-gray-900"
-                }`}
-              >
+              <div className="text-3xl md:text-4xl font-bold mb-2 text-indigo-600 dark:text-indigo-400">
                 {stat.number}
               </div>
-              <div className={textColor}>{stat.label}</div>
+              <div className="text-muted-foreground">{stat.label}</div>
             </div>
           ))}
         </motion.div>
@@ -862,14 +808,14 @@ const ShowcaseSection = () => {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.4 }}
-          viewport={{ once: true, margin: "-100px" }}
+          viewport={{ once: true }}
         >
-          <p className={`text-xl max-w-3xl mx-auto mb-8 ${textColor}`}>
+          <p className="text-xl max-w-3xl mx-auto mb-8 text-muted-foreground">
             {summary}
           </p>
           {showcaseContent.cta && (
-            <Button size="lg" asChild>
-              <Link href={showcaseContent.cta.href || "#"}>
+            <Button size="lg" className="bg-black hover:bg-gray-800 text-white">
+              <Link href={showcaseContent.cta.href || "#"} className="flex items-center">
                 {showcaseContent.cta.label || "View All Projects"}
                 <ExternalLink className="w-4 h-4 ml-2" />
               </Link>
@@ -881,68 +827,49 @@ const ShowcaseSection = () => {
   );
 };
 
+/* --------------------------------------------------
+   GET INVOLVED SECTION
+-------------------------------------------------- */
+
 const GetInvolvedSection = () => {
-  const { theme } = useTheme();
   const { content } = useContent();
-  const isDark = theme === "dark";
 
   const getInvolvedContent = content?.all_prototypes?.getInvolved || {};
   const steps = getInvolvedContent.steps || [];
   const summary = getInvolvedContent.summary || "";
 
-  const sectionBg = isDark
-    ? "bg-gradient-to-br from-slate-900 via-orange-900  to-slate-900"
-    : "bg-gradient-to-br from-orange-50  via-red-50  to-pink-50";
-
-  const cardBg = isDark
-    ? "bg-white  backdrop-blur-sm border-white  hover:border-orange-400 "
-    : "bg-whited  backdrop-blur-sm border-gray-200 hover:border-orange-400 ";
-
-  const titleColor = isDark ? "text-white" : "text-gray-900";
-  const textColor = isDark ? "text-gray-300" : "text-gray-700";
-
   return (
-    <section
-      className={`relative w-full min-h-screen flex items-center justify-center py-20 ${sectionBg}`}
-    >
-      <div className="relative z-10 px-4 max-w-6xl mx-auto">
+    <section className="relative py-32 px-6 bg-background flex justify-center">
+      <div className="max-w-7xl w-full text-center">
         <motion.h2
-          className={`text-4xl md:text-5xl font-bold text-center mb-16 ${titleColor}`}
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7 }}
-          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+          className="text-4xl md:text-5xl font-bold mb-4"
         >
-          {getInvolvedContent.heading || "Get"}{" "}
-          <span
-            className={`bg-gradient-to-r ${
-              isDark
-                ? "from-orange-400 to-pink-400"
-                : "from-orange-600 to-pink-600"
-            } bg-clip-text text-transparent`}
-          >
-            Involved
-          </span>
+          Get Involved
         </motion.h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+        <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-16">
+          Start your innovation journey with I2EDC
+        </p>
+
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
           {steps.map((step, index) => (
             <motion.div
               key={index}
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: index * 0.1 }}
-              viewport={{ once: true, margin: "-100px" }}
-              className={`rounded-2xl p-6 border transition-all duration-300 ${cardBg}`}
+              transition={{ delay: index * 0.1, duration: 0.6 }}
+              viewport={{ once: true }}
+              className="glass glass-hover p-6 text-left"
             >
               <div className="text-3xl mb-4">{step.icon}</div>
               <div className="text-sm font-semibold text-orange-600 dark:text-orange-400 mb-2">
                 STEP {step.step}
               </div>
-              <h3 className={`text-xl font-bold mb-3 ${titleColor}`}>
-                {step.title}
-              </h3>
-              <p className={textColor}>{step.description}</p>
+              <h3 className="text-xl font-bold mb-3">{step.title}</h3>
+              <p className="text-muted-foreground">{step.description}</p>
             </motion.div>
           ))}
         </div>
@@ -952,17 +879,16 @@ const GetInvolvedSection = () => {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.4 }}
-          viewport={{ once: true, margin: "-100px" }}
+          viewport={{ once: true }}
         >
-          <p className={`text-xl max-w-3xl mx-auto mb-8 ${textColor}`}>
+          <p className="text-xl max-w-3xl mx-auto mb-8 text-muted-foreground">
             {summary}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             {getInvolvedContent.primaryCta && (
               <Button
                 size="lg"
-                className="bg-orange-600 hover:bg-orange-700"
-                asChild
+                className="bg-black hover:bg-gray-800 text-white"
               >
                 <Link href={getInvolvedContent.primaryCta.href || "#"}>
                   {getInvolvedContent.primaryCta.label || "Start Your Project"}
@@ -970,7 +896,7 @@ const GetInvolvedSection = () => {
               </Button>
             )}
             {getInvolvedContent.secondaryCta && (
-              <Button variant="outline" size="lg" asChild>
+              <Button variant="outline" size="lg" className="border-gray-300 dark:border-gray-600">
                 <Link href={getInvolvedContent.secondaryCta.href || "#"}>
                   {getInvolvedContent.secondaryCta.label || "Join as Mentor"}
                 </Link>

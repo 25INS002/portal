@@ -1,4 +1,5 @@
 "use client";
+
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useTheme } from "next-themes";
@@ -42,86 +43,81 @@ export default function EventsSection() {
     }
   };
 
-  const formatDate = (dateString: string) => {
-    try {
-      return new Date(dateString).toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-      });
-    } catch {
-      return "Invalid Date";
-    }
-  };
-
-  // 🎨 Theme-based styles
-  const sectionBg = isDark
-    ? "bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900"
-    : "bg-gradient-to-br from-blue-50 via-cyan-50 to-indigo-50";
-
-  const titleColor = isDark ? "text-white" : "text-gray-900";
-  const subtitleGradient = isDark
-    ? "from-cyan-400 to-blue-400"
-    : "from-blue-600 to-cyan-600";
-
-  const cardBg = isDark
-    ? "bg-white/5 backdrop-blur-sm border-white/10 hover:border-white/20"
-    : "bg-white/80 backdrop-blur-sm border-gray-200 hover:border-gray-300";
-
-  const dateColor = isDark ? "text-cyan-400" : "text-blue-600";
-  const eventTitleColor = isDark ? "text-white" : "text-gray-900";
-  const descriptionColor = isDark ? "text-gray-300" : "text-gray-700";
-  const iconGradient = isDark
-    ? "from-blue-500 to-cyan-500"
-    : "from-blue-600 to-cyan-600";
+  const formatDate = (dateString: string) =>
+    new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
 
   const handleEventClick = (id: number) => {
     router.push(`/pages/events/${id}`);
   };
 
   return (
-    <section
-      className={`relative w-full min-h-screen flex items-center justify-center ${sectionBg}`}
-    >
-      <div className="relative z-10 px-6 max-w-6xl mx-auto">
+    <section className="relative w-full bg-background overflow-hidden">
+      {/* HISTORY → EVENTS TRANSITION */}
+      <div className="absolute top-0 left-0 w-full h-40 pointer-events-none">
+        <div className="absolute inset-0 hidden dark:block bg-gradient-to-b from-background via-background/80 to-transparent" />
+        <div className="absolute inset-0 block dark:hidden bg-gradient-to-b from-background to-background" />
+      </div>
+
+      <div className="relative z-10 max-w-7xl mx-auto px-6 md:px-20 pt-32 pb-28">
+        {/* TITLE */}
         <motion.h2
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          className={`text-4xl md:text-5xl font-bold ${titleColor} mb-12 text-center`}
+          transition={{ duration: 0.6 }}
+          viewport={{ once: true }}
+          className="h2 text-center mb-16"
         >
           Upcoming{" "}
-          <span
-            className={`text-transparent bg-gradient-to-r ${subtitleGradient} bg-clip-text`}
-          >
+          <span className="bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
             Events
           </span>
         </motion.h2>
 
+        {/* CONTENT */}
         {loading ? (
           <p className="text-center text-muted-foreground">
-            Loading events...
+            Loading events…
           </p>
         ) : events.length === 0 ? (
           <p className="text-center text-muted-foreground">
             No events available right now. Check back later!
           </p>
         ) : (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {events.slice(0, 6).map((event, index) => (
               <motion.div
                 key={event.id}
-                initial={{ opacity: 0, y: 30 }}
+                initial={{ opacity: 0, y: 24 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.2 }}
-                className={`rounded-2xl p-8 border transition-all duration-300 group hover:shadow-lg cursor-pointer ${cardBg}`}
+                transition={{ duration: 0.5, delay: index * 0.08 }}
+                viewport={{ once: true }}
                 onClick={() => handleEventClick(event.id)}
+                className="
+                  glass
+                  glass-hover
+                  p-6
+                  cursor-pointer
+                  group
+                "
               >
+                {/* ICON */}
                 <div
-                  className={`w-12 h-12 rounded-lg bg-gradient-to-r ${iconGradient} mb-6 flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}
+                  className="
+                    w-11 h-11
+                    rounded-lg
+                    bg-gradient-to-r from-blue-500 to-purple-500
+                    flex items-center justify-center
+                    mb-4
+                    group-hover:scale-110
+                    transition-transform
+                  "
                 >
                   <svg
-                    className="w-6 h-6 text-white"
+                    className="w-5 h-5 text-white"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -134,19 +130,19 @@ export default function EventsSection() {
                     />
                   </svg>
                 </div>
-                <span
-                  className={`${dateColor} text-sm font-semibold mb-2 block`}
-                >
+
+                {/* DATE */}
+                <p className="text-sm font-semibold text-blue-500 dark:text-cyan-400 mb-1">
                   {formatDate(event.date)}
-                </span>
-                <h3
-                  className={`text-xl font-bold ${eventTitleColor} mb-3 line-clamp-1`}
-                >
+                </p>
+
+                {/* TITLE */}
+                <h3 className="h4 mb-2 line-clamp-1">
                   {event.name}
                 </h3>
-                <p
-                  className={`${descriptionColor} leading-relaxed line-clamp-3`}
-                >
+
+                {/* DESCRIPTION */}
+                <p className="text-sm text-muted-foreground line-clamp-3">
                   {event.description}
                 </p>
               </motion.div>

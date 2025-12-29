@@ -1,396 +1,265 @@
-// Hero.tsx - Updated version
 "use client";
-
+import SectionDivider from "../SectionDivider";
 import { motion } from "framer-motion";
-import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import { useContent } from "@/context/ContentContext";
+import BackgroundVideo from "@/components/animations/BackgroundVideo/BackgroundVideo";
+import { useTheme } from "next-themes";
 import ServicesSection from "./ServicesSection";
 import PrototypesSection from "./PrototypesSection";
 import TeamSection from "./TeamSection";
-import { useTheme } from "next-themes";
 import HistorySection from "./HistorySection";
 import EventsSection from "./EventSection";
-import { useContent } from "@/context/ContentContext";
-const scrollToSection = (id: string) => {
-  const el = document.getElementById(id);
-  if (el) {
-    el.scrollIntoView({ behavior: "smooth" });
-  }
-};
+import { useMounted } from "@/hooks/useMounted";
 export default function HomePage() {
-  const [currentSection, setCurrentSection] = useState(0);
-  const isScrolling = useRef(false);
-  const sections = useRef<HTMLElement[]>([]);
-
-  // Register sections
-  useEffect(() => {
-    const updateSections = () => {
-      sections.current = Array.from(document.querySelectorAll("section"));
-    };
-    updateSections();
-    window.addEventListener("resize", updateSections);
-    return () => window.removeEventListener("resize", updateSections);
-  }, []);
-
   return (
-    <div className="relative">
+    <div className="relative w-full overflow-x-hidden">
       <HeroSection />
       <AboutSection />
+      <SectionDivider />
       <ServicesSection />
+      <SectionDivider />
       <HistorySection />
+      <SectionDivider />
       <EventsSection />
+      <SectionDivider />
       <PrototypesSection />
+      <SectionDivider />
       <TeamSection />
     </div>
   );
 }
 
+/* --------------------------------------------------
+   HERO SECTION — AMBIENT VIDEO + ANIMATED GRADIENT
+-------------------------------------------------- */
+
 export const HeroSection = () => {
+  const { content } = useContent();
   const { theme } = useTheme();
-  const isDark = theme === "dark";
-  const { content, loading, error } = useContent();
+  const mounted = useMounted();
+  const isDark = mounted && theme === "dark";
 
-  // Loading state
-  if (loading && !content.hero) {
-    return (
-      <section className="relative w-full h-screen overflow-hidden flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p
-            className={`text-lg ${isDark ? "text-gray-300" : "text-gray-700"}`}
-          >
-            Loading...
-          </p>
-        </div>
-      </section>
-    );
-  }
-
-  // Error state
-  if (error && !content.hero) {
-    return (
-      <section className="relative w-full h-screen overflow-hidden flex items-center justify-center">
-        <div className="text-center">
-          <p className={`text-lg text-red-500 mb-4`}>Error loading content</p>
-          <button
-            onClick={() => window.location.reload()}
-            className={`px-6 py-3 rounded-lg font-semibold ${
-              isDark
-                ? "bg-white/10 text-white border border-white/30"
-                : "bg-gray-100 text-gray-800 border border-gray-300"
-            }`}
-          >
-            Retry
-          </button>
-        </div>
-      </section>
-    );
-  }
-
-  // Fallback content if no hero data
-  const heroData = content.hero || {
-    headline: {
-      parts: [
-        { text: "Innovate.", style: "gradient-blue-purple" },
-        { text: "Create.", style: "gradient-green-cyan" },
-        { text: "Transform.", style: "gradient-orange-pink" },
-      ],
-    },
+  const heroData = content.hero ?? {
     description:
-      "The Institute Innovation Entrepreneurship Development Cell (I2EDC) is a hub for student innovators and entrepreneurs. We provide resources, mentorship, and a vibrant community to help you bring your ideas to life.",
-    buttons: [
-      { text: "Explore I2EDC", action: "scroll_to_explore" },
-      { text: "Join Community", action: "navigate_to_auth" },
-    ],
-  };
-
-  const getGradientClass = (style: string, isDark: boolean) => {
-    const gradients: { [key: string]: { dark: string; light: string } } = {
-      "gradient-blue-purple": {
-        dark: "from-blue-400 to-purple-600",
-        light: "from-blue-600 to-purple-700",
-      },
-      "gradient-green-cyan": {
-        dark: "from-green-400 to-cyan-600",
-        light: "from-green-600 to-cyan-700",
-      },
-      "gradient-orange-pink": {
-        dark: "from-orange-400 to-pink-600",
-        light: "from-orange-600 to-pink-700",
-      },
-    };
-
-    const gradient = gradients[style] || gradients["gradient-blue-purple"];
-    return isDark ? gradient.dark : gradient.light;
-  };
-
-  return (
-    <section className="relative w-full h-screen overflow-hidden">
-      {/* Background */}
-      <div className="absolute inset-0">
-      </div>
-
-      {/* Hero Content */}
-      <div
-        className={`relative z-10 h-full flex flex-col justify-center items-center text-center px-6 ${
-          isDark ? "text-white" : "text-gray-900"
-        }`}
-      >
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          className="max-w-4xl mx-auto"
-        >
-          <h1 className="text-5xl md:text-7xl font-bold mb-6">
-            {heroData.headline.parts.map((part: any, index: any) => (
-              <span key={index}>
-                <span
-                  className={`bg-gradient-to-r ${getGradientClass(
-                    part.style,
-                    isDark
-                  )} bg-clip-text text-transparent`}
-                >
-                  {part.text}
-                </span>
-                {index < heroData.headline.parts.length - 1 && " "}
-              </span>
-            ))}
-          </h1>
-
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            className={`text-xl md:text-2xl mb-8 max-w-3xl mx-auto leading-relaxed ${
-              isDark ? "text-gray-300" : "text-gray-700"
-            }`}
-          >
-            {heroData.description}
-          </motion.p>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.4 }}
-            className="flex flex-col sm:flex-row gap-4 justify-center items-center"
-          >
-            {heroData.buttons.map((button: any, index: any) => {
-              if (button.action === "scroll_to_explore") {
-                return (
-                  <motion.button
-                    key={index}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className={`px-8 py-4 rounded-lg font-semibold transition-all duration-300 border ${
-                      isDark
-                        ? "bg-gradient-to-r from-blue-500 to-purple-600 text-white border-blue-400/30 shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40"
-                        : "bg-gradient-to-r from-blue-600 to-purple-700 text-white border-blue-500/30 shadow-lg shadow-blue-500/30 hover:shadow-blue-600/40"
-                    }`}
-                    onClick={() => scrollToSection("explore")}
-                  >
-                    {button.text}
-                  </motion.button>
-                );
-              } else if (button.action === "navigate_to_auth") {
-                return (
-                  <Link key={index} href="/auth" scroll={false}>
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      className={`px-8 py-4 rounded-lg font-semibold border transition-all duration-300 ${
-                        isDark
-                          ? "bg-transparent text-white border-white/30 hover:bg-white/10"
-                          : "bg-transparent text-gray-800 border-gray-400 hover:bg-gray-100/50"
-                      }`}
-                    >
-                      {button.text}
-                    </motion.button>
-                  </Link>
-                );
-              }
-              return null;
-            })}
-          </motion.div>
-        </motion.div>
-      </div>
-
-      {/* Scroll Indicator */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 1, delay: 1 }}
-        className="absolute bottom-8 left-1/2 transform -translate-x-1/2"
-      >
-        <motion.div
-          animate={{ y: [0, 10, 0] }}
-          transition={{ duration: 2, repeat: Infinity }}
-          className={`w-6 h-10 border-2 rounded-full flex justify-center ${
-            isDark ? "border-white/50" : "border-gray-400"
-          }`}
-        >
-          <motion.div
-            animate={{ y: [0, 12, 0] }}
-            transition={{ duration: 2, repeat: Infinity }}
-            className={`w-1 h-3 rounded-full mt-2 ${
-              isDark ? "bg-white/70" : "bg-gray-600"
-            }`}
-          />
-        </motion.div>
-      </motion.div>
-    </section>
-  );
-};
-
-const AboutSection = () => {
-  const { theme } = useTheme();
-  const isDark = theme === "dark";
-  const { content, loading, error } = useContent();
-
-  // Loading state
-  if (loading && !content.about) {
-    return (
-      <section
-        className={`relative w-full min-h-screen flex items-center justify-center ${
-          isDark
-            ? "bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900"
-            : "bg-gradient-to-br from-blue-50 via-purple-50 to-cyan-50"
-        }`}
-      >
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto mb-4"></div>
-          <p
-            className={`text-lg ${isDark ? "text-gray-300" : "text-gray-700"}`}
-          >
-            Loading about content...
-          </p>
-        </div>
-      </section>
-    );
-  }
-
-  // Error state
-  if (error && !content.about) {
-    return (
-      <section
-        className={`relative w-full min-h-screen flex items-center justify-center ${
-          isDark
-            ? "bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900"
-            : "bg-gradient-to-br from-blue-50 via-purple-50 to-cyan-50"
-        }`}
-      >
-        <div className="text-center">
-          <p className={`text-lg text-red-500 mb-4`}>
-            Error loading about content
-          </p>
-          <button
-            onClick={() => window.location.reload()}
-            className={`px-6 py-3 rounded-lg font-semibold ${
-              isDark
-                ? "bg-white/10 text-white border border-white/30"
-                : "bg-gray-100 text-gray-800 border border-gray-300"
-            }`}
-          >
-            Retry
-          </button>
-        </div>
-      </section>
-    );
-  }
-
-  // Fallback content if no about data
-  const aboutData = content.about || {
-    title: "Explore I2EDC",
-    subtitle: "Our Offerings",
-    offerings: [
-      {
-        title: "Protospace",
-        description:
-          "A collaborative workspace equipped with tools and resources for prototyping and development.",
-        gradient: "from-blue-500 to-cyan-500",
-        icon: '<svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>',
-      },
-      {
-        title: "Tinkering Lab",
-        description:
-          "A hands-on lab for experimenting with electronics, robotics, and IoT.",
-        gradient: "from-purple-500 to-pink-500",
-        icon: '<svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>',
-      },
-      {
-        title: "Machine Services",
-        description:
-          "Access to a range of specialized machines for fabrication and manufacturing.",
-        gradient: "from-orange-500 to-red-500",
-        icon: '<svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>',
-      },
-    ],
-  };
-
-  // Theme-based styles
-  const sectionBg = isDark
-    ? "bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900"
-    : "bg-gradient-to-br from-blue-50 via-purple-50 to-cyan-50";
-
-  const cardBg = isDark
-    ? "bg-white/5 backdrop-blur-sm border-white/10 hover:border-white/20"
-    : "bg-white/80 backdrop-blur-sm border-gray-200 hover:border-gray-300";
-
-  const titleColor = isDark ? "text-white" : "text-gray-900";
-  const textColor = isDark ? "text-gray-300" : "text-gray-700";
-
-  // Function to render SVG from string
-  const renderSVG = (svgString: string) => {
-    const fixed = svgString.replace(/className=/g, "class=");
-    return <div dangerouslySetInnerHTML={{ __html: fixed }} />;
+      "The Institute Innovation Entrepreneurship Development Cell (I2EDC), IIT Jammu is a hub for student innovators and entrepreneurs. We provide resources, mentorship, and a vibrant community to help bring ideas to life.",
   };
 
   return (
     <section
-      className={`relative w-full min-h-screen flex items-center justify-center ${sectionBg}`}
-      id="explore"
+      className="
+    relative w-full overflow-hidden
+    min-h-[calc(100svh-64px)]
+    pt-[64px]
+  "
     >
-      <div className="relative z-10 text-center px-6 max-w-6xl mx-auto">
+      {/* 🎥 VIDEO — always rendered (hydration-safe) */}
+      <div
+        className={`
+          absolute inset-0 transition-opacity duration-500
+          ${isDark ? "opacity-100" : "opacity-0"}
+        `}
+      >
+        <BackgroundVideo videoPath="/Videos/background.mp4" opacity={0.22} />
+        <div className="absolute inset-0 bg-black/65" />
+      </div>
+
+      {/* 🌈 Gradient background (both themes) */}
+      <div
+        className={`
+          absolute inset-0
+          ${
+            isDark
+              ? "bg-[radial-gradient(ellipse_at_top_left,rgba(99,102,241,0.18),transparent_60%)]"
+              : "bg-[radial-gradient(ellipse_at_top_left,rgba(99,102,241,0.12),transparent_60%)]"
+          }
+        `}
+      />
+
+      {/* CONTENT */}
+      <div className="relative z-10 h-screen flex items-center sm:items-end">
+        <div className="w-full pb-10 sm:pb-[14vh]">
+          <div
+            className="
+              max-w-7xl
+              pl-10
+              sm:pl-16
+              md:pl-24
+              lg:pl-32
+              pr-8
+            "
+          >
+            <motion.div
+              initial={{ opacity: 0, y: 32 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, ease: "easeOut" }}
+              className="max-w-3xl"
+            >
+              <p
+                className={`
+                  uppercase tracking-widest text-xs mb-6
+                  ${isDark ? "text-indigo-400" : "text-indigo-600"}
+                `}
+              >
+                Institute Innovation Cell · IIT Jammu
+              </p>
+
+              <h1
+                className={`
+                  text-5xl md:text-6xl xl:text-7xl font-extrabold leading-tight mb-8
+                  ${isDark ? "text-white" : "text-gray-900"}
+                `}
+              >
+                Innovate. Create.
+                <br />
+                <span className="bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent">
+                  Transform.
+                </span>
+              </h1>
+
+              <p
+                className={`
+                  text-lg md:text-xl mb-10
+                  ${isDark ? "text-slate-300" : "text-gray-600"}
+                `}
+              >
+                {heroData.description}
+              </p>
+
+             <div className="flex flex-col sm:flex-row gap-4 items-center sm:items-start">
+                <button
+                  onClick={() =>
+                    document
+                      .getElementById("explore")
+                      ?.scrollIntoView({ behavior: "smooth" })
+                  }
+                  className="
+                    px-8 py-4 rounded-full font-semibold
+                    bg-black text-white
+                    hover:bg-gray-800 transition
+                  "
+                >
+                  Explore I2EDC
+                </button>
+
+                <Link href="/auth">
+                  <button
+                    className={`
+                      px-8 py-4 rounded-full font-semibold border transition
+                      ${
+                        isDark
+                          ? "border-white/30 text-white hover:bg-white/10"
+                          : "border-gray-300 text-gray-900 hover:bg-gray-100"
+                      }
+                    `}
+                  >
+                    Join Community
+                  </button>
+                </Link>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </div>
+
+      {/* HERO → ABOUT TRANSITION */}
+      <div className="absolute bottom-0 left-0 w-full h-64 pointer-events-none">
+        <div className="absolute inset-0 hidden dark:block bg-gradient-to-t from-background via-background/80 to-transparent" />
+        <div className="absolute inset-0 block dark:hidden bg-gradient-to-t from-background to-background" />
+      </div>
+    </section>
+  );
+};
+
+const renderSVG = (svg?: string) => {
+  if (!svg) return null;
+
+  const fixed = svg.replace(/className=/g, "class=");
+  return (
+    <span
+      className="pointer-events-none"
+      dangerouslySetInnerHTML={{ __html: fixed }}
+    />
+  );
+};
+
+/* --------------------------------------------------
+   ABOUT / EXPLORE SECTION
+-------------------------------------------------- */
+const AboutSection = () => {
+  const { content } = useContent();
+
+  const about = content.about ?? {
+    title: "Explore I2EDC",
+    subtitle: "Spaces · Tools · Mentorship",
+    offerings: [
+      {
+        title: "Protospace",
+        description: "Collaborative prototyping & fabrication environment.",
+      },
+      {
+        title: "Tinkering Lab",
+        description: "Hands-on electronics, robotics & IoT workspace.",
+      },
+      {
+        title: "Machine Services",
+        description: "Access to precision manufacturing tools.",
+      },
+      {
+        title: "Innovation Support",
+        description: "Mentorship, funding & startup guidance.",
+      },
+    ],
+  };
+
+  return (
+    <section
+      id="explore"
+      className="relative py-32 px-6 bg-background flex justify-center"
+    >
+      <div className="max-w-7xl w-full text-center">
         <motion.h2
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          className={`text-4xl md:text-5xl font-bold ${titleColor} mb-4`}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+          className="h2 mb-4"
         >
-          {aboutData.title}
+          {about.title}
         </motion.h2>
 
-        <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.2 }}
-          className={`text-lg md:text-xl ${textColor} mb-12 max-w-2xl mx-auto`}
-        >
-          {aboutData.subtitle}
-        </motion.p>
+        <p className="p max-w-2xl mx-auto mb-16">{about.subtitle}</p>
 
-        <div className="grid md:grid-cols-4 gap-8">
-          {aboutData.offerings.map((item: any, index: any) => (
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {about.offerings.map((item, i) => (
             <motion.div
-              key={item.title}
+              key={i}
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: index * 0.2 }}
-              className={`rounded-2xl p-8 border transition-all duration-300 hover:shadow-lg ${cardBg}`}
+              transition={{ delay: i * 0.1, duration: 0.6 }}
+              className="glass glass-hover p-6 text-left"
             >
-              <div className="flex flex-col items-center text-center">
-                <div
-                  className={`w-16 h-16 rounded-xl bg-gradient-to-r ${item.gradient} mb-4 flex items-center justify-center`}
-                >
-                  {renderSVG(item.icon)}
-                </div>
-                <h3 className={`text-xl font-bold ${titleColor} mb-3`}>
-                  {item.title}
-                </h3>
-                <p className={`leading-relaxed ${textColor}`}>
-                  {item.description}
-                </p>
+              {/* ICON BADGE */}
+              <div
+                className={`
+          mb-4
+          inline-flex
+          h-11 w-11
+          items-center justify-center
+          rounded-xl
+          bg-gradient-to-r ${item.gradient}
+          shadow-lg
+        `}
+              >
+                {renderSVG(item.icon)}
               </div>
+
+              {/* TITLE */}
+              <h3 className="h4 mb-2">{item.title}</h3>
+
+              {/* DESCRIPTION */}
+              <p className="text-sm text-muted-foreground">
+                {item.description}
+              </p>
             </motion.div>
           ))}
         </div>

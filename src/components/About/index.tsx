@@ -1,4 +1,4 @@
-// about.tsx – null-proof, type-safe
+// about.tsx – null-proof, type-safe with consistent homepage theme
 "use client";
 
 import { motion } from "framer-motion";
@@ -6,6 +6,7 @@ import { useTheme } from "next-themes";
 import Link from "next/link";
 import { useContent } from "@/context/ContentContext";
 import { useState, useEffect, useMemo } from "react";
+import SectionDivider from "../SectionDivider";
 
 /* --------------------- TYPE DEFINITIONS --------------------------- */
 type Gradient = string;
@@ -41,17 +42,11 @@ interface Timeline {
   heading?: string;
   milestones?: { year?: string; event?: string }[];
 }
-interface Leadership {
-  heading?: string;
-  summary?: string;
-  members?: { name?: string; role?: string; bio?: string }[];
-}
 interface AboutPageData {
   hero?: Hero;
   mission?: Mission;
   values?: Values;
   timeline?: Timeline;
-  leadership?: Leadership;
 }
 
 /* --------------------- SMALL HELPERS ------------------------------ */
@@ -62,14 +57,41 @@ const safeStr = (v?: string): string => (typeof v === "string" ? v : "");
 export default function AboutPage() {
   const { content } = useContent();
   const about = content?.aboutpg as AboutPageData | undefined;
-  if (!about) return null; // still loading or missing
+  
+  // Fallback data
+  const heroFallback = {
+    title: ["Discover Our", "Innovation", "Journey"],
+    subtitle: "The Institute Innovation Entrepreneurship Development Cell (I2EDC) at IIT Jammu is dedicated to fostering innovation, entrepreneurship, and creative problem-solving among students.",
+    cta: {
+      primary: { label: "Explore Programs", href: "/programs" },
+      secondary: { label: "Join Community", href: "/auth" }
+    }
+  };
+
+  if (!about) {
+    return (
+      <div className="relative w-full overflow-x-hidden">
+        <AboutHeroSection {...heroFallback} />
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="animate-pulse text-center">
+            <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-64 mb-4 mx-auto"></div>
+            <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-48 mx-auto"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="relative">
-      <AboutHeroSection {...(about.hero ?? {})} />
+    <div className="relative w-full overflow-x-hidden">
+      <AboutHeroSection {...(about.hero ?? heroFallback)} />
+      <SectionDivider />
       <MissionSection {...(about.mission ?? {})} />
+      <SectionDivider />
       <ValuesSection {...(about.values ?? {})} />
+      <SectionDivider />
       <HistorySection {...(about.timeline ?? {})} />
+      <SectionDivider />
       <TeamSection />
     </div>
   );
@@ -78,104 +100,138 @@ export default function AboutPage() {
 /* --------------------- HERO --------------------------------------- */
 const AboutHeroSection = ({ title, subtitle, cta }: Hero) => {
   const { theme } = useTheme();
-  const isDark = theme === "dark";
+  const [mounted, setMounted] = useState(false);
+  
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+  
+  const isDark = mounted && theme === "dark";
 
   const titleSafe = safeArr(title);
   const subSafe = safeStr(subtitle);
   const primary = cta?.primary;
   const secondary = cta?.secondary;
 
-  if (!titleSafe.length && !subSafe) return null;
-
   return (
-    <section className="relative w-full h-screen overflow-hidden">
-      <div className="absolute inset-0 pointer-events-none">
-      </div>
-
+    <section className="relative min-h-screen w-full overflow-hidden">
+      {/* 🌈 Gradient background matching homepage */}
       <div
-        className={`relative z-10 h-full flex flex-col justify-center items-center text-center px-6 ${
-          isDark ? "text-white" : "text-gray-900"
-        }`}
-      >
-        {!!titleSafe.length && (
-          <motion.h1
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="font-bold text-5xl md:text-6xl lg:text-7xl mb-6"
+        className={`
+          absolute inset-0 transition-opacity duration-500
+          ${
+            isDark
+              ? "bg-[radial-gradient(ellipse_at_top_left,rgba(99,102,241,0.18),transparent_60%)]"
+              : "bg-[radial-gradient(ellipse_at_top_left,rgba(99,102,241,0.12),transparent_60%)]"
+          }
+        `}
+      />
+
+      {/* CONTENT - Matching homepage layout */}
+      <div className="relative z-10 min-h-screen flex items-end">
+        <div className="w-full pb-[20vh]">
+          <div
+            className="
+              max-w-7xl
+              pl-10
+              sm:pl-16
+              md:pl-24
+              lg:pl-32
+              pr-8
+            "
           >
-            {titleSafe.map((chunk, i) => (
-              <span
-                key={i}
-                className={`bg-gradient-to-r ${
-                  isDark
-                    ? "from-blue-400 to-purple-600"
-                    : "from-blue-600 to-purple-700"
-                } bg-clip-text text-transparent`}
+            <motion.div
+              initial={{ opacity: 0, y: 32 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, ease: "easeOut" }}
+              className="max-w-3xl"
+            >
+              {/* Small header like homepage */}
+              <p
+                className={`
+                  uppercase tracking-widest text-xs mb-6
+                  ${isDark ? "text-indigo-400" : "text-indigo-600"}
+                `}
               >
-                {chunk}
-                {i < titleSafe.length - 1 && " "}
-              </span>
-            ))}
-          </motion.h1>
-        )}
+                About · I2EDC · IIT Jammu
+              </p>
 
-        {!!subSafe && (
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3, duration: 0.8 }}
-            className={`text-xl md:text-2xl mb-10 max-w-3xl mx-auto leading-relaxed ${
-              isDark ? "text-gray-300" : "text-gray-700"
-            }`}
-          >
-            {subSafe}
-          </motion.p>
-        )}
-
-        {(primary?.label || secondary?.label) && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5, duration: 0.8 }}
-            className="flex flex-col sm:flex-row gap-4 justify-center mt-8"
-          >
-            {primary?.label && (
-              <Link href={primary.href ?? "#"}>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className={`px-8 py-4 rounded-lg font-semibold transition-all duration-300 border ${
-                    isDark
-                      ? "bg-gradient-to-r from-blue-500 to-purple-600 text-white border-blue-400/30 shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40"
-                      : "bg-gradient-to-r from-blue-600 to-purple-700 text-white border-blue-500/30 shadow-lg shadow-blue-500/30 hover:shadow-blue-600/40"
-                  }`}
+              {/* Title with gradient like homepage */}
+              {!!titleSafe.length && (
+                <h1
+                  className={`
+                    text-5xl md:text-6xl xl:text-7xl font-extrabold leading-tight mb-8
+                    ${isDark ? "text-white" : "text-gray-900"}
+                  `}
                 >
-                  {primary.label}
-                </motion.button>
-              </Link>
-            )}
+                  {titleSafe.map((chunk, i) => (
+                    <span key={i}>
+                      {chunk.includes("Innovation") || chunk.includes("Journey") ? (
+                        <span className="bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent">
+                          {chunk}
+                        </span>
+                      ) : (
+                        chunk
+                      )}
+                      {i < titleSafe.length - 1 && " "}
+                    </span>
+                  ))}
+                </h1>
+              )}
 
-            {secondary?.label && (
-              <Link href={secondary.href ?? "#"}>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className={`px-8 py-4 rounded-lg font-semibold border transition-all duration-300 ${
-                    isDark
-                      ? "bg-transparent text-white border-white/30 hover:bg-white/10"
-                      : "bg-transparent text-gray-800 border-gray-400 hover:bg-gray-100/50"
-                  }`}
+              {/* Subtitle with proper spacing */}
+              {!!subSafe && (
+                <p
+                  className={`
+                    text-lg md:text-xl mb-10 max-w-3xl
+                    ${isDark ? "text-slate-300" : "text-gray-600"}
+                  `}
                 >
-                  {secondary.label}
-                </motion.button>
-              </Link>
-            )}
-          </motion.div>
-        )}
+                  {subSafe}
+                </p>
+              )}
+
+              {/* CTA Buttons matching homepage */}
+              {(primary?.label || secondary?.label) && (
+                <div className="flex flex-col sm:flex-row gap-4">
+                  {primary?.label && (
+                    <Link href={primary.href ?? "#"}>
+                      <button
+                        className="
+                          px-8 py-4 rounded-full font-semibold
+                          bg-black text-white
+                          hover:bg-gray-800 transition
+                        "
+                      >
+                        {primary.label}
+                      </button>
+                    </Link>
+                  )}
+
+                  {secondary?.label && (
+                    <Link href={secondary.href ?? "#"}>
+                      <button
+                        className={`
+                          px-8 py-4 rounded-full font-semibold border transition
+                          ${
+                            isDark
+                              ? "border-white/30 text-white hover:bg-white/10"
+                              : "border-gray-300 text-gray-900 hover:bg-gray-100"
+                          }
+                        `}
+                      >
+                        {secondary.label}
+                      </button>
+                    </Link>
+                  )}
+                </div>
+              )}
+            </motion.div>
+          </div>
+        </div>
       </div>
 
-      {/* scroll indicator */}
+      {/* Scroll indicator */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -184,23 +240,29 @@ const AboutHeroSection = ({ title, subtitle, cta }: Hero) => {
           isDark ? "text-white" : "text-gray-600"
         }`}
       >
-        <span className="text-sm mb-2">Scroll to explore</span>
+        <span className="text-xs tracking-widest mb-2">SCROLL DOWN</span>
         <motion.div
-          animate={{ y: [0, 10, 0] }}
+          animate={{ y: [0, 8, 0] }}
           transition={{ repeat: Infinity, duration: 1.5 }}
           className={`w-6 h-10 border-2 rounded-full flex justify-center ${
             isDark ? "border-white/50" : "border-gray-400"
           }`}
         >
           <motion.div
-            animate={{ y: [0, 12, 0] }}
-            transition={{ duration: 2, repeat: Infinity }}
+            animate={{ y: [0, 8, 0] }}
+            transition={{ repeat: Infinity, duration: 1.5, delay: 0.2 }}
             className={`w-1 h-3 rounded-full mt-2 ${
               isDark ? "bg-white/70" : "bg-gray-600"
             }`}
           />
         </motion.div>
       </motion.div>
+
+      {/* HERO → NEXT SECTION TRANSITION */}
+      <div className="absolute bottom-0 left-0 w-full h-64 pointer-events-none">
+        <div className="absolute inset-0 hidden dark:block bg-gradient-to-t from-background via-background/80 to-transparent" />
+        <div className="absolute inset-0 block dark:hidden bg-gradient-to-t from-background to-background" />
+      </div>
     </section>
   );
 };
@@ -208,93 +270,106 @@ const AboutHeroSection = ({ title, subtitle, cta }: Hero) => {
 /* ------------------- MISSION -------------------------------------- */
 const MissionSection = ({ heading, paragraphs, pillars }: Mission) => {
   const { theme } = useTheme();
-  const isDark = theme === "dark";
+  const [mounted, setMounted] = useState(false);
+  
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+  
+  const isDark = mounted && theme === "dark";
 
-  const headingSafe = safeStr(heading);
-  const paraSafe = safeArr(paragraphs);
-  const pillarSafe = safeArr(pillars);
-
-  const sectionBg = isDark
-    ? "bg-gradient-to-br from-slate-900 via-blue-900/20 to-slate-900"
-    : "bg-gradient-to-br from-gray-50 via-blue-50/50 to-gray-50";
-  const cardBg = isDark
-    ? "bg-white/5 backdrop-blur-sm border-white/10 hover:border-blue-400/30"
-    : "bg-white/80 backdrop-blur-sm border-gray-200 hover:border-blue-400/30";
-  const titleColor = isDark ? "text-white" : "text-gray-900";
-  const textColor = isDark ? "text-gray-300" : "text-gray-700";
-  const accentColor = isDark ? "text-blue-400" : "text-blue-600";
-
-  if (!headingSafe && !paraSafe.length && !pillarSafe.length) return null;
+  const headingSafe = safeStr(heading) || "Our Mission";
+  const paraSafe = safeArr(paragraphs) || [
+    "To cultivate a culture of innovation and entrepreneurship at IIT Jammu by providing resources, mentorship, and opportunities for students to transform ideas into impactful solutions."
+  ];
+  const pillarSafe = safeArr(pillars) || [
+    {
+      title: "Innovation",
+      desc: "Fostering creative thinking and problem-solving skills",
+      icon: "💡",
+      gradient: "from-blue-500 to-cyan-500"
+    },
+    {
+      title: "Collaboration",
+      desc: "Building interdisciplinary teams and partnerships",
+      icon: "🤝",
+      gradient: "from-indigo-500 to-purple-500"
+    },
+    {
+      title: "Impact",
+      desc: "Creating solutions with real-world applications",
+      icon: "⚡",
+      gradient: "from-purple-500 to-pink-500"
+    }
+  ];
 
   return (
     <section
       id="mission"
-      className={`relative w-full min-h-screen flex items-center justify-center ${sectionBg}`}
+      className="relative py-32 px-6 bg-background flex justify-center"
     >
-      <div className="relative z-10 px-4 max-w-4xl mx-auto">
-        {!!headingSafe && (
-          <motion.h2
-            className={`text-4xl md:text-5xl font-bold text-center mb-12 ${titleColor}`}
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7 }}
-            viewport={{ once: true, margin: "-100px" }}
-          >
-            Our{" "}
-            <span
-              className={`bg-gradient-to-r ${
-                isDark
-                  ? "from-blue-400 to-cyan-400"
-                  : "from-blue-600 to-cyan-600"
-              } bg-clip-text text-transparent`}
-            >
-              {headingSafe}
-            </span>
-          </motion.h2>
-        )}
+      <div className="max-w-7xl w-full text-center">
+        <motion.h2
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+          className="text-4xl md:text-5xl font-bold mb-4"
+        >
+          {headingSafe}
+        </motion.h2>
 
-        {!!paraSafe.length && (
+        <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-16">
+          {paraSafe[0]}
+        </p>
+
+        {/* Pillars as cards matching homepage style */}
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {pillarSafe.map((item, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.1, duration: 0.6 }}
+              className="glass glass-hover p-6 text-left"
+            >
+              {/* ICON BADGE matching homepage */}
+              <div
+                className={`
+                  mb-4
+                  inline-flex
+                  h-11 w-11
+                  items-center justify-center
+                  rounded-xl
+                  bg-gradient-to-r ${item.gradient || "from-indigo-500 to-purple-500"}
+                  shadow-lg
+                `}
+              >
+                <span className="text-lg">{item.icon || "✨"}</span>
+              </div>
+
+              {/* TITLE */}
+              <h3 className="text-xl font-bold mb-2">{item.title}</h3>
+
+              {/* DESCRIPTION */}
+              <p className="text-sm text-muted-foreground">
+                {item.desc}
+              </p>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* Additional paragraphs */}
+        {paraSafe.length > 1 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            viewport={{ once: true, margin: "-100px" }}
-            className={`text-lg md:text-xl leading-relaxed text-center mb-12 ${textColor}`}
+            transition={{ duration: 0.8, delay: 0.3 }}
+            className="mt-16 max-w-3xl mx-auto"
           >
-            {paraSafe.map((p, i) => (
-              <p key={i} className="mb-6 last:mb-0">
+            {paraSafe.slice(1).map((p, i) => (
+              <p key={i} className="text-lg text-muted-foreground mb-4">
                 {p}
               </p>
-            ))}
-          </motion.div>
-        )}
-
-        {!!pillarSafe.length && (
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-            viewport={{ once: true, margin: "-100px" }}
-            className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12"
-          >
-            {pillarSafe.map((item, index) => (
-              <motion.div
-                key={index}
-                whileHover={{ y: -5, scale: 1.02 }}
-                className={`rounded-2xl p-6 border transition-all duration-300 ${cardBg}`}
-              >
-                <div
-                  className={`w-12 h-12 rounded-lg bg-gradient-to-r ${
-                    item.gradient ?? "from-blue-500 to-cyan-500"
-                  } mb-4 flex items-center justify-center text-white text-xl`}
-                >
-                  {item.icon ?? "✨"}
-                </div>
-                <h3 className={`text-xl font-bold mb-3 ${accentColor}`}>
-                  {item.title ?? ""}
-                </h3>
-                <p className={textColor}>{item.desc ?? ""}</p>
-              </motion.div>
             ))}
           </motion.div>
         )}
@@ -306,90 +381,96 @@ const MissionSection = ({ heading, paragraphs, pillars }: Mission) => {
 /* ------------------- VALUES --------------------------------------- */
 const ValuesSection = ({ heading, summary, cards }: Values) => {
   const { theme } = useTheme();
-  const isDark = theme === "dark";
+  const [mounted, setMounted] = useState(false);
+  
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+  
+  const isDark = mounted && theme === "dark";
 
-  const headingSafe = safeStr(heading);
-  const summarySafe = safeStr(summary);
-  const cardsSafe = safeArr(cards);
-
-  const sectionBg = isDark
-    ? "bg-gradient-to-br from-slate-900 via-purple-900/20 to-slate-900"
-    : "bg-gradient-to-br from-purple-50/80 via-pink-50/50 to-rose-50/80";
-  const cardBg = isDark
-    ? "bg-white/5 backdrop-blur-sm border-white/10 hover:border-purple-400/30"
-    : "bg-white/80 backdrop-blur-sm border-gray-200 hover:border-purple-400/30";
-  const titleColor = isDark ? "text-white" : "text-gray-900";
-  const textColor = isDark ? "text-gray-300" : "text-gray-700";
-  const accentColor = isDark ? "text-purple-400" : "text-purple-600";
-
-  if (!headingSafe && !cardsSafe.length) return null;
+  const headingSafe = safeStr(heading) || "Our Values";
+  const summarySafe = safeStr(summary) || "Guiding principles that drive our innovation ecosystem";
+  const cardsSafe = safeArr(cards) || [
+    {
+      title: "Integrity",
+      desc: "Commitment to ethical practices and transparency in all endeavors",
+      icon: "🔒",
+      gradient: "from-green-500 to-emerald-500"
+    },
+    {
+      title: "Excellence",
+      desc: "Striving for the highest quality in innovation and execution",
+      icon: "⭐",
+      gradient: "from-yellow-500 to-orange-500"
+    },
+    {
+      title: "Inclusivity",
+      desc: "Creating opportunities for all students regardless of background",
+      icon: "🌍",
+      gradient: "from-blue-500 to-cyan-500"
+    },
+    {
+      title: "Resilience",
+      desc: "Persevering through challenges and learning from failures",
+      icon: "🛡️",
+      gradient: "from-red-500 to-pink-500"
+    }
+  ];
 
   return (
-    <section
-      className={`relative w-full min-h-screen flex items-center justify-center ${sectionBg}`}
-    >
-      <div className="relative z-10 px-4 max-w-6xl mx-auto">
-        {!!headingSafe && (
+    <section className="relative py-32 px-6 bg-background flex justify-center">
+      <div className="max-w-7xl w-full">
+        <div className="text-center mb-16">
           <motion.h2
-            className={`text-4xl md:text-5xl font-bold text-center mb-16 ${titleColor}`}
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7 }}
-            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+            className="text-4xl md:text-5xl font-bold mb-4"
           >
-            Our{" "}
-            <span
-              className={`bg-gradient-to-r ${
-                isDark
-                  ? "from-purple-400 to-pink-400"
-                  : "from-purple-600 to-pink-600"
-              } bg-clip-text text-transparent`}
-            >
-              {headingSafe}
-            </span>
+            {headingSafe}
           </motion.h2>
-        )}
+          
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            {summarySafe}
+          </p>
+        </div>
 
-        {!!cardsSafe.length && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {cardsSafe.map((value, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-                viewport={{ once: true, margin: "-100px" }}
-                className={`rounded-2xl p-8 border transition-all duration-300 hover:shadow-lg ${cardBg}`}
+        {/* Cards grid matching homepage */}
+        <div className="grid sm:grid-cols-2 gap-6">
+          {cardsSafe.map((value, index) => (
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1, duration: 0.6 }}
+              className="glass glass-hover p-8 text-left"
+            >
+              {/* ICON BADGE */}
+              <div
+                className={`
+                  mb-6
+                  inline-flex
+                  h-14 w-14
+                  items-center justify-center
+                  rounded-xl
+                  bg-gradient-to-r ${value.gradient || "from-indigo-500 to-purple-500"}
+                  shadow-lg
+                `}
               >
-                <div
-                  className={`w-12 h-12 rounded-lg bg-gradient-to-r ${
-                    value.gradient ?? "from-purple-500 to-pink-500"
-                  } mb-6 flex items-center justify-center text-white text-xl`}
-                >
-                  {value.icon ?? "✨"}
-                </div>
-                <h3 className={`text-2xl font-bold mb-3 ${accentColor}`}>
-                  {value.title ?? ""}
-                </h3>
-                <p className={`text-lg ${textColor}`}>{value.desc ?? ""}</p>
-              </motion.div>
-            ))}
-          </div>
-        )}
+                <span className="text-2xl">{value.icon || "✨"}</span>
+              </div>
 
-        {!!summarySafe && (
-          <motion.div
-            className="mt-16 text-center"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.3 }}
-            viewport={{ once: true, margin: "-100px" }}
-          >
-            <p className={`text-xl max-w-3xl mx-auto ${textColor}`}>
-              {summarySafe}
-            </p>
-          </motion.div>
-        )}
+              {/* TITLE */}
+              <h3 className="text-xl font-bold mb-4">{value.title}</h3>
+
+              {/* DESCRIPTION */}
+              <p className="text-muted-foreground">
+                {value.desc}
+              </p>
+            </motion.div>
+          ))}
+        </div>
       </div>
     </section>
   );
@@ -398,113 +479,95 @@ const ValuesSection = ({ heading, summary, cards }: Values) => {
 /* ------------------- TIMELINE ------------------------------------- */
 const HistorySection = ({ heading, milestones }: Timeline) => {
   const { theme } = useTheme();
-  const isDark = theme === "dark";
+  const [mounted, setMounted] = useState(false);
+  
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+  
+  const isDark = mounted && theme === "dark";
 
-  const headingSafe = safeStr(heading);
-  const milestonesSafe = safeArr(milestones);
-
-  const sectionBg = isDark
-    ? "bg-gradient-to-br from-slate-900 via-green-900/20 to-slate-900"
-    : "bg-gradient-to-br from-green-50/80 via-cyan-50/50 to-blue-50/80";
-  const cardBg = isDark
-    ? "bg-white/5 backdrop-blur-sm border-white/10 hover:border-green-400/30"
-    : "bg-white/80 backdrop-blur-sm border-gray-200 hover:border-green-400/30";
-  const titleColor = isDark ? "text-white" : "text-gray-900";
-  const textColor = isDark ? "text-gray-300" : "text-gray-700";
-  const accentColor = isDark ? "text-green-400" : "text-green-600";
-
-  if (!headingSafe && !milestonesSafe.length) return null;
+  const headingSafe = safeStr(heading) || "Our Journey";
+  const milestonesSafe = safeArr(milestones) || [
+    { year: "2018", event: "Foundation of I2EDC at IIT Jammu" },
+    { year: "2019", event: "First Innovation Challenge & Prototype Exhibition" },
+    { year: "2020", event: "Launch of Tinkering Lab & Digital Initiatives" },
+    { year: "2021", event: "Partnerships with Industry Leaders Established" },
+    { year: "2022", event: "Expansion of Protospace Facilities" },
+    { year: "2023", event: "100+ Student Projects Supported" },
+    { year: "2024", event: "National Recognition for Innovation Programs" }
+  ];
 
   return (
-    <section
-      className={`relative w-full min-h-screen flex items-center justify-center pt-20 ${sectionBg}`}
-    >
-      <div className="relative z-10 px-4 max-w-6xl mx-auto">
-        {!!headingSafe && (
+    <section className="relative py-32 px-6 bg-background flex justify-center">
+      <div className="max-w-7xl w-full">
+        <div className="text-center mb-16">
           <motion.h2
-            className={`text-4xl md:text-5xl font-bold text-center mb-16 ${titleColor}`}
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7 }}
-            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+            className="text-4xl md:text-5xl font-bold mb-4"
           >
-            Our{" "}
-            <span
-              className={`bg-gradient-to-r ${
-                isDark
-                  ? "from-green-400 to-cyan-400"
-                  : "from-green-600 to-cyan-600"
-              } bg-clip-text text-transparent`}
-            >
-              {headingSafe}
-            </span>
+            {headingSafe}
           </motion.h2>
-        )}
+          
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            A timeline of key milestones in our innovation journey
+          </p>
+        </div>
 
-        {!!milestonesSafe.length && (
-          <div className="relative">
-            <div
-              className={`absolute left-1/2 top-0 bottom-0 w-1 bg-gradient-to-b ${
-                isDark
-                  ? "from-green-500/30 via-cyan-500/30 to-blue-500/30"
-                  : "from-green-400/50 via-cyan-400/50 to-blue-400/50"
-              } transform -translate-x-1/2 hidden md:block`}
-            />
-            {milestonesSafe.map((m, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, x: index % 2 === 0 ? -50 : 50 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-                viewport={{ once: true, margin: "-100px" }}
-                className={`relative flex flex-col md:flex-row items-center mb-12 md:mb-0 ${
-                  index % 2 === 0 ? "md:flex-row-reverse" : ""
-                }`}
-              >
-                <div
-                  className={`w-full md:w-1/2 p-4 ${
-                    index % 2 === 0
-                      ? "md:pl-8 md:text-left"
-                      : "md:pr-8 md:text-right"
-                  }`}
-                >
-                  <motion.div
-                    whileHover={{ scale: 1.02 }}
-                    className={`rounded-2xl p-6 border transition-all duration-300 ${cardBg}`}
-                  >
-                    <h3 className={`text-2xl font-bold mb-2 ${accentColor}`}>
-                      {m.year ?? ""}
-                    </h3>
-                    <p className={textColor}>{m.event ?? ""}</p>
-                  </motion.div>
+        {/* Timeline */}
+        <div className="relative">
+          {/* Center line */}
+          <div className="absolute left-1/2 transform -translate-x-1/2 h-full w-0.5 bg-gradient-to-b from-indigo-500/30 via-purple-500/30 to-transparent" />
+          
+          {milestonesSafe.map((milestone, index) => (
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, x: index % 2 === 0 ? -50 : 50 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: index * 0.1 }}
+              viewport={{ once: true }}
+              className={`
+                relative flex items-center mb-12
+                ${index % 2 === 0 ? 'flex-row-reverse' : ''}
+              `}
+            >
+              {/* Content */}
+              <div className={`w-1/2 ${index % 2 === 0 ? 'pr-12 text-right' : 'pl-12'}`}>
+                <div className="glass glass-hover p-6">
+                  <h3 className={`
+                    text-2xl font-bold mb-2
+                    ${isDark ? 'text-indigo-300' : 'text-indigo-600'}
+                  `}>
+                    {milestone.year}
+                  </h3>
+                  <p className="text-muted-foreground">
+                    {milestone.event}
+                  </p>
                 </div>
-
-                <div
-                  className={`hidden md:flex w-12 h-12 rounded-full bg-gradient-to-r ${
-                    isDark
-                      ? "from-green-500 to-cyan-600"
-                      : "from-green-600 to-cyan-700"
-                  } items-center justify-center relative z-10 border-4 ${
-                    isDark ? "border-slate-900" : "border-white"
-                  } mx-4 shadow-lg ${
-                    isDark ? "shadow-green-500/20" : "shadow-green-500/30"
-                  }`}
-                >
-                  <div className="w-3 h-3 rounded-full bg-white" />
-                </div>
-
-                <div className="w-full md:w-1/2 p-4 hidden md:block" />
-              </motion.div>
-            ))}
-          </div>
-        )}
+              </div>
+              
+              {/* Center dot */}
+              <div className="absolute left-1/2 transform -translate-x-1/2">
+                <div className={`
+                  w-4 h-4 rounded-full
+                  bg-gradient-to-r from-indigo-500 to-purple-500
+                  ring-4 ${isDark ? 'ring-gray-900' : 'ring-white'}
+                `} />
+              </div>
+              
+              {/* Spacer */}
+              <div className={`w-1/2 ${index % 2 === 0 ? 'pl-12' : 'pr-12'}`} />
+            </motion.div>
+          ))}
+        </div>
       </div>
     </section>
   );
 };
 
 /* ------------------- LEADERSHIP ----------------------------------- */
-
 interface TeamMember {
   name: string;
   role: string;
@@ -521,16 +584,21 @@ interface TeamData {
 
 const TeamSection = () => {
   const { theme } = useTheme();
-  const isDark = theme === "dark";
+  const [mounted, setMounted] = useState(false);
+  
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+  
+  const isDark = mounted && theme === "dark";
   const { content, loading, error } = useContent();
   const [activeClub, setActiveClub] = useState("core");
   const [isInitialized, setIsInitialized] = useState(false);
+  
   // Initialize active club once data is loaded
   useEffect(() => {
     if (!loading && content.full_team && !isInitialized) {
       const teamData = content.full_team as TeamData;
-      console.log("Team",teamData);
-      
       const clubs = [
         { key: "core", members: teamData.core_members },
         { key: "ps_tl", members: teamData.ps_tl_members },
@@ -744,19 +812,23 @@ const TeamSection = () => {
   }
 
   return (
-    <section className="relative w-full min-h-screen flex items-center justify-center overflow-hidden py-16">
-      <div className="relative z-2 text-center px-4 max-w-7xl mx-auto w-full">
-        <motion.h2
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8 }}
-          className={`text-3xl md:text-4xl lg:text-5xl font-bold ${
-            isDark ? "text-white" : "text-gray-900"
-          } mb-12 font-serif`}
-        >
-          Meet Our Team
-        </motion.h2>
+    <section className="relative py-32 px-6 bg-background flex justify-center">
+      <div className="max-w-7xl w-full">
+        <div className="text-center mb-16">
+          <motion.h2
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+            className="text-4xl md:text-5xl font-bold mb-4"
+          >
+            Meet Our Team
+          </motion.h2>
+          
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            Dedicated individuals driving innovation forward
+          </p>
+        </div>
 
         {/* Club Navigation Tabs */}
         {clubTabs.length > 1 && (
@@ -784,12 +856,12 @@ const TeamSection = () => {
           </motion.div>
         )}
 
-        {/* Active Club Title - FIXED: Only one instance */}
+        {/* Active Club Title */}
         <motion.h3
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5 }}
-          className={`text-2xl md:text-3xl font-bold mb-8 bg-gradient-to-r ${
+          className={`text-2xl md:text-3xl font-bold mb-8 text-center bg-gradient-to-r ${
             clubConfig[activeClub as keyof typeof clubConfig]?.gradient ||
             "from-gray-500 to-gray-600"
           } bg-clip-text text-transparent`}
@@ -800,7 +872,7 @@ const TeamSection = () => {
 
         {/* Team Members Grid */}
         <motion.div
-          key={activeClub} // This ensures re-animation on club change
+          key={activeClub}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.6, delay: 0.2 }}
@@ -820,7 +892,7 @@ const TeamSection = () => {
           } border`}
         >
           <h4
-            className={`text-xl font-bold mb-4 ${
+            className={`text-xl font-bold mb-4 text-center ${
               isDark ? "text-white" : "text-gray-900"
             }`}
           >
@@ -858,7 +930,7 @@ const LoadingState = ({
   isDark: boolean;
   message: string;
 }) => (
-  <section className="relative w-full min-h-screen flex items-center justify-center overflow-hidden">
+  <section className="relative w-full min-h-screen flex items-center justify-center overflow-hidden py-32">
     <div className="text-center">
       <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-500 mx-auto mb-4"></div>
       <p className={`text-lg ${isDark ? "text-gray-300" : "text-gray-700"}`}>
@@ -875,7 +947,7 @@ const ErrorState = ({
   isDark: boolean;
   onRetry: () => void;
 }) => (
-  <section className="relative w-full min-h-screen flex items-center justify-center overflow-hidden">
+  <section className="relative w-full min-h-screen flex items-center justify-center overflow-hidden py-32">
     <div className="text-center">
       <p className="text-lg text-red-500 mb-4">Error loading team content</p>
       <button
@@ -899,7 +971,7 @@ const NoDataState = ({
   isDark: boolean;
   onRetry: () => void;
 }) => (
-  <section className="relative w-full min-h-screen flex items-center justify-center overflow-hidden">
+  <section className="relative w-full min-h-screen flex items-center justify-center overflow-hidden py-32">
     <div className="text-center">
       <p
         className={`text-lg ${isDark ? "text-gray-300" : "text-gray-700"} mb-4`}
