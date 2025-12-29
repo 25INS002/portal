@@ -1,16 +1,48 @@
-import axios from 'axios';
+import axios from "axios";
 
-// Get the backend URL from environment variables, with a fallback for local development
-const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
+// Backend URL (VPS or localhost)
+const backendUrl =
+  process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
 
-// Create a single, centralized Axios instance
 const api = axios.create({
-    baseURL: `${backendUrl}/api`,
-    withCredentials: true,
-    headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-    },
+  baseURL: `${backendUrl}/api`,
+  headers: {
+    "Content-Type": "application/json",
+    Accept: "application/json",
+  },
+});
+
+// -----------------------------
+// Token handling (localStorage)
+// -----------------------------
+let accessToken: string | null =
+  typeof window !== "undefined"
+    ? localStorage.getItem("access_token")
+    : null;
+
+export const setAccessToken = (token: string | null) => {
+  accessToken = token;
+
+  if (typeof window !== "undefined") {
+    if (token) {
+      localStorage.setItem("access_token", token);
+    } else {
+      localStorage.removeItem("access_token");
+    }
+  }
+};
+
+export const getAccessToken = () => accessToken;
+
+// -----------------------------
+// Axios interceptor
+// -----------------------------
+api.interceptors.request.use((config) => {
+  const token = getAccessToken();
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
 });
 
 export default api;

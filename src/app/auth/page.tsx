@@ -29,7 +29,7 @@ export default function AuthPage() {
   const [step, setStep] = useState<Step>("email");
   const [isSignUp, setIsSignUp] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { checkAuthStatus } = useAuth();
+  const { login: authLogin } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -43,8 +43,7 @@ export default function AuthPage() {
   const login = async () => {
     setLoading(true);
     try {
-      await api.post("/accounts/login/", { email, password });
-      await checkAuthStatus();
+      await authLogin(email, password);
       toast.success("Welcome back!");
       setStep("success");
       setTimeout(() => router.push("/"), 1500);
@@ -78,9 +77,8 @@ export default function AuthPage() {
     setLoading(true);
     try {
       await api.post("/accounts/verify-otp/", { username: email, otp });
-      await checkAuthStatus();
       toast.success("Account verified");
-      setStep("success");
+      setStep("form");
       setTimeout(() => router.push("/"), 1500);
     } catch (e: any) {
       toast.error(e?.response?.data?.error || "Invalid OTP");

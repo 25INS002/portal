@@ -68,7 +68,7 @@ interface EventParticipation {
 }
 
 const HistoryPage: React.FC = () => {
-    const { isAuthenticated, user } = useAuth();
+    const { isAuthenticated,isLoading, user } = useAuth();
     const [serviceRequests, setServiceRequests] = useState<ServiceRequest[]>([]);
     const [events, setEvents] = useState<Event[]>([]);
     const [eventParticipations, setEventParticipations] = useState<Record<number, EventParticipation>>({});
@@ -469,7 +469,7 @@ For queries: events@i2edc.com
         );
     }
 
-    if (loading) {
+    if (loading || isLoading) {
         return (
             <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30 dark:from-slate-900 dark:to-blue-900/20 mt-24">
                 <div className="max-w-6xl mx-auto p-8">

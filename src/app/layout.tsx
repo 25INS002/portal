@@ -5,6 +5,7 @@ import "./globals.css";
 import ClientLayout from "./ClientLayout";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "sonner";
+import { AuthProvider } from "@/context/AuthContext";
 
 /* ---------------- FONTS ---------------- */
 
@@ -42,19 +43,22 @@ export default function RootLayout({
       className={`${inter.variable} ${poppins.variable}`}
     >
       <body className="antialiased min-h-screen font-body">
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="dark"
-          enableSystem
-        >
-          <Toaster
-            richColors
-            position="bottom-right"
-            toastOptions={{ className: "glass" }}
-          />
+        {/* 🔐 AUTH MUST BE HERE */}
+        <AuthProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="dark"
+            enableSystem
+          >
+            <Toaster
+              richColors
+              position="bottom-right"
+              toastOptions={{ className: "glass" }}
+            />
 
-          <ClientLayout>{children}</ClientLayout>
-        </ThemeProvider>
+            <ClientLayout>{children}</ClientLayout>
+          </ThemeProvider>
+        </AuthProvider>
       </body>
     </html>
   );

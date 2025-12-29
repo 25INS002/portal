@@ -4,7 +4,7 @@
 import { usePathname } from "next/navigation";
 import { IsMobileProvider } from "../context/IsMobileContext";
 import { ScrollProvider } from "@/context/ScrollContext";
-import { AuthProvider, useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/context/AuthContext";
 import Header from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { ContentProvider } from "@/context/ContentContext";
@@ -47,7 +47,6 @@ export default function ClientLayout({
   const isAuthRoute = pathname.startsWith("/auth");
 
   return (
-    <AuthProvider>
       <ContentProvider>
         <PreWrapper>
           {isAuthRoute ? (
@@ -64,6 +63,5 @@ export default function ClientLayout({
           )}
         </PreWrapper>
       </ContentProvider>
-    </AuthProvider>
   );
 }
