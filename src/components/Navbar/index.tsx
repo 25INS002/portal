@@ -14,6 +14,7 @@ const navItems = [
   { label: "Events", href: "/pages/events" },
   { label: "Prototypes", href: "/pages/prototypes" },
   { label: "Contact", href: "/pages/contact" },
+  { label: "Login", href: "/auth?action=login" },
 ];
 
 export default function Header() {
@@ -130,21 +131,24 @@ export default function Header() {
     border-black/10 dark:border-white/10
   "
             >
-              {navItems.map((item) => (
-                <a
-                  key={item.label}
-                  href={item.href}
-                  className="
+              {navItems.map((item) => {
+                if (item.label !== "Login")
+                  return (
+                    <a
+                      key={item.label}
+                      href={item.href}
+                      className="
         px-5 py-2 rounded-full
         text-[11px] uppercase tracking-widest font-semibold
         transition-colors duration-200
         text-gray-800 hover:text-gray-950 hover:bg-black/5
         dark:text-white/80 dark:hover:text-white dark:hover:bg-white/10
       "
-                >
-                  {item.label}
-                </a>
-              ))}
+                    >
+                      {item.label}
+                    </a>
+                  );
+              })}
             </div>
 
             {/* ACTIONS */}
@@ -230,22 +234,25 @@ export default function Header() {
         before:pointer-events-none
       `}
           >
-            {navItems.map((item) => (
-              <a
-                key={item.label}
-                href={item.href}
-                onClick={() => setMobileOpen(false)}
-                className="
+            {navItems.map((item) => {
+              if (item.label === "Login" && isAuthenticated) return null;
+              return (
+                <a
+                  key={item.label}
+                  href={item.href}
+                  onClick={() => setMobileOpen(false)}
+                  className="
             text-3xl font-bold tracking-tight
             transition-colors duration-200
 
             text-gray-900 hover:text-primary
             dark:text-white dark:hover:text-primary
           "
-              >
-                {item.label}
-              </a>
-            ))}
+                >
+                  {item.label}
+                </a>
+              );
+            })}
           </motion.div>
         )}
       </AnimatePresence>

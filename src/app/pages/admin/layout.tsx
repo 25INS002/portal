@@ -30,7 +30,8 @@ export default function SuperAdminLayout({
         : pathSegments.join("/");
 
     return (
-        <div className="min-h-screen p-6 text-white my-dark-bg">
+        <div className="min-h-screen p-6 text-white">
+            <br />
             <br />
             <br />
             <br />

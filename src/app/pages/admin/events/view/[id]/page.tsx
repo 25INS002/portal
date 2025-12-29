@@ -375,7 +375,7 @@ export default function ViewEventPage() {
 
   if (loadingEvent) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen  flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
           <p className="text-muted-foreground">Loading event data...</p>
@@ -386,7 +386,7 @@ export default function ViewEventPage() {
 
   if (!event || !formData) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen  flex items-center justify-center">
         <div className="text-center">
           <p className="text-destructive mb-4">Event not found</p>
           <Button onClick={() => router.push("/pages/admin/events")}>
@@ -399,7 +399,7 @@ export default function ViewEventPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background py-8 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen  py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Header with Back Button */}
         <div className="flex items-center justify-between">

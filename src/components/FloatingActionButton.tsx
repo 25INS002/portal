@@ -2,7 +2,14 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { User, History, X, LogIn, LogOut } from "lucide-react";
+import {
+  User,
+  History,
+  X,
+  LogIn,
+  LogOut,
+  Shield,
+} from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 
@@ -23,6 +30,8 @@ export default function FloatingActionButton() {
     fn();
   };
 
+  const isAdmin = !!(user?.is_superuser || user?.is_staff);
+
   return (
     <>
       {/* ================= FAB ================= */}
@@ -39,7 +48,7 @@ export default function FloatingActionButton() {
               <>
                 {/* PROFILE */}
                 <GlassAction
-                  y={-110}
+                  y={-165}
                   delay={0}
                   onClick={() =>
                     closeAnd(() => router.push("/pages/user/profile"))
@@ -50,8 +59,8 @@ export default function FloatingActionButton() {
 
                 {/* HISTORY */}
                 <GlassAction
-                  y={-55}
-                  delay={0.1}
+                  y={-110}
+                  delay={0.08}
                   onClick={() =>
                     closeAnd(() => router.push("/pages/user/history"))
                   }
@@ -59,11 +68,24 @@ export default function FloatingActionButton() {
                   <History className="w-5 h-5" />
                 </GlassAction>
 
+                {/* ADMIN (ONLY IF STAFF / SUPERUSER) */}
+                {isAuthenticated && isAdmin && (
+                  <GlassAction
+                    y={-55}
+                    delay={0.16}
+                    onClick={() =>
+                      closeAnd(() => router.push("/pages/admin"))
+                    }
+                  >
+                    <Shield className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                  </GlassAction>
+                )}
+
                 {/* LOGIN / LOGOUT */}
                 {isAuthenticated ? (
                   <GlassAction
                     x={-55}
-                    delay={0.2}
+                    delay={0.24}
                     onClick={() => closeAnd(logout)}
                   >
                     <LogOut className="w-5 h-5 text-red-500" />
@@ -71,7 +93,7 @@ export default function FloatingActionButton() {
                 ) : (
                   <GlassAction
                     x={-90}
-                    delay={0.2}
+                    delay={0.24}
                     onClick={() => closeAnd(() => router.push("/auth"))}
                   >
                     <LogIn className="w-5 h-5 text-green-600" />
@@ -138,7 +160,7 @@ export default function FloatingActionButton() {
           {isAuthenticated && (
             <motion.div
               className="pointer-events-none absolute inset-0 rounded-full
-    bg-gradient-to-r from-indigo-500/20 via-purple-500/20 to-indigo-500/20"
+              bg-gradient-to-r from-indigo-500/20 via-purple-500/20 to-indigo-500/20"
               animate={{
                 scale: [1, 1.25, 1],
                 opacity: [0.6, 0, 0.6],
@@ -203,7 +225,6 @@ function GlassAction({
         flex items-center justify-center
       "
     >
-      {/* highlight */}
       <div className="pointer-events-none absolute inset-0 rounded-full bg-gradient-to-b from-white/30 to-transparent opacity-40" />
       <div className="relative z-10">{children}</div>
     </motion.button>

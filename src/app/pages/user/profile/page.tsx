@@ -204,7 +204,7 @@ export default function ProfilePage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         {/* SIDEBAR */}
-        <Card className="lg:col-span-1 sticky top-24">
+        <Card className="lg:col-span-1 top-24">
           <CardHeader className="text-center">
             <div className="mx-auto w-20 h-20 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 flex items-center justify-center text-white text-2xl font-bold">
               {initials}
@@ -249,7 +249,7 @@ export default function ProfilePage() {
                 <CardContent className="space-y-6">
                   <div className="grid md:grid-cols-2 gap-6">
                     <div>
-                      <Label>First Name</Label>
+                      <Label className="mb-2">First Name</Label>
                       <Input
                         value={editForm.first_name}
                         disabled={!isEditing}
@@ -257,7 +257,7 @@ export default function ProfilePage() {
                       />
                     </div>
                     <div>
-                      <Label>Last Name</Label>
+                      <Label className="mb-2">Last Name</Label>
                       <Input
                         value={editForm.last_name}
                         disabled={!isEditing}
@@ -267,7 +267,7 @@ export default function ProfilePage() {
                   </div>
 
                   <div>
-                    <Label>Email</Label>
+                    <Label className="mb-2">Email</Label>
                     <Input
                       type="email"
                       value={editForm.email}
@@ -277,7 +277,7 @@ export default function ProfilePage() {
                   </div>
 
                   <div>
-                    <Label>Username</Label>
+                    <Label className="mb-2">Username</Label>
                     <Input value={user?.username} disabled />
                   </div>
                 </CardContent>

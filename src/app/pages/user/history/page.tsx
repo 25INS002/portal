@@ -556,9 +556,7 @@ For queries: events@i2edc.com
   if (!isAuthenticated) {
     return (
       <div
-        className="min-h-screen bg-gradient-to-br 
-from-indigo-50 via-white to-violet-50 
-dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950 mt-24"
+        className="min-h-screen bg-gradient-to-br mt-24"
       >
         <div className="max-w-4xl mx-auto p-8">
           <Alert>
@@ -576,9 +574,7 @@ dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950 mt-24"
   if (loading || isLoading) {
     return (
       <div
-        className="min-h-screen bg-gradient-to-br 
-from-indigo-50 via-white to-violet-50 
-dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950 mt-24"
+        className="min-h-screen bg-gradient-to-br mt-24"
       >
         <div className="max-w-6xl mx-auto p-8">
           <div className="space-y-8">
@@ -598,8 +594,7 @@ dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950 mt-24"
   return (
     <div
       className="min-h-screen bg-gradient-to-br 
-from-indigo-50 via-white to-violet-50 
-dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950 mt-24"
+mt-24"
     >
       <div className="max-w-6xl mx-auto p-8">
         {/* Header */}

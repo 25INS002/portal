@@ -45,23 +45,23 @@ export default function ClientLayout({
 }) {
   const pathname = usePathname();
   const isAuthRoute = pathname.startsWith("/auth");
-
+  const {isAuthenticated } = useAuth();
   return (
-      <ContentProvider>
-        <PreWrapper>
-          {isAuthRoute ? (
-            /* 🔓 AUTH ROUTES — no header/footer, no auth gate */
-            children
-          ) : (
-            /* 🔐 APP ROUTES — wait for auth resolution */
-            <AuthGate>
-              <Header />
-              {children}
-              <FloatingActionButton />
-              <Footer />
-            </AuthGate>
-          )}
-        </PreWrapper>
-      </ContentProvider>
+    <ContentProvider>
+      <PreWrapper>
+        {isAuthRoute ? (
+          /* 🔓 AUTH ROUTES — no header/footer, no auth gate */
+          children
+        ) : (
+          /* 🔐 APP ROUTES — wait for auth resolution */
+          <AuthGate>
+            <Header />
+            {children}
+            {isAuthenticated && <FloatingActionButton />}
+            <Footer />
+          </AuthGate>
+        )}
+      </PreWrapper>
+    </ContentProvider>
   );
 }
