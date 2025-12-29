@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import api from "@/lib/api";
+import ServiceRequestRemarks from "@/components/ServiceManager/Chat";
 import {
   Card,
   CardContent,
@@ -555,9 +556,7 @@ For queries: events@i2edc.com
 
   if (!isAuthenticated) {
     return (
-      <div
-        className="min-h-screen bg-gradient-to-br mt-24"
-      >
+      <div className="min-h-screen bg-gradient-to-br mt-24">
         <div className="max-w-4xl mx-auto p-8">
           <Alert>
             <AlertCircle className="h-4 w-4" />
@@ -573,9 +572,7 @@ For queries: events@i2edc.com
 
   if (loading || isLoading) {
     return (
-      <div
-        className="min-h-screen bg-gradient-to-br mt-24"
-      >
+      <div className="min-h-screen bg-gradient-to-br mt-24">
         <div className="max-w-6xl mx-auto p-8">
           <div className="space-y-8">
             <Skeleton className="h-12 w-64" />
@@ -592,18 +589,11 @@ For queries: events@i2edc.com
   }
 
   return (
-    <div
-      className="min-h-screen bg-gradient-to-br 
-mt-24"
-    >
+    <div className="min-h-screen bg-gradient-to-br mt-24">
       <div className="max-w-6xl mx-auto p-8">
         {/* Header */}
         <div className="mb-8">
-          <h1
-            className="text-4xl font-bold 
-bg-gradient-to-r from-indigo-600 to-violet-600 
-bg-clip-text text-transparent mb-2"
-          >
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent mb-2">
             My History
           </h1>
           <p className="text-slate-600 dark:text-slate-400">
@@ -626,39 +616,76 @@ bg-clip-text text-transparent mb-2"
         >
           <TabsList
             className="
-grid w-full grid-cols-2 
-rounded-xl bg-slate-100/60 dark:bg-slate-800/60 p-1
-"
+    flex w-full gap-2 p-1
+    rounded-xl
+    bg-slate-100/60 dark:bg-slate-800/60
+
+    overflow-x-auto
+    overflow-y-visible      
+    h-auto                
+
+    sm:grid sm:grid-cols-2 sm:overflow-visible
+  "
           >
-            <TabsTrigger value="services" className="
-flex items-center gap-2 rounded-lg
-data-[state=active]:bg-white 
-data-[state=active]:shadow-sm
-dark:data-[state=active]:bg-slate-900
-">
-              <Package className="w-4 h-4" />
-              Service Requests ({serviceRequests.length})
+            <TabsTrigger
+              value="services"
+              className="
+    flex flex-col items-center justify-center
+    gap-1
+    px-3 py-2
+    min-h-[3.25rem]  
+    rounded-lg
+    text-xs leading-tight
+
+    data-[state=active]:bg-white
+    data-[state=active]:shadow-sm
+    dark:data-[state=active]:bg-slate-900
+
+    sm:flex-row sm:gap-2 sm:text-sm sm:min-h-[2.75rem]
+  "
+            >
+              <Package className="w-4 h-4 shrink-0" />
+              <span>Services</span>
+              <span className="text-[10px] text-muted-foreground sm:text-xs">
+                ({serviceRequests.length})
+              </span>
             </TabsTrigger>
-            <TabsTrigger value="events" className="
-flex items-center gap-2 rounded-lg
-data-[state=active]:bg-white 
-data-[state=active]:shadow-sm
-dark:data-[state=active]:bg-slate-900
-">
-              <Users className="w-4 h-4" />
-              Event Registrations ({participatingEvents.length})
+
+            <TabsTrigger
+              value="events"
+              className="
+    flex flex-col items-center justify-center
+    gap-1
+    px-3 py-2
+    min-h-[6.25rem]
+    rounded-lg
+    text-xs leading-tight
+
+    data-[state=active]:bg-white
+    data-[state=active]:shadow-sm
+    dark:data-[state=active]:bg-slate-900
+
+    sm:flex-row sm:gap-2 sm:text-sm sm:min-h-[2.75rem]
+  "
+            >
+              <Users className="w-4 h-4 shrink-0" />
+              <span>Events</span>
+              <span className="text-[10px] text-muted-foreground sm:text-xs">
+                ({participatingEvents.length})
+              </span>
             </TabsTrigger>
           </TabsList>
 
           {/* Service Requests Tab */}
           <TabsContent value="services" className="space-y-6">
             {serviceRequests.length === 0 ? (
-             <Card className="
+              <Card
+                className="
 border border-slate-200/60 dark:border-slate-700/60
 bg-white/70 dark:bg-slate-900/60
 backdrop-blur-md shadow-sm hover:shadow-md transition
-">
-
+"
+              >
                 <CardContent className="p-8 text-center">
                   <Package className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
                   <h3 className="text-xl font-semibold text-gray-600 dark:text-gray-400 mb-2">
@@ -686,7 +713,7 @@ bg-white/70 dark:bg-slate-900/60
 backdrop-blur-md shadow-sm hover:shadow-md transition"
                     >
                       <CardHeader className="pb-4">
-                        <div className="flex justify-between items-start">
+                        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
                           <div>
                             <CardTitle className="text-xl flex items-center gap-2">
                               {request.service.name}
@@ -732,37 +759,51 @@ backdrop-blur-md shadow-sm hover:shadow-md transition"
                               {request.request_msg.body}
                             </p>
                           </div>
+                          <ServiceRequestRemarks
+                            requestId={request.id}
+                            rawRemark={request.remark}
+                            onNewRemark={(newRemark) => {
+                              request.remark = request.remark
+                                ? request.remark +
+                                  "\n" +
+                                  JSON.stringify(newRemark)
+                                : JSON.stringify(newRemark);
+                            }}
+                          />
                         </div>
-
-                        {request.remark && (
-                          <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                            <h4 className="font-semibold text-sm text-blue-700 dark:text-blue-300 mb-1">
-                              Admin Remark
-                            </h4>
-                            <p className="text-blue-600 dark:text-blue-400 text-sm">
-                              {request.remark}
-                            </p>
-                          </div>
-                        )}
                       </CardContent>
 
-                      <CardFooter className="flex justify-between items-center pt-4 border-t">
-                        <div className="flex items-center gap-2 text-sm text-gray-500">
-                          <Clock className="w-4 h-4" />
-                          Last updated {formatDate(request.updated_at)}
+                      <CardFooter
+                        className="
+    flex flex-col gap-3
+    pt-4 border-t
+    sm:flex-row sm:justify-between sm:items-center
+  "
+                      >
+                        {/* Left info */}
+                        <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-500">
+                          <Clock className="w-4 h-4 shrink-0" />
+                          <span className="leading-tight">
+                            Last updated {formatDate(request.updated_at)}
+                          </span>
                         </div>
-                        <div className="flex gap-2">
+
+                        {/* Actions */}
+                        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                           <Button
                             variant="outline"
                             size="sm"
+                            className="w-full sm:w-auto"
                             onClick={() => downloadPDFReceipt(request)}
                           >
-                            <Download className="w-4 h-4 mr-2" />
+                            <Download className="w-4 h-4 mr-2 shrink-0" />
                             Download PDF
                           </Button>
+
                           <Button
                             variant="outline"
                             size="sm"
+                            className="w-full sm:w-auto"
                             onClick={() => {
                               alert(
                                 `Service Request Details:\n\nSubject: ${
@@ -777,7 +818,7 @@ backdrop-blur-md shadow-sm hover:shadow-md transition"
                               );
                             }}
                           >
-                            <Eye className="w-4 h-4 mr-2" />
+                            <Eye className="w-4 h-4 mr-2 shrink-0" />
                             View Details
                           </Button>
                         </div>
@@ -792,12 +833,13 @@ backdrop-blur-md shadow-sm hover:shadow-md transition"
           {/* Event Registrations Tab */}
           <TabsContent value="events" className="space-y-6">
             {participatingEvents.length === 0 ? (
-             <Card className="
+              <Card
+                className="
 border border-slate-200/60 dark:border-slate-700/60
 bg-white/70 dark:bg-slate-900/60
 backdrop-blur-md shadow-sm hover:shadow-md transition
-">
-
+"
+              >
                 <CardContent className="p-8 text-center">
                   <Users className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
                   <h3 className="text-xl font-semibold text-gray-600 dark:text-gray-400 mb-2">
@@ -821,22 +863,26 @@ bg-white/70 dark:bg-slate-900/60
 backdrop-blur-md shadow-sm hover:shadow-md transition"
                   >
                     <CardHeader className="pb-4">
-                      <div className="flex justify-between items-start">
+                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
+                        {/* LEFT */}
                         <div>
-                          <CardTitle className="text-xl flex items-center gap-2">
-                            {event.name}
-                            {getEventStatusBadge(event)}
+                          <CardTitle className="text-xl">
+                            {event.name} {getEventStatusBadge(event)}
                           </CardTitle>
+
                           <CardDescription className="flex items-center gap-2 mt-2">
-                            <Calendar className="w-4 h-4" />
+                            <Calendar className="w-4 h-4 shrink-0" />
                             {formatEventDate(event.date)}
                           </CardDescription>
                         </div>
-                        <div className="text-right">
+
+                        {/* RIGHT */}
+                        <div className="text-left sm:text-right flex flex-col gap-1">
                           <div className="text-sm text-gray-500">
                             {event.participants.length} participants
                           </div>
-                          <div className="text-xs text-gray-400 mt-1">
+
+                          <div className="text-xs text-gray-400">
                             Reg ends: {formatDate(event.reg_end_date)}
                           </div>
                         </div>
@@ -875,47 +921,53 @@ backdrop-blur-md shadow-sm hover:shadow-md transition"
                       </div>
                     </CardContent>
 
-                    <CardFooter className="flex justify-between items-center pt-4 border-t">
-                      <div className="flex items-center gap-2 text-sm text-gray-500">
-                        <User className="w-4 h-4" />
-                        Ticket: E-{event.id}-{user?.id || "USER"}
+                    <CardFooter
+                      className="
+    flex flex-col gap-3
+    pt-4 border-t
+
+    sm:flex-row sm:justify-between sm:items-center
+  "
+                    >
+                      {/* Left info */}
+                      <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-500">
+                        <User className="w-4 h-4 shrink-0" />
+                        <span className="leading-tight break-all">
+                          Ticket: E-{event.id}-{user?.id || "USER"}
+                        </span>
                       </div>
-                      <div className="flex gap-2">
+
+                      {/* Actions */}
+                      <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                         <Button
                           variant="outline"
                           size="sm"
+                          className="w-full sm:w-auto"
                           onClick={() => downloadEventTicket(event)}
                         >
-                          <Download className="w-4 h-4 mr-2" />
+                          <Download className="w-4 h-4 mr-2 shrink-0" />
                           Download Ticket
                         </Button>
+
                         <Button
                           variant="outline"
                           size="sm"
+                          className="w-full sm:w-auto"
                           onClick={() => {
                             alert(
-                              `Event Details:\n\nName: ${
-                                event.name
-                              }\nDate: ${formatEventDate(
-                                event.date
-                              )}\nDuration: ${
-                                event.duration
-                              }\nStatus: ${getEventStatus(
-                                event
-                              )}\nParticipants: ${
-                                event.participants.length
-                              }\nRegistration Ends: ${formatDate(
-                                event.reg_end_date
-                              )}\nDescription: ${
-                                event.description
-                              }\n\nDetailed Info: ${
-                                event.long_description ||
-                                "No additional details"
-                              }`
+                              `Event Details:\n\nName: ${event.name}
+Date: ${formatEventDate(event.date)}
+Duration: ${event.duration}
+Status: ${getEventStatus(event)}
+Participants: ${event.participants.length}
+Registration Ends: ${formatDate(event.reg_end_date)}
+Description: ${event.description}
+
+Detailed Info: ${event.long_description || "No additional details"}`
                             );
                           }}
                         >
-                          <Eye className="w-4 h-4 mr-2" />
+                          <Eye className="w-4 h-4 mr-2 shrink-0" />
                           View Details
                         </Button>
                       </div>
@@ -932,40 +984,60 @@ backdrop-blur-md shadow-sm hover:shadow-md transition"
           <CardHeader>
             <CardTitle>Summary</CardTitle>
           </CardHeader>
+
           <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                <div className="text-2xl font-bold text-blue-600">
+            <div
+              className="
+        grid grid-cols-1 gap-3
+        sm:grid-cols-2 sm:gap-4
+        md:grid-cols-4
+      "
+            >
+              {/* Service Requests */}
+              <div className="rounded-xl p-4 text-center bg-blue-50 dark:bg-blue-900/20">
+                <div className="text-2xl sm:text-3xl font-bold text-blue-600">
                   {serviceRequests.length}
                 </div>
-                <div className="text-sm text-blue-600">Service Requests</div>
+                <div className="text-xs sm:text-sm text-blue-600 mt-1">
+                  Service Requests
+                </div>
               </div>
-              <div className="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                <div className="text-2xl font-bold text-green-600">
+
+              {/* Completed Services */}
+              <div className="rounded-xl p-4 text-center bg-green-50 dark:bg-green-900/20">
+                <div className="text-2xl sm:text-3xl font-bold text-green-600">
                   {
                     serviceRequests.filter((r) => r.status === "COMPLETED")
                       .length
                   }
                 </div>
-                <div className="text-sm text-green-600">Completed Services</div>
+                <div className="text-xs sm:text-sm text-green-600 mt-1">
+                  Completed Services
+                </div>
               </div>
-              <div className="text-center p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
-                <div className="text-2xl font-bold text-purple-600">
+
+              {/* Event Registrations */}
+              <div className="rounded-xl p-4 text-center bg-purple-50 dark:bg-purple-900/20">
+                <div className="text-2xl sm:text-3xl font-bold text-purple-600">
                   {participatingEvents.length}
                 </div>
-                <div className="text-sm text-purple-600">
+                <div className="text-xs sm:text-sm text-purple-600 mt-1">
                   Event Registrations
                 </div>
               </div>
-              <div className="text-center p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
-                <div className="text-2xl font-bold text-orange-600">
+
+              {/* Events Attended */}
+              <div className="rounded-xl p-4 text-center bg-orange-50 dark:bg-orange-900/20">
+                <div className="text-2xl sm:text-3xl font-bold text-orange-600">
                   {
                     participatingEvents.filter(
                       (e) => getEventStatus(e) === "COMPLETED"
                     ).length
                   }
                 </div>
-                <div className="text-sm text-orange-600">Events Attended</div>
+                <div className="text-xs sm:text-sm text-orange-600 mt-1">
+                  Events Attended
+                </div>
               </div>
             </div>
           </CardContent>

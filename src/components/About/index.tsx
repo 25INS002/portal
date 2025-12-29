@@ -7,7 +7,7 @@ import Link from "next/link";
 import { useContent } from "@/context/ContentContext";
 import { useState, useEffect, useMemo } from "react";
 import SectionDivider from "../SectionDivider";
-
+import HistorySection from "@/components/Hero/HistorySection";
 /* --------------------- TYPE DEFINITIONS --------------------------- */
 type Gradient = string;
 interface Hero {
@@ -306,7 +306,7 @@ const MissionSection = ({ heading, paragraphs, pillars }: Mission) => {
   return (
     <section
       id="mission"
-      className="relative py-32 px-6 bg-background flex justify-center"
+      className="relative lg:py-32 px-6 bg-background flex justify-center"
     >
       <div className="max-w-7xl w-full text-center">
         <motion.h2
@@ -419,7 +419,7 @@ const ValuesSection = ({ heading, summary, cards }: Values) => {
   ];
 
   return (
-    <section className="relative py-32 px-6 bg-background flex justify-center">
+    <section className="relative lg:py-32 px-6 bg-background flex justify-center">
       <div className="max-w-7xl w-full">
         <div className="text-center mb-16">
           <motion.h2
@@ -476,96 +476,6 @@ const ValuesSection = ({ heading, summary, cards }: Values) => {
   );
 };
 
-/* ------------------- TIMELINE ------------------------------------- */
-const HistorySection = ({ heading, milestones }: Timeline) => {
-  const { theme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-  
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-  
-  const isDark = mounted && theme === "dark";
-
-  const headingSafe = safeStr(heading) || "Our Journey";
-  const milestonesSafe = safeArr(milestones) || [
-    { year: "2018", event: "Foundation of I2EDC at IIT Jammu" },
-    { year: "2019", event: "First Innovation Challenge & Prototype Exhibition" },
-    { year: "2020", event: "Launch of Tinkering Lab & Digital Initiatives" },
-    { year: "2021", event: "Partnerships with Industry Leaders Established" },
-    { year: "2022", event: "Expansion of Protospace Facilities" },
-    { year: "2023", event: "100+ Student Projects Supported" },
-    { year: "2024", event: "National Recognition for Innovation Programs" }
-  ];
-
-  return (
-    <section className="relative py-32 px-6 bg-background flex justify-center">
-      <div className="max-w-7xl w-full">
-        <div className="text-center mb-16">
-          <motion.h2
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-            className="text-4xl md:text-5xl font-bold mb-4"
-          >
-            {headingSafe}
-          </motion.h2>
-          
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            A timeline of key milestones in our innovation journey
-          </p>
-        </div>
-
-        {/* Timeline */}
-        <div className="relative">
-          {/* Center line */}
-          <div className="absolute left-1/2 transform -translate-x-1/2 h-full w-0.5 bg-gradient-to-b from-indigo-500/30 via-purple-500/30 to-transparent" />
-          
-          {milestonesSafe.map((milestone, index) => (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, x: index % 2 === 0 ? -50 : 50 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6, delay: index * 0.1 }}
-              viewport={{ once: true }}
-              className={`
-                relative flex items-center mb-12
-                ${index % 2 === 0 ? 'flex-row-reverse' : ''}
-              `}
-            >
-              {/* Content */}
-              <div className={`w-1/2 ${index % 2 === 0 ? 'pr-12 text-right' : 'pl-12'}`}>
-                <div className="glass glass-hover p-6">
-                  <h3 className={`
-                    text-2xl font-bold mb-2
-                    ${isDark ? 'text-indigo-300' : 'text-indigo-600'}
-                  `}>
-                    {milestone.year}
-                  </h3>
-                  <p className="text-muted-foreground">
-                    {milestone.event}
-                  </p>
-                </div>
-              </div>
-              
-              {/* Center dot */}
-              <div className="absolute left-1/2 transform -translate-x-1/2">
-                <div className={`
-                  w-4 h-4 rounded-full
-                  bg-gradient-to-r from-indigo-500 to-purple-500
-                  ring-4 ${isDark ? 'ring-gray-900' : 'ring-white'}
-                `} />
-              </div>
-              
-              {/* Spacer */}
-              <div className={`w-1/2 ${index % 2 === 0 ? 'pl-12' : 'pr-12'}`} />
-            </motion.div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-};
 
 /* ------------------- LEADERSHIP ----------------------------------- */
 interface TeamMember {
@@ -812,7 +722,7 @@ const TeamSection = () => {
   }
 
   return (
-    <section className="relative py-32 px-6 bg-background flex justify-center">
+    <section className="relative mb-8 lg:py-24 px-6 bg-background flex justify-center">
       <div className="max-w-7xl w-full">
         <div className="text-center mb-16">
           <motion.h2

@@ -59,7 +59,7 @@ const HistorySection = () => {
         <div className="absolute inset-0 block dark:hidden bg-gradient-to-b from-background to-background" />
       </div>
 
-      <div className="relative z-10 max-w-5xl mx-auto px-6 md:px-20 pt-40 pb-32">
+      <div className="relative z-10 max-w-5xl mx-auto px-6 md:px-20 lg:pt-40 lg:pb-32">
         {/* SECTION TITLE */}
         <motion.h2
           initial={{ opacity: 0, y: 30 }}

@@ -106,7 +106,7 @@ export const HeroSection = () => {
 
               <h1
                 className={`
-                  text-5xl md:text-6xl xl:text-7xl font-extrabold leading-tight mb-8
+                  text-4xl md:text-6xl xl:text-7xl font-extrabold leading-tight mb-8
                   ${isDark ? "text-white" : "text-gray-900"}
                 `}
               >
@@ -119,14 +119,14 @@ export const HeroSection = () => {
 
               <p
                 className={`
-                  text-lg md:text-xl mb-10
+                   md:text-xl mb-10
                   ${isDark ? "text-slate-300" : "text-gray-600"}
                 `}
               >
                 {heroData.description}
               </p>
 
-             <div className="flex flex-col sm:flex-row gap-4 items-center sm:items-start">
+              <div className="flex flex-col sm:flex-row gap-4 items-center sm:items-start">
                 <button
                   onClick={() =>
                     document
@@ -161,7 +161,31 @@ export const HeroSection = () => {
           </div>
         </div>
       </div>
-
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1 }}
+        className={`absolute bottom-8 left-1/2 transform -translate-x-1/2 flex flex-col items-center ${
+          isDark ? "text-white" : "text-gray-600"
+        }`}
+      >
+        <span className="text-xs tracking-widest mb-2">SCROLL DOWN</span>
+        <motion.div
+          animate={{ y: [0, 8, 0] }}
+          transition={{ repeat: Infinity, duration: 1.5 }}
+          className={`w-6 h-10 border-2 rounded-full flex justify-center ${
+            isDark ? "border-white/50" : "border-gray-400"
+          }`}
+        >
+          <motion.div
+            animate={{ y: [0, 8, 0] }}
+            transition={{ repeat: Infinity, duration: 1.5, delay: 0.2 }}
+            className={`w-1 h-3 rounded-full mt-2 ${
+              isDark ? "bg-white/70" : "bg-gray-600"
+            }`}
+          />
+        </motion.div>
+      </motion.div>
       {/* HERO → ABOUT TRANSITION */}
       <div className="absolute bottom-0 left-0 w-full h-64 pointer-events-none">
         <div className="absolute inset-0 hidden dark:block bg-gradient-to-t from-background via-background/80 to-transparent" />
@@ -215,7 +239,7 @@ const AboutSection = () => {
   return (
     <section
       id="explore"
-      className="relative py-32 px-6 bg-background flex justify-center"
+      className="relative lg:py-32 px-6 bg-background flex justify-center"
     >
       <div className="max-w-7xl w-full text-center">
         <motion.h2

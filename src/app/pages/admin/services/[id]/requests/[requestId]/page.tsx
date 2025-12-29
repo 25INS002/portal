@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import api from "@/lib/api";
+import ServiceRequestRemarks from "@/components/ServiceManager/Chat";
 import { toast } from "sonner";
 import {
   Card,
@@ -125,52 +126,57 @@ const ServiceRequestDetailPage: React.FC = () => {
 
     try {
       setDownloading(true);
-      
+
       // Fetch the media file
       const response = await fetch(request.media_url);
       const blob = await response.blob();
-      
+
       // Create a download link
       const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = url;
-      
+
       // Extract filename from URL or create one
-      const filename = request.media_url.split('/').pop() || `service-request-${request.id}-media`;
+      const filename =
+        request.media_url.split("/").pop() ||
+        `service-request-${request.id}-media`;
       link.download = filename;
-      
+
       // Trigger download
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      
+
       // Clean up
       window.URL.revokeObjectURL(url);
       toast.success("Media downloaded successfully");
-      
     } catch (error) {
       console.error("Download error:", error);
       toast.error("Failed to download media");
-      
+
       // Fallback: open in new tab if download fails
-      window.open(request.media_url, '_blank');
+      window.open(request.media_url, "_blank");
     } finally {
       setDownloading(false);
     }
   };
 
   const getFileIcon = (url: string) => {
-    const extension = url.split('.').pop()?.toLowerCase();
-    const isImage = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].includes(extension || '');
-    const isVideo = ['mp4', 'avi', 'mov', 'wmv', 'flv'].includes(extension || '');
-    
+    const extension = url.split(".").pop()?.toLowerCase();
+    const isImage = ["jpg", "jpeg", "png", "gif", "bmp", "webp"].includes(
+      extension || ""
+    );
+    const isVideo = ["mp4", "avi", "mov", "wmv", "flv"].includes(
+      extension || ""
+    );
+
     if (isImage) return <Image className="h-5 w-5" />;
     if (isVideo) return <Video className="h-5 w-5" />;
     return <File className="h-5 w-5" />;
   };
 
   const getFileName = (url: string) => {
-    return url.split('/').pop() || 'Download File';
+    return url.split("/").pop() || "Download File";
   };
 
   const getStatusBadge = (status: string) => {
@@ -224,7 +230,7 @@ const ServiceRequestDetailPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-foreground">Loading request details...</p>
@@ -235,14 +241,14 @@ const ServiceRequestDetailPage: React.FC = () => {
 
   if (!request) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center text-foreground">Request not found</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background py-8 px-4">
+    <div className="min-h-screen py-8 px-4">
       <div className="container mx-auto space-y-6">
         {/* Header with proper theming */}
         <div className="flex items-center space-x-4 mb-6 p-4 rounded-lg bg-card border border-border shadow-sm">
@@ -256,7 +262,9 @@ const ServiceRequestDetailPage: React.FC = () => {
             <span>Back</span>
           </Button>
           <div className="flex-1">
-            <h1 className="text-3xl font-bold text-card-foreground">Service Request Detail</h1>
+            <h1 className="text-3xl font-bold text-card-foreground">
+              Service Request Detail
+            </h1>
             <p className="text-muted-foreground mt-1">
               Request ID: {request.id} • Service: {request.service.name}
             </p>
@@ -281,7 +289,9 @@ const ServiceRequestDetailPage: React.FC = () => {
         {/* User & Service Info */}
         <Card className="border-border bg-card">
           <CardHeader className="pb-4">
-            <CardTitle className="text-card-foreground">User & Service Information</CardTitle>
+            <CardTitle className="text-card-foreground">
+              User & Service Information
+            </CardTitle>
             <CardDescription className="text-muted-foreground">
               Details about the user and requested service
             </CardDescription>
@@ -289,49 +299,72 @@ const ServiceRequestDetailPage: React.FC = () => {
           <CardContent className="space-y-4 text-card-foreground">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <p className="font-semibold text-sm text-muted-foreground">User</p>
-                <p>
-                  {request.requested_by.first_name} {request.requested_by.last_name}
+                <p className="font-semibold text-sm text-muted-foreground">
+                  User
                 </p>
-                <p className="text-sm text-muted-foreground">{request.requested_by.email}</p>
-              </div>
-              
-              <div>
-                <p className="font-semibold text-sm text-muted-foreground">Service</p>
-                <p>{request.service.name}</p>
-                <p className="text-sm text-muted-foreground">{request.service.description}</p>
+                <p>
+                  {request.requested_by.first_name}{" "}
+                  {request.requested_by.last_name}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {request.requested_by.email}
+                </p>
               </div>
 
               <div>
-                <p className="font-semibold text-sm text-muted-foreground">Plan</p>
+                <p className="font-semibold text-sm text-muted-foreground">
+                  Service
+                </p>
+                <p>{request.service.name}</p>
+                <p className="text-sm text-muted-foreground">
+                  {request.service.description}
+                </p>
+              </div>
+
+              <div>
+                <p className="font-semibold text-sm text-muted-foreground">
+                  Plan
+                </p>
                 <p>{request.plan.plan}</p>
                 <p className="text-sm">
                   ${request.plan.cost} (-${request.plan.discount} discount)
                 </p>
                 {request.plan.description && (
-                  <p className="text-sm text-muted-foreground mt-1">{request.plan.description}</p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {request.plan.description}
+                  </p>
                 )}
               </div>
 
               <div>
-                <p className="font-semibold text-sm text-muted-foreground">Final Price</p>
-                <p className="text-lg font-bold text-green-600">${request.final_price}</p>
+                <p className="font-semibold text-sm text-muted-foreground">
+                  Final Price
+                </p>
+                <p className="text-lg font-bold text-green-600">
+                  ${request.final_price}
+                </p>
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-border">
               <div>
-                <p className="font-semibold text-sm text-muted-foreground">Status</p>
+                <p className="font-semibold text-sm text-muted-foreground">
+                  Status
+                </p>
                 <div className="mt-1">{getStatusBadge(request.status)}</div>
               </div>
-              
+
               <div>
-                <p className="font-semibold text-sm text-muted-foreground">Requested At</p>
+                <p className="font-semibold text-sm text-muted-foreground">
+                  Requested At
+                </p>
                 <p className="text-sm">{formatDate(request.requested_at)}</p>
               </div>
-              
+
               <div>
-                <p className="font-semibold text-sm text-muted-foreground">Last Updated</p>
+                <p className="font-semibold text-sm text-muted-foreground">
+                  Last Updated
+                </p>
                 <p className="text-sm">{formatDate(request.updated_at)}</p>
               </div>
             </div>
@@ -341,36 +374,64 @@ const ServiceRequestDetailPage: React.FC = () => {
         {/* Request Message */}
         <Card className="border-border bg-card">
           <CardHeader className="pb-4">
-            <CardTitle className="text-card-foreground">Request Message</CardTitle>
+            <CardTitle className="text-card-foreground">
+              Request Message
+            </CardTitle>
             <CardDescription className="text-muted-foreground">
               Message submitted by the user
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4 text-card-foreground">
             <div>
-              <p className="font-semibold text-sm text-muted-foreground">Subject</p>
+              <p className="font-semibold text-sm text-muted-foreground">
+                Subject
+              </p>
               <p className="mt-1">{request.request_msg.subject}</p>
             </div>
             <div>
-              <p className="font-semibold text-sm text-muted-foreground">Message</p>
-              <p className="mt-1 whitespace-pre-wrap">{request.request_msg.body}</p>
+              <p className="font-semibold text-sm text-muted-foreground">
+                Message
+              </p>
+              <p className="mt-1 whitespace-pre-wrap">
+                {request.request_msg.body}
+              </p>
             </div>
+          </CardContent>
+        </Card>
+        <Card className="border-border bg-card">
+          <CardHeader className="pb-1">
+            <CardTitle className="text-card-foreground">Reamarks</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <ServiceRequestRemarks
+              requestId={request.id}
+              rawRemark={request.remark}
+              onNewRemark={(newRemark) => {
+                request.remark = request.remark
+                  ? request.remark + "\n" + JSON.stringify(newRemark)
+                  : JSON.stringify(newRemark);
+              }}
+            />
           </CardContent>
         </Card>
 
         {/* Remarks & Status Update */}
         <Card className="border-border bg-card">
           <CardHeader className="pb-4">
-            <CardTitle className="text-card-foreground">Update Request</CardTitle>
+            <CardTitle className="text-card-foreground">
+              Update Request
+            </CardTitle>
             <CardDescription className="text-muted-foreground">
               Update the status and add remarks for this request
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-card-foreground">Status</label>
+              <label className="text-sm font-medium text-card-foreground">
+                Status
+              </label>
               <Select value={newStatus} onValueChange={setNewStatus}>
-                <SelectTrigger className="border-border bg-background text-foreground">
+                <SelectTrigger className="border-border text-foreground">
                   <SelectValue placeholder="Select status" />
                 </SelectTrigger>
                 <SelectContent className="bg-card border-border text-card-foreground">
@@ -381,20 +442,8 @@ const ServiceRequestDetailPage: React.FC = () => {
                 </SelectContent>
               </Select>
             </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-card-foreground">Remark (optional)</label>
-              <Textarea
-                placeholder="Add remarks or notes about this request..."
-                value={remark}
-                onChange={(e) => setRemark(e.target.value)}
-                rows={4}
-                className="border-border bg-background text-foreground resize-none"
-              />
-            </div>
-
-            <Button 
-              onClick={handleStatusUpdate} 
+            <Button
+              onClick={handleStatusUpdate}
               disabled={updating}
               className="w-full sm:w-auto"
             >
@@ -420,7 +469,7 @@ const ServiceRequestDetailPage: React.FC = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="flex items-center justify-between p-4 border border-border rounded-lg bg-background">
+              <div className="flex items-center justify-between p-4 border border-border rounded-lg">
                 <div className="flex items-center space-x-3">
                   {getFileIcon(request.media_url)}
                   <div>
@@ -448,7 +497,7 @@ const ServiceRequestDetailPage: React.FC = () => {
                     <span>{downloading ? "Downloading" : "Download"}</span>
                   </Button>
                   <Button
-                    onClick={() => window.open(request.media_url, '_blank')}
+                    onClick={() => window.open(request.media_url, "_blank")}
                     variant="ghost"
                     size="sm"
                     className="text-card-foreground hover:bg-accent hover:text-accent-foreground"

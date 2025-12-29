@@ -62,7 +62,7 @@ export default function EventsSection() {
         <div className="absolute inset-0 block dark:hidden bg-gradient-to-b from-background to-background" />
       </div>
 
-      <div className="relative z-10 max-w-7xl mx-auto px-6 md:px-20 pt-32 pb-28">
+      <div className="relative z-10 max-w-7xl mx-auto px-6 md:px-20 lg:pt-32 lg:pb-28">
         {/* TITLE */}
         <motion.h2
           initial={{ opacity: 0, y: 24 }}

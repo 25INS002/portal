@@ -1,6 +1,6 @@
 export default function SectionDivider() {
   return (
-    <div className="relative my-24">
+    <div className="relative my-8 sm:my-12 lg:my-24">
       <div className="absolute inset-0 flex items-center">
         <span className="w-full border-t border-border/60" />
       </div>
