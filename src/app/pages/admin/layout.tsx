@@ -37,7 +37,7 @@ export default function SuperAdminLayout({
             <br />
 
             {/* Tabs */}
-            <div className="flex gap-2 mb-4 overflow-x-auto flex-row-reverse">
+            <div className="flex gap-2 mb-4 overflow-x-auto flex-row-reverse mx-auto">
                 {tabs.map((tab) => {
                     // Replace the current tab with the new tab, or append if no tab exists
                     const tabHref = currentTabIndex !== -1 

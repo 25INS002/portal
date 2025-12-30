@@ -536,12 +536,12 @@ const AdminServicesPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen py-8 px-4">
-      <div className="container mx-auto">
+    <div className="min-h-screen py-8 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 gap-6">
           <div className="space-y-2">
-            <h1 className="text-4xl font-bold">Services Management</h1>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">Services Management</h1>
             <p className="text-lg text-muted-foreground max-w-2xl">
               Manage all your services, pricing plans, and monitor performance
               metrics

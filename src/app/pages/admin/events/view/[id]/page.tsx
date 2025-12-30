@@ -388,7 +388,7 @@ export default function ViewEventPage() {
     return (
       <div className="min-h-screen  flex items-center justify-center">
         <div className="text-center">
-          <p className="text-destructive mb-4">Event not found</p>
+          <p className="text-destructive mb-4 text-black">Event not found</p>
           <Button onClick={() => router.push("/pages/admin/events")}>
             <ArrowLeftIcon className="h-4 w-4 mr-2" />
             Back to Events
@@ -402,9 +402,8 @@ export default function ViewEventPage() {
     <div className="min-h-screen  py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Header with Back Button */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
           <Button 
-            variant="ghost" 
             onClick={() => router.push("/pages/admin/events")}
             className="flex items-center gap-2"
           >

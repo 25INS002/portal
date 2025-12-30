@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import type { Icon } from "leaflet";
+import api from "@/lib/api";
 
 import { MapPin, Mail, Phone, Clock, Send, CheckCircle } from "lucide-react";
 import SectionDivider from "../SectionDivider";
@@ -171,17 +172,31 @@ const ContactFormSection = () => {
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    try {
+      await api.post("/query/contact/submit/", {
+        name: form.name.trim(),
+        email: form.email.trim(),
+        subject: form.subject.trim(),
+        message: form.message.trim(),
+      });
 
-    console.log("Form submitted", form);
-    setSubmitted(true);
-    setForm({ name: "", email: "", subject: "", message: "" });
-    setLoading(false);
+      setSubmitted(true);
+      setForm({
+        name: "",
+        email: "",
+        subject: "",
+        message: "",
+      });
+    } catch (error) {
+      console.error("Contact form submission failed:", error);
+      alert("Something went wrong. Please try again later.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

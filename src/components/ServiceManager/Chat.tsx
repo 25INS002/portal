@@ -71,7 +71,7 @@ export default function ServiceRequestRemarks({
         </div>
         <button
           onClick={() => setIsExpanded(!isExpanded)}
-          className="p-1.5 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors md:hidden"
+          className="p-1.5 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
           aria-label={isExpanded ? "Collapse" : "Expand"}
         >
           {isExpanded ? (
