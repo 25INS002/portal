@@ -1,23 +1,10 @@
 "use client";
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import api from "@/lib/api";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-  CardDescription,
-} from "@/components/ui/card";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import SpotlightCard from "@/components/ui/SpotlightCard";
 import {
   Trash2,
   ShieldCheck,
@@ -30,6 +17,11 @@ import {
   Save,
   X,
   RefreshCw,
+  MoreVertical,
+  ShieldAlert,
+  User,
+  Mail,
+  Lock
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -54,8 +46,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface User {
   id: number;
@@ -82,8 +82,6 @@ const AssignAccess: React.FC = () => {
     is_staff: false,
     is_superuser: false,
   });
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
   const [form, setForm] = useState({
     username: "",
     email: "",
@@ -95,21 +93,18 @@ const AssignAccess: React.FC = () => {
     username: "",
     email: "",
     password: "",
-    is_staff: false,
-    is_superuser: false,
   });
 
   // Fetch users
   const fetchUsers = async () => {
     setLoading(true);
-    setError(null);
     try {
       const res = await api.get<User[]>("/adminpanel/list-users/");
       setUsers(res.data);
       setFilteredUsers(res.data);
     } catch (error) {
       console.error("Error fetching users:", error);
-      setError("Failed to load users. Please try again.");
+      toast.error("Failed to load users. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -149,8 +144,8 @@ const AssignAccess: React.FC = () => {
 
   // Handle form input
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setForm({ ...form, [name]: value });
+    const { name, value, type, checked } = e.target;
+    setForm({ ...form, [name]: type === "checkbox" ? checked : value });
 
     // Clear error when user types
     if (formErrors[name as keyof typeof formErrors]) {
@@ -174,8 +169,6 @@ const AssignAccess: React.FC = () => {
       username: "",
       email: "",
       password: "",
-      is_staff: false,
-      is_superuser: false,
     };
 
     if (!form.username.trim()) {
@@ -208,10 +201,9 @@ const AssignAccess: React.FC = () => {
     if (!validateForm()) return;
 
     setLoading(true);
-    setError(null);
     try {
       await api.post("/adminpanel/create-admin/", form);
-      setSuccess("Admin created successfully");
+      toast.success("Admin created successfully");
       setForm({
         username: "",
         email: "",
@@ -220,12 +212,9 @@ const AssignAccess: React.FC = () => {
         is_superuser: false,
       });
       fetchUsers();
-
-      // Clear success message after 3 seconds
-      setTimeout(() => setSuccess(null), 3000);
     } catch (error: any) {
       const errorMsg = error.response?.data?.error || "Failed to create admin";
-      setError(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -252,18 +241,14 @@ const AssignAccess: React.FC = () => {
   // Save edited user
   const saveEditedUser = async (userId: number) => {
     setLoading(true);
-    setError(null);
     try {
       await api.patch(`/adminpanel/update-user/${userId}/`, editForm);
-      setSuccess("User updated successfully");
+      toast.success("User updated successfully");
       setEditingUser(null);
       fetchUsers();
-
-      // Clear success message after 3 seconds
-      setTimeout(() => setSuccess(null), 3000);
     } catch (error: any) {
       console.error("Error updating user:", error);
-      setError(error.response?.data?.error || "Failed to update user");
+      toast.error(error.response?.data?.error || "Failed to update user");
     } finally {
       setLoading(false);
     }
@@ -279,26 +264,18 @@ const AssignAccess: React.FC = () => {
     if (!userToModify) return;
 
     setLoading(true);
-    setError(null);
     try {
       await api.patch(`/adminpanel/update-user/${userToModify.id}/`, {
         is_staff: !userToModify.is_staff,
         is_superuser: userToModify.is_superuser,
       });
-      setSuccess(
-        `User ${
-          !userToModify.is_staff
-            ? "promoted to admin"
-            : "demoted to regular user"
-        } successfully`
+      toast.success(
+        `User ${!userToModify.is_staff ? "promoted to admin" : "demoted to regular user"} successfully`
       );
       fetchUsers();
-
-      // Clear success message after 3 seconds
-      setTimeout(() => setSuccess(null), 3000);
     } catch (error) {
       console.error("Error updating user:", error);
-      setError("Failed to update user. Please try again.");
+      toast.error("Failed to update user status");
     } finally {
       setLoading(false);
       setAdminDialogOpen(false);
@@ -316,17 +293,13 @@ const AssignAccess: React.FC = () => {
     if (!userToDelete) return;
 
     setLoading(true);
-    setError(null);
     try {
       await api.delete(`/adminpanel/delete-user/${userToDelete.id}/`);
-      setSuccess("User deleted successfully");
+      toast.success("User deleted successfully");
       setUsers((prev) => prev.filter((u) => u.id !== userToDelete.id));
-
-      // Clear success message after 3 seconds
-      setTimeout(() => setSuccess(null), 3000);
     } catch (error) {
       console.error("Error deleting user:", error);
-      setError("Failed to delete user. Please try again.");
+      toast.error("Failed to delete user");
     } finally {
       setLoading(false);
       setDeleteDialogOpen(false);
@@ -341,435 +314,290 @@ const AssignAccess: React.FC = () => {
   };
 
   const getRoleVariant = (user: User) => {
-    if (user.is_superuser) return "destructive";
+    if (user.is_superuser) return "destructive"; // Or a custom color
     if (user.is_staff) return "default";
-    return "outline";
+    return "secondary";
+  };
+  
+  const getRoleColor = (user: User) => {
+    if (user.is_superuser) return "bg-red-500/10 text-red-500 border-red-500/20";
+    if (user.is_staff) return "bg-purple-500/10 text-purple-500 border-purple-500/20";
+    return "bg-blue-500/10 text-blue-500 border-blue-500/20";
   };
 
   return (
-    <div className="min-h-screen py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">User Management</h1>
-            <p className="text-muted-foreground">
-              Super Admin – Manage user roles and permissions
-            </p>
+    <div className="w-full relative min-h-screen pt-32 pb-12 px-6">
+       {/* Ambient Highlights */}
+       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-purple-500/5 blur-[100px] pointer-events-none rounded-full" />
+       
+       <div className="max-w-7xl mx-auto space-y-8 z-10 relative">
+          
+          {/* Header */}
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+             <div>
+                <motion.h1 
+                  initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                  className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400"
+                >
+                  Access Management
+                </motion.h1>
+                <motion.p 
+                  initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
+                  className="text-muted-foreground mt-1"
+                >
+                  Manage system administrators, user roles, and permissions
+                </motion.p>
+             </div>
+             <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.2 }}>
+                <Button 
+                   onClick={fetchUsers} disabled={loading}
+                   className="rounded-full bg-white/10 hover:bg-white/20 border border-white/10 text-white backdrop-blur-md"
+                >
+                   <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
+                   Refresh List
+                </Button>
+             </motion.div>
           </div>
-          <Button
-            onClick={fetchUsers}
-            className="flex items-center gap-2"
-          >
-            {loading ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <RefreshCw className="h-4 w-4" />
-            )}
-            Refresh
-          </Button>
-        </div>
 
-        {error && (
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
+          {/* Create Admin Card */}
+          <SpotlightCard className="p-8 bg-white/5 border-white/10" spotlightColor="rgba(255,255,255,0.05)">
+             <div className="flex items-center gap-3 mb-6">
+                 <div className="p-2.5 rounded-xl bg-indigo-500/10 border border-indigo-500/20 shadow-inner shadow-indigo-500/10">
+                    <UserPlus className="w-5 h-5 text-indigo-400" />
+                 </div>
+                 <div>
+                    <h2 className="text-xl font-bold text-white">Create New Admin</h2>
+                    <p className="text-sm text-muted-foreground">Grant system access to new administrators</p>
+                 </div>
+             </div>
 
-        {success && (
-          <Alert
-            variant="default"
-            className="bg-green-800 text-green-50 border-green-200"
-          >
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>{success}</AlertDescription>
-          </Alert>
-        )} 
-
-        <Card className="mb-2">
-          <CardHeader>
-            <CardTitle>Create New Admin</CardTitle>
-            <CardDescription>
-              Add a new administrator to the system
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="username">Username</Label>
-                <Input
-                  id="username"
-                  name="username"
-                  value={form.username}
-                  onChange={handleChange}
-                  placeholder="Username"
-                  className={formErrors.username ? "border-red-500" : ""}
-                />
-                {formErrors.username && (
-                  <p className="text-red-500 text-xs">{formErrors.username}</p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  name="email"
-                  value={form.email}
-                  onChange={handleChange}
-                  placeholder="Email"
-                  className={formErrors.email ? "border-red-500" : ""}
-                />
-                {formErrors.email && (
-                  <p className="text-red-500 text-xs">{formErrors.email}</p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  name="password"
-                  value={form.password}
-                  onChange={handleChange}
-                  placeholder="Password"
-                  className={formErrors.password ? "border-red-500" : ""}
-                />
-
-                {formErrors.password && (
-                  <p className="text-red-500 text-xs">{formErrors.password}</p>
-                )}
-              </div>
-
-              <div className="flex flex-row gap-2">
-                <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    id={`staff`}
-                    name="is_staff"
-                    checked={form.is_staff}
-                    onChange={handleChange}
-                    className="h-4 w-4"
-                  />
-                  <Label htmlFor={`staff`} className="text-sm">
-                    Staff
-                  </Label>
-                </div>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    id={`superuser`}
-                    name="is_superuser"
-                    checked={form.is_superuser}
-                    onChange={handleChange}
-                    className="h-4 w-4"
-                  />
-                  <Label htmlFor={`superuser`} className="text-sm">
-                    Superadmin
-                  </Label>
-                </div>
-              </div>
-            </div>
-            <Button
-              onClick={handleCreateAdmin}
-              disabled={loading}
-              className="flex items-center gap-2"
-            >
-              <UserPlus className="h-4 w-4" />
-              Create Admin
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div>
-              <CardTitle>User Management</CardTitle>
-              <CardDescription>
-                {filteredUsers.length}{" "}
-                {filteredUsers.length === 1 ? "user" : "users"} found
-              </CardDescription>
-            </div>
-            <div className="flex flex-col gap-2 md:flex-row">
-              <div className="relative">
-                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search users..."
-                  className="pl-8 w-full md:w-[200px]"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </div>
-              <Select value={roleFilter} onValueChange={setRoleFilter}>
-                <SelectTrigger className="w-full md:w-[140px]">
-                  <div className="flex items-center gap-2">
-                    <Filter className="h-4 w-4" />
-                    <SelectValue placeholder="Filter by role" />
-                  </div>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Roles</SelectItem>
-                  <SelectItem value="superadmin">Superadmin</SelectItem>
-                  <SelectItem value="admin">Admin</SelectItem>
-                  <SelectItem value="user">User</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>User</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Role</TableHead>
-                    <TableHead>Joined</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredUsers.map((user) => (
-                    <TableRow key={user.id}>
-                      <TableCell className="font-medium">
-                        {user.username}
-                      </TableCell>
-                      <TableCell>{user.email}</TableCell>
-                      <TableCell>
-                        {editingUser === user.id ? (
-                          <div className="flex flex-col gap-2">
-                            <div className="flex items-center gap-2">
-                              <input
-                                type="checkbox"
-                                id={`staff-${user.id}`}
-                                name="is_staff"
-                                checked={editForm.is_staff}
-                                onChange={handleEditChange}
-                                className="h-4 w-4"
-                              />
-                              <Label
-                                htmlFor={`staff-${user.id}`}
-                                className="text-sm"
-                              >
-                                Staff
-                              </Label>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <input
-                                type="checkbox"
-                                id={`superuser-${user.id}`}
-                                name="is_superuser"
-                                checked={editForm.is_superuser}
-                                onChange={handleEditChange}
-                                className="h-4 w-4"
-                              />
-                              <Label
-                                htmlFor={`superuser-${user.id}`}
-                                className="text-sm"
-                              >
-                                Superadmin
-                              </Label>
-                            </div>
-                          </div>
-                        ) : (
-                          <Badge variant={getRoleVariant(user)}>
-                            {getUserRole(user)}
-                          </Badge>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {user.date_joined
-                          ? new Date(user.date_joined).toLocaleDateString()
-                          : "N/A"}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          {editingUser === user.id ? (
-                            <>
-                              <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Button
-                                      size="sm"
-                                      variant="default"
-                                      onClick={() => saveEditedUser(user.id)}
-                                      className="flex items-center gap-1"
-                                      disabled={loading}
-                                    >
-                                      <Save className="h-4 w-4" /> Save
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    <p>Save changes</p>
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
-                              <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      onClick={cancelEditing}
-                                      className="flex items-center gap-1"
-                                    >
-                                      <X className="h-4 w-4" /> Cancel
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    <p>Cancel editing</p>
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
-                            </>
-                          ) : (
-                            <>
-                              <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      onClick={() => startEditing(user)}
-                                      className="flex items-center gap-1"
-                                    >
-                                      <Edit className="h-4 w-4" /> Edit
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    <p>Edit user details</p>
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
-                              {!user.is_superuser && (
-                                <TooltipProvider>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <Button
-                                        size="sm"
-                                        variant="outline"
-                                        onClick={() => handleToggleAdmin(user)}
-                                        className="flex items-center gap-1"
-                                        disabled={loading}
-                                      >
-                                        <ShieldCheck className="h-4 w-4" />
-                                        {user.is_staff
-                                          ? "Revoke"
-                                          : "Make Admin"}
-                                      </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                      <p>
-                                        {user.is_staff
-                                          ? "Revoke admin privileges"
-                                          : "Grant admin privileges"}
-                                      </p>
-                                    </TooltipContent>
-                                  </Tooltip>
-                                </TooltipProvider>
-                              )}
-                              {!user.is_superuser && (
-                                <TooltipProvider>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <Button
-                                        size="sm"
-                                        variant="destructive"
-                                        onClick={() => handleDeleteUser(user)}
-                                        className="flex items-center gap-1"
-                                        disabled={loading}
-                                      >
-                                        <Trash2 className="h-4 w-4" /> Delete
-                                      </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                      <p>Permanently delete this user</p>
-                                    </TooltipContent>
-                                  </Tooltip>
-                                </TooltipProvider>
-                              )}
-                            </>
-                          )}
+             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                 <div className="space-y-2">
+                    <Label className="text-xs text-muted-foreground ml-1">Username</Label>
+                    <div className="relative">
+                       <User className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                       <Input 
+                          name="username" value={form.username} onChange={handleChange} 
+                          className={`pl-9 bg-black/40 border-white/10 focus:border-indigo-500/50 ${formErrors.username ? "border-red-500/50" : ""}`}
+                          placeholder="e.g. admin_jane"
+                       />
+                    </div>
+                 </div>
+                 <div className="space-y-2">
+                    <Label className="text-xs text-muted-foreground ml-1">Email Address</Label>
+                     <div className="relative">
+                       <Mail className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                       <Input 
+                          name="email" value={form.email} onChange={handleChange} 
+                          className={`pl-9 bg-black/40 border-white/10 focus:border-indigo-500/50 ${formErrors.email ? "border-red-500/50" : ""}`}
+                          placeholder="jane@company.com"
+                       />
+                    </div>
+                 </div>
+                 <div className="space-y-2">
+                    <Label className="text-xs text-muted-foreground ml-1">Password</Label>
+                    <div className="relative">
+                       <Lock className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                       <Input 
+                          type="password" name="password" value={form.password} onChange={handleChange} 
+                          className={`pl-9 bg-black/40 border-white/10 focus:border-indigo-500/50 ${formErrors.password ? "border-red-500/50" : ""}`}
+                          placeholder="••••••••"
+                       />
+                    </div>
+                 </div>
+             </div>
+             
+             <div className="mt-6 flex flex-col md:flex-row justify-between items-center gap-4 border-t border-white/5 pt-6">
+                 <div className="flex items-center gap-6">
+                     <label className="flex items-center gap-2 cursor-pointer group">
+                        <div className="relative flex items-center">
+                           <input type="checkbox" name="is_staff" checked={form.is_staff} onChange={handleChange} 
+                             className="peer h-4 w-4 appearance-none rounded border border-white/30 bg-black/20 checked:border-indigo-500 checked:bg-indigo-500 transition-all"
+                           />
+                           <ShieldCheck className="absolute opacity-0 peer-checked:opacity-100 pointer-events-none text-white w-3 h-3 left-0.5" />
                         </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                  {filteredUsers.length === 0 && (
-                    <TableRow>
-                      <TableCell
-                        colSpan={5}
-                        className="text-center h-24 text-muted-foreground"
+                        <span className="text-sm text-muted-foreground group-hover:text-white transition-colors">Grant Staff Access</span>
+                     </label>
+
+                     <label className="flex items-center gap-2 cursor-pointer group">
+                        <div className="relative flex items-center">
+                           <input type="checkbox" name="is_superuser" checked={form.is_superuser} onChange={handleChange} 
+                             className="peer h-4 w-4 appearance-none rounded border border-white/30 bg-black/20 checked:border-red-500 checked:bg-red-500 transition-all"
+                           />
+                           <ShieldAlert className="absolute opacity-0 peer-checked:opacity-100 pointer-events-none text-white w-3 h-3 left-0.5" />
+                        </div>
+                        <span className="text-sm text-muted-foreground group-hover:text-white transition-colors">Grant Superuser</span>
+                     </label>
+                 </div>
+
+                 <Button onClick={handleCreateAdmin} disabled={loading} className="w-full md:w-auto bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-500/20">
+                    <UserPlus className="w-4 h-4 mr-2" />
+                    Create Account
+                 </Button>
+             </div>
+          </SpotlightCard>
+
+          {/* Users List */}
+          <div className="space-y-4">
+             <div className="flex flex-col md:flex-row justify-between items-center gap-4 bg-white/5 border border-white/10 p-4 rounded-xl backdrop-blur-md">
+                <div className="flex items-center gap-2">
+                   <div className="p-2 bg-white/10 rounded-lg">
+                      <Search className="w-4 h-4 text-white" />
+                   </div>
+                   <Input 
+                      placeholder="Search users..." 
+                      value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
+                      className="bg-transparent border-none focus:ring-0 w-full md:w-[300px] text-white placeholder:text-muted-foreground"
+                   />
+                </div>
+                
+                <div className="flex items-center gap-3">
+                   <Select value={roleFilter} onValueChange={setRoleFilter}>
+                      <SelectTrigger className="w-[140px] bg-black/20 border-white/10 h-9">
+                         <div className="flex items-center gap-2 text-muted-foreground text-xs uppercase font-semibold">
+                            <Filter className="w-3 h-3" />
+                            <SelectValue />
+                         </div>
+                      </SelectTrigger>
+                      <SelectContent className="bg-gray-900 border-white/10">
+                         <SelectItem value="all">All Roles</SelectItem>
+                         <SelectItem value="superadmin">Superadmin</SelectItem>
+                         <SelectItem value="admin">Admin</SelectItem>
+                         <SelectItem value="user">User</SelectItem>
+                      </SelectContent>
+                   </Select>
+                   <div className="h-4 w-[1px] bg-white/10 mx-1" />
+                   <span className="text-xs text-muted-foreground"><strong className="text-white">{filteredUsers.length}</strong> Users</span>
+                </div>
+             </div>
+
+             <div className="grid grid-cols-1 gap-2">
+                <AnimatePresence>
+                   {filteredUsers.map((user) => (
+                      <motion.div 
+                         key={user.id}
+                         initial={{ opacity: 0, y: 10 }}
+                         animate={{ opacity: 1, y: 0 }}
+                         exit={{ opacity: 0, scale: 0.95 }}
+                         className="group flex flex-col md:flex-row items-center justify-between p-4 rounded-xl bg-white/5 border border-white/5 hover:border-white/10 hover:bg-white/[0.07] transition-all"
                       >
-                        {searchQuery || roleFilter !== "all"
-                          ? "No users match your filters."
-                          : "No users found."}
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-          </CardContent>
-        </Card>
+                         <div className="flex items-center gap-4 w-full md:w-auto">
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shadow-inner ${user.is_superuser ? "bg-gradient-to-br from-red-500 to-orange-500 text-white" : "bg-gradient-to-br from-gray-700 to-gray-600 text-gray-300"}`}>
+                               {user.username.charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                               <div className="flex items-center gap-2">
+                                  <h3 className="font-semibold text-white">{user.username}</h3>
+                                  <Badge variant="outline" className={`text-[10px] px-2 py-0 h-5 border-0 ${getRoleColor(user)}`}>
+                                     {getUserRole(user)}
+                                  </Badge>
+                               </div>
+                               <p className="text-xs text-muted-foreground">{user.email}</p>
+                            </div>
+                         </div>
 
-        {/* Delete Confirmation Dialog */}
-        <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Are you sure?</DialogTitle>
-              <DialogDescription>
-                This will permanently delete user{" "}
-                <strong>{userToDelete?.username}</strong>. This action cannot be
-                undone.
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter>
-              <DialogClose asChild>
-                <Button variant="outline">Cancel</Button>
-              </DialogClose>
-              <Button
-                variant="destructive"
-                onClick={confirmDeleteUser}
-                disabled={loading}
-              >
-                {loading ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  "Delete User"
-                )}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+                         <div className="flex items-center gap-6 mt-4 md:mt-0 w-full md:w-auto justify-between md:justify-end">
+                             <div className="text-xs text-muted-foreground flex flex-col items-end">
+                                <span>Joined</span>
+                                <span className="text-gray-400">{user.date_joined ? new Date(user.date_joined).toLocaleDateString() : 'N/A'}</span>
+                             </div>
 
-        {/* Admin Toggle Confirmation Dialog */}
-        <Dialog open={adminDialogOpen} onOpenChange={setAdminDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Confirm Role Change</DialogTitle>
-              <DialogDescription>
-                {userToModify?.is_staff
-                  ? `Are you sure you want to revoke admin privileges from ${userToModify?.username}?`
-                  : `Are you sure you want to grant admin privileges to ${userToModify?.username}?`}
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter>
-              <DialogClose asChild>
-                <Button variant="outline">Cancel</Button>
-              </DialogClose>
-              <Button onClick={confirmToggleAdmin} disabled={loading}>
-                {loading ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  "Confirm"
+                             {editingUser === user.id ? (
+                                <div className="flex items-center gap-2">
+                                   <div className="flex flex-col gap-1 mr-4">
+                                      <label className="flex items-center gap-2 text-xs">
+                                         <input type="checkbox" name="is_staff" checked={editForm.is_staff} onChange={handleEditChange} /> Staff
+                                      </label>
+                                      <label className="flex items-center gap-2 text-xs">
+                                         <input type="checkbox" name="is_superuser" checked={editForm.is_superuser} onChange={handleEditChange} /> SA
+                                      </label>
+                                   </div>
+                                   <Button size="sm" onClick={() => saveEditedUser(user.id)} className="h-8 bg-green-600/20 text-green-400 hover:bg-green-600/30">
+                                      <Save className="w-3 h-3 mr-1" /> Save
+                                   </Button>
+                                   <Button size="sm" variant="ghost" onClick={cancelEditing} className="h-8">
+                                      <X className="w-3 h-3" />
+                                   </Button>
+                                </div>
+                             ) : (
+                                <DropdownMenu>
+                                   <DropdownMenuTrigger asChild>
+                                      <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-white">
+                                         <MoreVertical className="w-4 h-4" />
+                                      </Button>
+                                   </DropdownMenuTrigger>
+                                   <DropdownMenuContent align="end" className="bg-gray-900 border-white/10">
+                                      <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                      <DropdownMenuSeparator className="bg-white/10" />
+                                      <DropdownMenuItem onClick={() => startEditing(user)}>
+                                         <Edit className="w-3 h-3 mr-2" /> Edit Permissions
+                                      </DropdownMenuItem>
+                                      {!user.is_superuser && (
+                                         <DropdownMenuItem onClick={() => handleToggleAdmin(user)}>
+                                            <ShieldCheck className="w-3 h-3 mr-2" /> {user.is_staff ? "Revoke Admin" : "Make Admin"}
+                                         </DropdownMenuItem>
+                                      )}
+                                      <DropdownMenuSeparator className="bg-white/10" />
+                                      <DropdownMenuItem onClick={() => handleDeleteUser(user)} className="text-red-400 focus:text-red-400">
+                                         <Trash2 className="w-3 h-3 mr-2" /> Delete Account
+                                      </DropdownMenuItem>
+                                   </DropdownMenuContent>
+                                </DropdownMenu>
+                             )}
+                         </div>
+                      </motion.div>
+                   ))}
+                </AnimatePresence>
+                {filteredUsers.length === 0 && (
+                   <div className="text-center py-12 text-muted-foreground bg-white/5 rounded-xl border border-dashed border-white/10">
+                      No users found matching your search.
+                   </div>
                 )}
+             </div>
+          </div>
+       </div>
+
+       {/* Dialogs */}
+       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="bg-gray-900 border-white/10">
+          <DialogHeader>
+            <DialogTitle className="text-red-500">Delete User Account</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to permanently delete <strong>{userToDelete?.username}</strong>? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+            <Button variant="destructive" onClick={confirmDeleteUser} disabled={loading}>
+              {loading ? "Deleting..." : "Delete User"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      <Dialog open={adminDialogOpen} onOpenChange={setAdminDialogOpen}>
+        <DialogContent className="bg-gray-900 border-white/10">
+           <DialogHeader>
+              <DialogTitle>Update User Role</DialogTitle>
+              <DialogDescription>
+                 {userToModify?.is_staff 
+                    ? `Revoke administrative privileges from ${userToModify?.username}?`
+                    : `Promote ${userToModify?.username} to Administrator?`
+                 }
+              </DialogDescription>
+           </DialogHeader>
+           <DialogFooter>
+              <Button variant="outline" onClick={() => setAdminDialogOpen(false)}>Cancel</Button>
+              <Button onClick={confirmToggleAdmin} disabled={loading} className="bg-white text-black hover:bg-white/90">
+                 Confirm Update
               </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </div>
+           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
     </div>
   );
 };
 
 export default AssignAccess;
+

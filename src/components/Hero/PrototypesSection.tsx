@@ -1,17 +1,35 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { useTheme } from "next-themes";
 import { useContent } from "@/context/ContentContext";
 import { useMounted } from "@/hooks/useMounted";
+import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import SpotlightCard from "@/components/ui/SpotlightCard";
+
+// Register GSAP plugins
+if (typeof window !== "undefined") {
+  gsap.registerPlugin(ScrollTrigger);
+}
+
+interface Prototype {
+  title: string;
+  description: string;
+  category: string;
+}
+
 export default function PrototypesSection() {
   const { theme } = useTheme();
   const mounted = useMounted();
   const isDark = mounted && theme === "dark";
-  const { content, loading, error } = useContent();
+  const { content } = useContent();
+  const sectionRef = useRef<HTMLElement>(null);
+  const cardsRef = useRef<HTMLDivElement>(null);
 
   // Fallback content
-  const prototypesData = content.prototypes?.prototypes ?? [
+  const prototypesData: Prototype[] = content.prototypes?.prototypes ?? [
     {
       title: "Smart Agriculture System",
       description:
@@ -32,77 +50,83 @@ export default function PrototypesSection() {
     },
   ];
 
-  return (
-    <section className="relative w-full bg-background overflow-hidden">
-      {/* EVENTS → PROTOTYPES TRANSITION */}
-      <div className="absolute top-0 left-0 w-full h-40 pointer-events-none">
-        <div className="absolute inset-0 hidden dark:block bg-gradient-to-b from-background via-background/80 to-transparent" />
-        <div className="absolute inset-0 block dark:hidden bg-gradient-to-b from-background to-background" />
-      </div>
+  // GSAP scroll animations
+  useEffect(() => {
+    if (!mounted || !cardsRef.current) return;
 
-      <div className="relative z-10 max-w-6xl mx-auto px-6 md:px-20 lg:pt-40 lg:pb-32">
+    const ctx = gsap.context(() => {
+      const cards = cardsRef.current?.querySelectorAll(".prototype-card");
+      
+      if (cards) {
+        gsap.fromTo(
+          cards,
+          { opacity: 0, y: 30 },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.5,
+            ease: "power2.out",
+            stagger: 0.1,
+            scrollTrigger: {
+              trigger: cardsRef.current,
+              start: "top 85%",
+              toggleActions: "play none none reverse",
+            },
+          }
+        );
+      }
+    }, sectionRef);
+
+    return () => ctx.revert();
+  }, [mounted]);
+
+  return (
+    <section ref={sectionRef} className="relative w-full bg-background overflow-hidden">
+      <div className="relative z-10 max-w-6xl mx-auto px-6 md:px-16 py-24 lg:py-32">
         {/* SECTION TITLE */}
-        <motion.h2
-          initial={{ opacity: 0, y: 30 }}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
+          transition={{ duration: 0.6 }}
           viewport={{ once: true }}
-          className="h2 text-center mb-16"
+          className="text-center mb-16"
         >
-          Student{" "}
-          <span className="bg-gradient-to-r from-green-400 to-cyan-400 bg-clip-text text-transparent">
-            Prototypes
+          <span className={`
+            inline-block px-4 py-1.5 rounded-full text-xs font-medium tracking-wider uppercase mb-6
+            ${isDark ? "bg-green-500/10 text-green-400" : "bg-green-100 text-green-600"}
+          `}>
+            Innovation Showcase
           </span>
-        </motion.h2>
+          <h2 className="h2">
+            Student{" "}
+            <span className="bg-gradient-to-r from-green-400 to-cyan-400 bg-clip-text text-transparent">
+              Prototypes
+            </span>
+          </h2>
+        </motion.div>
 
         {/* PROTOTYPE CARDS */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div ref={cardsRef} className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {prototypesData.map((prototype, index) => (
-            <motion.div
+            <SpotlightCard
               key={index}
-              initial={{ opacity: 0, y: 40 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: index * 0.15 }}
-              viewport={{ once: true }}
-              whileHover={{ y: -8 }}
-              className={`
-                rounded-2xl
-                p-8
-                border
-                backdrop-blur-xl
-                transition-all
-                duration-500
-                ${
-                  isDark
-                    ? `
-                      bg-white/[0.06]
-                      border-white/[0.12]
-                      hover:bg-white/[0.09]
-                      hover:border-white/[0.18]
-                      shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]
-                    `
-                    : `
-                      bg-white/[0.85]
-                      border-black/[0.08]
-                      hover:bg-white
-                      hover:border-black/[0.12]
-                      shadow-[inset_0_1px_0_rgba(255,255,255,0.9)]
-                    `
-                }
-              `}
+              className="prototype-card p-8 h-full flex flex-col"
+              spotlightColor={isDark ? "rgba(74, 222, 128, 0.15)" : "rgba(74, 222, 128, 0.08)"}
             >
               {/* ICON */}
-              <div
-                className="
+              <div className="
                   w-12 h-12
-                  rounded-lg
-                  bg-gradient-to-r from-green-500 to-cyan-500
+                  rounded-xl
+                  bg-gradient-to-br from-green-500 to-cyan-500
                   mb-6
                   flex items-center justify-center
+                  shadow-lg
+                  text-white
+                  transition-transform duration-500 group-hover:scale-110 group-hover:rotate-6
                 "
               >
                 <svg
-                  className="w-6 h-6 text-white"
+                  className="w-6 h-6"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -117,28 +141,28 @@ export default function PrototypesSection() {
               </div>
 
               {/* CATEGORY */}
-              <span className="text-sm font-semibold text-green-400 block mb-2">
+              <span className={`text-sm font-semibold block mb-2 ${isDark ? "text-green-400" : "text-green-600"}`}>
                 {prototype.category}
               </span>
 
               {/* TITLE */}
-              <h3
-                className={`text-xl font-bold mb-3 ${
-                  isDark ? "text-white" : "text-gray-900"
-                }`}
-              >
+              <h3 className={`text-xl font-bold mb-3 ${isDark ? "text-white" : "text-gray-900"}`}>
                 {prototype.title}
               </h3>
 
               {/* DESCRIPTION */}
-              <p
-                className={`leading-relaxed ${
-                  isDark ? "text-slate-300" : "text-gray-700"
-                }`}
-              >
+              <p className={`leading-relaxed mb-4 ${isDark ? "text-slate-400" : "text-gray-600"}`}>
                 {prototype.description}
               </p>
-            </motion.div>
+
+              {/* Arrow */}
+              <div className={`mt-auto flex items-center text-sm font-medium transition-colors ${isDark ? "text-green-400" : "text-green-600"}`}>
+                View Project
+                <svg className="w-4 h-4 ml-1 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
+            </SpotlightCard>
           ))}
         </div>
       </div>

@@ -273,24 +273,19 @@ html {
   animation: hero-gradient 20s ease infinite;
 }
 
-
 /* ---------- Leaflet Custom Glow Marker ---------- */
 .leaflet-glow-marker {
   width: 22px;
   height: 22px;
   border-radius: 9999px;
   background: radial-gradient(circle, #8b5cf6 40%, #6366f1 70%);
-  box-shadow:
-    0 0 12px rgba(139, 92, 246, 0.9),
-    0 0 28px rgba(99, 102, 241, 0.7);
+  box-shadow: 0 0 12px rgba(139, 92, 246, 0.9), 0 0 28px rgba(99, 102, 241, 0.7);
   animation: glow-pulse 1.8s ease-in-out infinite;
   border: 2px solid white;
 }
 
 .dark .leaflet-glow-marker {
-  box-shadow:
-    0 0 14px rgba(139, 92, 246, 1),
-    0 0 36px rgba(99, 102, 241, 0.9);
+  box-shadow: 0 0 14px rgba(139, 92, 246, 1), 0 0 36px rgba(99, 102, 241, 0.9);
 }
 
 @keyframes glow-pulse {
@@ -306,4 +301,102 @@ html {
     transform: scale(1);
     opacity: 0.9;
   }
+}
+
+/* --------------------------------------------------
+   GRADIENT TEXT ANIMATION
+-------------------------------------------------- */
+@keyframes gradient-x {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+.animate-gradient-x {
+  background-size: 200% 200%;
+  animation: gradient-x 3s ease infinite;
+}
+
+/* --------------------------------------------------
+   TEXTPRESSURE STYLES
+-------------------------------------------------- */
+.text-pressure-title {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.text-pressure-title span {
+  transition: font-variation-settings 0.1s ease-out;
+  will-change: font-variation-settings;
+}
+
+/* --------------------------------------------------
+   ENHANCED BUTTON STYLES
+-------------------------------------------------- */
+.btn-primary {
+  @apply px-8 py-4 rounded-full font-semibold;
+  @apply bg-gradient-to-r from-indigo-600 to-purple-600 text-white;
+  @apply hover:from-indigo-500 hover:to-purple-500 transition-all duration-300;
+  @apply shadow-lg;
+  box-shadow: 0 10px 30px -10px rgba(99, 102, 241, 0.4);
+}
+
+.btn-primary:hover {
+  box-shadow: 0 20px 40px -15px rgba(99, 102, 241, 0.5);
+  transform: translateY(-2px);
+}
+
+/* --------------------------------------------------
+   CARD GLOW EFFECTS
+-------------------------------------------------- */
+.card-glow {
+  position: relative;
+}
+
+.card-glow::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: linear-gradient(
+    135deg,
+    rgba(99, 102, 241, 0.3),
+    rgba(139, 92, 246, 0.3),
+    rgba(99, 102, 241, 0.3)
+  );
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.card-glow:hover::before {
+  opacity: 1;
+}
+
+/* --------------------------------------------------
+   SMOOTH SCROLL OVERRIDES (Lenis)
+-------------------------------------------------- */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+.lenis.lenis-smooth iframe {
+  pointer-events: none;
 }

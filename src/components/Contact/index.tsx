@@ -3,18 +3,26 @@
 import { motion } from "framer-motion";
 import { useTheme } from "next-themes";
 import { useMounted } from "@/hooks/useMounted";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import type { Icon } from "leaflet";
 import api from "@/lib/api";
+import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import SpotlightCard from "@/components/ui/SpotlightCard";
 
-import { MapPin, Mail, Phone, Clock, Send, CheckCircle } from "lucide-react";
+import { MapPin, Mail, Phone, Clock, Send, CheckCircle, ArrowRight, MessageSquare, User, FileText } from "lucide-react";
 import SectionDivider from "../SectionDivider";
+
+// Register GSAP plugins
+if (typeof window !== "undefined") {
+  gsap.registerPlugin(ScrollTrigger);
+}
 
 export default function ContactPage() {
   return (
@@ -36,116 +44,59 @@ const ContactHeroSection = () => {
   const { theme } = useTheme();
   const mounted = useMounted();
   const isDark = mounted && theme === "dark";
+  const heroRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!mounted || !heroRef.current) return;
+
+    const ctx = gsap.context(() => {
+        const tl = gsap.timeline();
+
+      tl.from(".hero-text-reveal", {
+        y: 100,
+        opacity: 0,
+        duration: 1,
+        stagger: 0.2,
+        ease: "power4.out",
+      })
+      .from(".hero-subtext", {
+        y: 30,
+        opacity: 0,
+        duration: 0.8,
+        ease: "power2.out",
+      }, "-=0.5");
+    }, heroRef);
+
+    return () => ctx.revert();
+  }, [mounted]);
 
   return (
-    <section className="relative min-h-screen w-full overflow-hidden">
-      {/* 🌈 Gradient background (both themes) */}
-      <div
-        className={`
-          absolute inset-0
-          ${
-            isDark
-              ? "bg-[radial-gradient(ellipse_at_top_left,rgba(99,102,241,0.18),transparent_60%)]"
-              : "bg-[radial-gradient(ellipse_at_top_left,rgba(99,102,241,0.12),transparent_60%)]"
-          }
-        `}
-      />
-
-      {/* CONTENT */}
-      <div className="relative z-10 min-h-screen flex items-end">
-        <div className="w-full pb-[20vh]">
-          <div
-            className="
-              max-w-7xl
-              pl-10
-              sm:pl-16
-              md:pl-24
-              lg:pl-32
-              pr-8
-            "
-          >
-            <motion.div
-              initial={{ opacity: 0, y: 32 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, ease: "easeOut" }}
-              className="max-w-3xl"
-            >
-              <p
-                className={`
-                  uppercase tracking-widest text-xs mb-6
-                  ${isDark ? "text-indigo-400" : "text-indigo-600"}
-                `}
-              >
-                Get in Touch · I2EDC · IIT Jammu
-              </p>
-
-              <h1
-                className={`
-                  text-5xl md:text-6xl xl:text-7xl font-extrabold leading-tight mb-8
-                  ${isDark ? "text-white" : "text-gray-900"}
-                `}
-              >
-                Contact
-                <br />
-                <span className="bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent">
-                  Us
-                </span>
-              </h1>
-
-              <p
-                className={`
-                  text-lg md:text-xl mb-10
-                  ${isDark ? "text-slate-300" : "text-gray-600"}
-                `}
-              >
-                We'd love to hear from you! Reach out for inquiries, feedback,
-                or collaborations. Our team is here to help bring your
-                innovative ideas to life.
-              </p>
-
-              <div className="flex flex-col sm:flex-row gap-4">
-                <button
-                  onClick={() =>
-                    document
-                      .getElementById("form")
-                      ?.scrollIntoView({ behavior: "smooth" })
-                  }
-                  className="
-                    px-8 py-4 rounded-full font-semibold
-                    bg-black text-white
-                    hover:bg-gray-800 transition
-                  "
-                >
-                  Send Message
-                </button>
-
-                <button
-                  onClick={() =>
-                    document
-                      .getElementById("info")
-                      ?.scrollIntoView({ behavior: "smooth" })
-                  }
-                  className={`
-                    px-8 py-4 rounded-full font-semibold border transition
-                    ${
-                      isDark
-                        ? "border-white/30 text-white hover:bg-white/10"
-                        : "border-gray-300 text-gray-900 hover:bg-gray-100"
-                    }
-                  `}
-                >
-                  Find Us
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        </div>
+    <section ref={heroRef} className="relative min-h-[70vh] w-full flex items-center justify-center overflow-hidden pt-32 pb-20">
+      {/* Background Gradient */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className={`absolute inset-0 ${
+            isDark 
+            ? "bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-indigo-900/20 via-background to-background"
+            : "bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-indigo-100 via-background to-background"
+        }`} />
       </div>
 
-      {/* HERO → NEXT SECTION TRANSITION */}
-      <div className="absolute bottom-0 left-0 w-full h-64 pointer-events-none">
-        <div className="absolute inset-0 hidden dark:block bg-gradient-to-t from-background via-background/80 to-transparent" />
-        <div className="absolute inset-0 block dark:hidden bg-gradient-to-t from-background to-background" />
+      <div className="relative z-10 max-w-5xl mx-auto px-6 text-center">
+            <div className="overflow-hidden mb-2">
+                <p className="hero-text-reveal text-sm md:text-base font-bold tracking-[0.2em] text-indigo-500 uppercase mb-6">
+                    Get In Touch · I2EDC
+                </p>
+            </div>
+            
+            <div className="overflow-hidden mb-6">
+                 <h1 className="hero-text-reveal text-6xl md:text-8xl font-black tracking-tight text-foreground">
+                    Contact <span className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">Us</span>
+                </h1>
+            </div>
+
+            <p className="hero-subtext text-lg md:text-2xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+                We'd love to hear from you! Reach out for inquiries, feedback, or collaborations. Our team is here to help bring your innovative ideas to life.
+            </p>
       </div>
     </section>
   );
@@ -169,7 +120,7 @@ const ContactFormSection = () => {
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const handleChange = (e) =>
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     setForm({ ...form, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -200,134 +151,132 @@ const ContactFormSection = () => {
   };
 
   return (
-    <section
-      id="form"
-      className="relative py-32 px-6 bg-background flex justify-center"
-    >
-      <div className="max-w-3xl w-full">
-        <motion.h2
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-          className="text-4xl md:text-5xl font-bold mb-4 text-center"
-        >
-          Send Us a Message
-        </motion.h2>
+    <section id="form" className="relative py-24 px-6 bg-background flex justify-center">
+        <div className="max-w-5xl w-full">
+            <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6 }}
+                className="relative bg-secondary/5 border border-white/10 dark:border-white/5 rounded-[2.5rem] p-8 md:p-14 backdrop-blur-md shadow-2xl overflow-hidden"
+            >
+                {/* Decorative background blobs */}
+                <div className="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+                <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
 
-        <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-16 text-center">
-          Have questions or want to collaborate? Fill out the form below and
-          we'll get back to you as soon as possible.
-        </p>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          viewport={{ once: true }}
-        >
-          <Card className="glass">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Send className="w-5 h-5 text-indigo-600" />
-                Contact Form
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="text-sm font-medium mb-2 block">
-                      Your Name *
-                    </label>
-                    <Input
-                      placeholder="Enter your full name"
-                      name="name"
-                      value={form.name}
-                      onChange={handleChange}
-                      required
-                      className="glass"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-sm font-medium mb-2 block">
-                      Email Address *
-                    </label>
-                    <Input
-                      placeholder="Enter your email"
-                      type="email"
-                      name="email"
-                      value={form.email}
-                      onChange={handleChange}
-                      required
-                      className="glass"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium mb-2 block">
-                    Subject *
-                  </label>
-                  <Input
-                    placeholder="What is this regarding?"
-                    name="subject"
-                    value={form.subject}
-                    onChange={handleChange}
-                    required
-                    className="glass"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium mb-2 block">
-                    Message *
-                  </label>
-                  <Textarea
-                    placeholder="Tell us about your inquiry, project idea, or collaboration proposal..."
-                    name="message"
-                    value={form.message}
-                    onChange={handleChange}
-                    required
-                    className="glass min-h-[160px] resize-none"
-                  />
-                </div>
-
-                <Button
-                  type="submit"
-                  className="w-full bg-black hover:bg-gray-800 text-white"
-                  disabled={loading}
-                >
-                  {loading ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      Sending...
-                    </>
-                  ) : (
-                    <>
-                      <Send className="w-4 h-4 mr-2" />
-                      Send Message
-                    </>
-                  )}
-                </Button>
-
-                {submitted && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    className="flex items-center justify-center gap-2 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800"
-                  >
-                    <CheckCircle className="w-5 h-5 text-green-600" />
-                    <p className="text-green-700 dark:text-green-300 font-medium">
-                      Thank you! Your message has been sent successfully.
+                <div className="relative z-10 text-center mb-12">
+                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-tr from-indigo-500 to-purple-500 text-white mb-6 shadow-lg shadow-indigo-500/20 rotate-3">
+                        <Send className="w-7 h-7" />
+                    </div>
+                    <h2 className="text-4xl md:text-5xl font-bold mb-4 tracking-tight">Send us a Message</h2>
+                    <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+                        Have a project in mind or just want to say hi? Fill out the form below and we'll get back to you shortly.
                     </p>
-                  </motion.div>
-                )}
-              </form>
-            </CardContent>
-          </Card>
-        </motion.div>
-      </div>
+                </div>
+
+                <form onSubmit={handleSubmit} className="relative z-10 space-y-8 max-w-3xl mx-auto">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div className="space-y-3">
+                            <label className="text-sm font-semibold flex items-center gap-2 text-foreground/80">
+                                <div className="p-1.5 rounded-md bg-blue-500/10 text-blue-500">
+                                    <User className="w-4 h-4" />
+                                </div>
+                                Your Name
+                            </label>
+                            <Input
+                                placeholder="Enter your full name"
+                                name="name"
+                                value={form.name}
+                                onChange={handleChange}
+                                required
+                                className="h-14 rounded-2xl bg-secondary/30 border-transparent hover:bg-secondary/50 focus:bg-background focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/10 transition-all duration-300 text-base px-5"
+                            />
+                        </div>
+                        <div className="space-y-3">
+                            <label className="text-sm font-semibold flex items-center gap-2 text-foreground/80">
+                                <div className="p-1.5 rounded-md bg-pink-500/10 text-pink-500">
+                                    <Mail className="w-4 h-4" />
+                                </div>
+                                Email Address
+                            </label>
+                            <Input
+                                placeholder="Enter your email"
+                                type="email"
+                                name="email"
+                                value={form.email}
+                                onChange={handleChange}
+                                required
+                                className="h-14 rounded-2xl bg-secondary/30 border-transparent hover:bg-secondary/50 focus:bg-background focus:border-pink-500/50 focus:ring-4 focus:ring-pink-500/10 transition-all duration-300 text-base px-5"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="space-y-3">
+                        <label className="text-sm font-semibold flex items-center gap-2 text-foreground/80">
+                            <div className="p-1.5 rounded-md bg-amber-500/10 text-amber-500">
+                                <FileText className="w-4 h-4" />
+                            </div>
+                            Subject
+                        </label>
+                        <Input
+                            placeholder="What is this regarding?"
+                            name="subject"
+                            value={form.subject}
+                            onChange={handleChange}
+                            required
+                            className="h-14 rounded-2xl bg-secondary/30 border-transparent hover:bg-secondary/50 focus:bg-background focus:border-amber-500/50 focus:ring-4 focus:ring-amber-500/10 transition-all duration-300 text-base px-5"
+                        />
+                    </div>
+
+                    <div className="space-y-3">
+                        <label className="text-sm font-semibold flex items-center gap-2 text-foreground/80">
+                            <div className="p-1.5 rounded-md bg-indigo-500/10 text-indigo-500">
+                                <MessageSquare className="w-4 h-4" />
+                            </div>
+                            Message
+                        </label>
+                        <Textarea
+                            placeholder="Tell us about your inquiry, project idea, or collaboration proposal..."
+                            name="message"
+                            value={form.message}
+                            onChange={handleChange}
+                            required
+                            className="min-h-[180px] rounded-2xl bg-secondary/30 border-transparent hover:bg-secondary/50 focus:bg-background focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-300 text-base p-5 resize-none"
+                        />
+                    </div>
+
+                    <Button
+                        type="submit"
+                        className="w-full h-14 text-lg font-bold rounded-2xl bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:opacity-90 text-white shadow-xl shadow-indigo-500/20 transition-all duration-300 hover:scale-[1.01] active:scale-[0.99]"
+                        disabled={loading}
+                    >
+                        {loading ? (
+                            <div className="flex items-center gap-2">
+                                <div className="h-5 w-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                <span>Sending Message...</span>
+                            </div>
+                        ) : (
+                            <div className="flex items-center gap-2">
+                                <span>Send Message</span>
+                                <Send className="w-5 h-5" />
+                            </div>
+                        )}
+                    </Button>
+
+                    {submitted && (
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9, y: 10 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center gap-3 text-center"
+                        >
+                            <div className="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                                <CheckCircle className="w-5 h-5" />
+                            </div>
+                            <p className="font-semibold">Message sent! We'll get back to you soon.</p>
+                        </motion.div>
+                    )}
+                </form>
+            </motion.div>
+        </div>
     </section>
   );
 };
@@ -348,7 +297,7 @@ function ContactInfoSection() {
 
       const icon = L.divIcon({
         className: "", // important: avoid default styles
-        html: `<div class="leaflet-glow-marker"></div>`,
+        html: `<div class="leaflet-glow-marker"></div>`, // Ensure you have css for this or use default
         iconSize: [22, 22],
         iconAnchor: [11, 11], // center
         popupAnchor: [0, -12],
@@ -362,24 +311,35 @@ function ContactInfoSection() {
   const contactInfo = [
     {
       title: "Address",
-      value:
-        "I2EDC Office, Academic Block\nIndian Institute of Technology Jammu\nJagti, NH-44, Jammu & Kashmir – 181221",
-      icon: <MapPin />,
+      value: "I2EDC Office, Academic Block\nIndian Institute of Technology Jammu\nJagti, NH-44, Jammu & Kashmir – 181221",
+      icon: <MapPin className="w-6 h-6" />,
+      color: "rgba(239, 68, 68, 0.2)",
+      gradient: "from-red-500 to-orange-500",
+      iconColor: "text-red-100",
     },
     {
       title: "Email",
       value: "i2edc@iitjammu.ac.in",
-      icon: <Mail />,
+      icon: <Mail className="w-6 h-6" />,
+      color: "rgba(59, 130, 246, 0.2)",
+      gradient: "from-blue-500 to-cyan-500",
+      iconColor: "text-blue-100",
     },
     {
       title: "Phone",
       value: "+91 123 456 7890",
-      icon: <Phone />,
+      icon: <Phone className="w-6 h-6" />,
+      color: "rgba(34, 197, 94, 0.2)",
+      gradient: "from-emerald-500 to-teal-500",
+      iconColor: "text-emerald-100",
     },
     {
       title: "Office Hours",
       value: "Monday – Friday\n9:00 AM – 5:00 PM",
-      icon: <Clock />,
+      icon: <Clock className="w-6 h-6" />,
+      color: "rgba(168, 85, 247, 0.2)",
+      gradient: "from-purple-500 to-pink-500",
+      iconColor: "text-purple-100",
     },
   ];
   const tileUrl = isDark
@@ -389,72 +349,80 @@ function ContactInfoSection() {
   const attribution = isDark
     ? '&copy; <a href="https://carto.com/">CARTO</a>'
     : '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>';
-  return (
-    <section className="relative py-32 px-6 bg-background">
-      <div className="max-w-7xl mx-auto">
-        {/* Heading */}
-        <motion.h2
-          initial={{ opacity: 0, y: 24 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="h2 text-center mb-4"
-        >
-          Find Us
-        </motion.h2>
 
-        <p className="p text-center max-w-2xl mx-auto mb-20">
-          Visit our campus office or reach out through any of the channels
-          below.
-        </p>
+  return (
+    <section id="info" className="relative py-24 px-6 bg-background">
+      <div className="max-w-7xl mx-auto">
+        
+        <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold mb-6">Find Us</h2>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+                Visit our campus office or reach out through any of the channels below.
+            </p>
+        </div>
 
         {/* Contact Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-20">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-20">
           {contactInfo.map((item, i) => (
             <motion.div
               key={i}
-              initial={{ opacity: 0, y: 24 }}
+              initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: i * 0.08 }}
+              transition={{ delay: i * 0.1 }}
+              className="h-full"
             >
-              <Card className="glass glass-hover h-full">
-                <CardContent className="p-6 flex gap-4">
-                  <div className="h-12 w-12 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-500 flex items-center justify-center text-white">
-                    {item.icon}
-                  </div>
+              <SpotlightCard className="h-full p-1" spotlightColor={item.color}>
+                  <div className="relative h-full bg-background/50 rounded-[0.9rem] p-6 flex flex-col items-center text-center overflow-hidden group">
+                    {/* Hover Glow Background */}
+                    <div className={`absolute top-0 inset-x-0 h-1 bg-gradient-to-r ${item.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
+                    
+                    <div className={`
+                        w-16 h-16 rounded-2xl bg-gradient-to-br ${item.gradient} 
+                        flex items-center justify-center mb-6 shadow-lg transform group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-300
+                    `}>
+                        <div className={`${item.iconColor}`}>
+                            {item.icon}
+                        </div>
+                    </div>
 
-                  <div>
-                    <h3 className="text-lg font-semibold mb-1">{item.title}</h3>
-                    <p className="text-sm text-muted-foreground whitespace-pre-line">
+                    <h3 className="text-xl font-bold mb-3">{item.title}</h3>
+                    <p className="text-muted-foreground whitespace-pre-line leading-relaxed text-sm">
                       {item.value}
                     </p>
                   </div>
-                </CardContent>
-              </Card>
+              </SpotlightCard>
             </motion.div>
           ))}
         </div>
+
         {/* Map Container */}
-        <div className="rounded-xl overflow-hidden border border-white/10 glass">
+        <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            className="rounded-[2.5rem] overflow-hidden border border-border/50 shadow-2xl h-[500px] w-full relative z-0"
+        >
           <MapContainer
             center={position}
             zoom={15}
             scrollWheelZoom={false}
-            className="h-[420px] w-full"
+            className="h-full w-full z-0"
           >
             <TileLayer attribution={attribution} url={tileUrl} />
             {glowIcon && (
               <Marker position={position} icon={glowIcon}>
-                <Popup>
-                  <strong>IIT Jammu Campus</strong>
-                  <br />
-                  I2EDC Office
+                <Popup className="custom-popup">
+                    <div className="p-2 text-center">
+                        <strong className="text-indigo-600 block mb-1">I2EDC Office</strong>
+                        <span className="text-xs text-gray-600">IIT Jammu Campus</span>
+                    </div>
                 </Popup>
               </Marker>
             )}
           </MapContainer>
-        </div>
+        </motion.div>
+
       </div>
     </section>
   );

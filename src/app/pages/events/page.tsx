@@ -1,6 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useRef, useState, useEffect } from "react";
+import { gsap } from "gsap";
+import SpotlightCard from "@/components/ui/SpotlightCard";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { useTheme } from "next-themes";
@@ -29,7 +33,14 @@ import {
   Sparkles,
   Trophy,
   Award,
-  CalendarDays
+  CalendarDays,
+  Rocket,
+  Lightbulb,
+  PenTool,
+  Hammer,
+  Zap,
+  Cpu,
+  Globe
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -39,7 +50,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+
 
 type Event = {
   id: number;
@@ -83,106 +94,126 @@ const EventsHeroSection = () => {
   const { theme } = useTheme();
   const mounted = useMounted();
   const isDark = mounted && theme === "dark";
+  const heroRef = useRef<HTMLDivElement>(null);
+  const textRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!mounted || !heroRef.current || !textRef.current) return;
+
+    const ctx = gsap.context(() => {
+      // Title reveal animation
+      const tl = gsap.timeline();
+
+      tl.from(".hero-text-reveal", {
+        y: 100,
+        opacity: 0,
+        duration: 1,
+        stagger: 0.2,
+        ease: "power4.out",
+      })
+      .from(".hero-subtext", {
+        y: 30,
+        opacity: 0,
+        duration: 0.8,
+        ease: "power2.out",
+      }, "-=0.5")
+      .from(".hero-buttons", {
+        y: 20,
+        opacity: 0,
+        duration: 0.6,
+        ease: "power2.out",
+      }, "-=0.4");
+
+    }, heroRef);
+
+    return () => ctx.revert();
+  }, [mounted]);
 
   return (
-    <section className="relative min-h-screen w-full overflow-hidden">
+    <section ref={heroRef} className="relative min-h-screen w-full overflow-hidden flex items-center justify-center pt-20">
       {/* 🌈 Gradient background (both themes) */}
       <div
         className={`
-          absolute inset-0
+          absolute inset-0 transition-opacity duration-500
           ${
             isDark
-              ? "bg-[radial-gradient(ellipse_at_top_left,rgba(99,102,241,0.18),transparent_60%)]"
-              : "bg-[radial-gradient(ellipse_at_top_left,rgba(99,102,241,0.12),transparent_60%)]"
+              ? "bg-[radial-gradient(ellipse_at_top_right,rgba(99,102,241,0.15),transparent_60%),radial-gradient(ellipse_at_bottom_left,rgba(59,130,246,0.15),transparent_60%)]"
+              : "bg-[radial-gradient(ellipse_at_top_right,rgba(99,102,241,0.1),transparent_60%),radial-gradient(ellipse_at_bottom_left,rgba(59,130,246,0.1),transparent_60%)]"
           }
         `}
       />
 
       {/* CONTENT */}
-      <div className="relative z-10 min-h-screen flex items-end">
-        <div className="w-full pb-[20vh]">
-          <div
-            className="
-              max-w-7xl
-              pl-10
-              sm:pl-16
-              md:pl-24
-              lg:pl-32
-              pr-8
-            "
-          >
-            <motion.div
-              initial={{ opacity: 0, y: 32 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, ease: "easeOut" }}
-              className="max-w-3xl"
-            >
+      <div className="relative z-10 w-full max-w-7xl px-6 md:px-12 flex flex-col items-center text-center">
+         <div ref={textRef} className="max-w-4xl mx-auto">
+            <div className="overflow-hidden mb-2">
               <p
                 className={`
-                  uppercase tracking-widest text-xs mb-6
+                  hero-text-reveal uppercase tracking-[0.2em] text-sm font-semibold mb-6 inline-block
                   ${isDark ? "text-indigo-400" : "text-indigo-600"}
                 `}
               >
                 Events & Workshops · I2EDC · IIT Jammu
               </p>
+            </div>
 
-              <h1
-                className={`
-                  text-5xl md:text-6xl xl:text-7xl font-extrabold leading-tight mb-8
-                  ${isDark ? "text-white" : "text-gray-900"}
-                `}
-              >
-                Discover
-                <br />
-                <span className="bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent">
+            <h1 className="text-5xl md:text-7xl lg:text-8xl font-extrabold tracking-tight mb-8 leading-[1.1]">
+              <div className="overflow-hidden inline-block mr-4">
+                <span className={`hero-text-reveal inline-block ${isDark ? "text-white" : "text-gray-900"}`}>
+                  Discover
+                </span>
+              </div>
+              <div className="overflow-hidden inline-block pb-2">
+                <span className="hero-text-reveal inline-block bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">
                   Events.
                 </span>
-              </h1>
+              </div>
+            </h1>
 
-              <p
+            <p
+              className={`
+                hero-subtext text-lg md:text-xl mb-12 max-w-2xl mx-auto leading-relaxed
+                ${isDark ? "text-slate-300" : "text-gray-600"}
+              `}
+            >
+              Join our community of innovators through workshops, hackathons, and networking events designed to inspire, educate, and connect.
+            </p>
+
+            <div className="hero-buttons flex flex-col sm:flex-row gap-4 justify-center items-center">
+              <button
+                onClick={() =>
+                  document
+                    .getElementById("events-grid")
+                    ?.scrollIntoView({ behavior: "smooth" })
+                }
+                className="
+                  px-8 py-6 rounded-full font-semibold text-base
+                  bg-gradient-to-r from-indigo-600 to-purple-600 text-white
+                  hover:from-indigo-500 hover:to-purple-500
+                  shadow-lg shadow-indigo-500/25
+                  transition-all duration-300 hover:scale-105
+                "
+              >
+                Browse Events
+              </button>
+
+              <button
                 className={`
-                  text-lg md:text-xl mb-10
-                  ${isDark ? "text-slate-300" : "text-gray-600"}
+                  px-8 py-6 rounded-full font-semibold text-base border-2 transition-all duration-300 hover:scale-105
+                  ${
+                    isDark
+                      ? "border-white/20 text-white hover:border-white/40 hover:bg-white/5"
+                      : "border-gray-300 text-gray-900 hover:border-gray-400 hover:bg-gray-50"
+                  }
                 `}
               >
-                Join our community of innovators through workshops, hackathons, and networking events designed to inspire, educate, and connect.
-              </p>
-
-              <div className="flex flex-col sm:flex-row gap-4">
-                <button
-                  onClick={() =>
-                    document
-                      .getElementById("events-grid")
-                      ?.scrollIntoView({ behavior: "smooth" })
-                  }
-                  className="
-                    px-8 py-4 rounded-full font-semibold
-                    bg-black text-white
-                    hover:bg-gray-800 transition
-                  "
-                >
-                  Browse Events
-                </button>
-
-                <button
-                  className={`
-                    px-8 py-4 rounded-full font-semibold border transition
-                    ${
-                      isDark
-                        ? "border-white/30 text-white hover:bg-white/10"
-                        : "border-gray-300 text-gray-900 hover:bg-gray-100"
-                    }
-                  `}
-                >
-                  <a href="#features" className="flex items-center gap-2">
-                    <span>Learn More</span>
-                    <ArrowRightIcon className="w-4 h-4" />
-                  </a>
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        </div>
+                <a href="#features" className="flex items-center gap-2">
+                  <span>Learn More</span>
+                  <ArrowRightIcon className="w-4 h-4" />
+                </a>
+              </button>
+            </div>
+         </div>
       </div>
 
       {/* HERO → EVENTS TRANSITION */}
@@ -525,27 +556,27 @@ const EventsGridSection = () => {
 
       {/* Quick Stats */}
       {events.length > 0 && (
-        <div className="space-y-3 pt-4 border-t border-gray-100 dark:border-gray-700">
-          <h4 className="text-sm font-medium">Event Statistics</h4>
-          <div className="grid grid-cols-2 gap-2">
-            <div className="text-center p-2 bg-muted/50 rounded-lg">
-              <div className="text-lg font-bold text-indigo-600">{events.length}</div>
-              <div className="text-xs text-muted-foreground">Total Events</div>
+        <div className="space-y-4 pt-6 border-t border-dashed border-gray-200 dark:border-white/10 mt-6">
+          <h4 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Event Overview</h4>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="text-center p-3 rounded-xl bg-indigo-500/10 border border-indigo-500/20">
+              <div className="text-2xl font-black text-indigo-600 dark:text-indigo-400 leading-none mb-1">{events.length}</div>
+              <div className="text-[10px] uppercase font-bold text-indigo-600/70 dark:text-indigo-400/70">Total</div>
             </div>
-            <div className="text-center p-2 bg-muted/50 rounded-lg">
-              <div className="text-lg font-bold text-blue-600">
+            <div className="text-center p-3 rounded-xl bg-blue-500/10 border border-blue-500/20">
+              <div className="text-2xl font-black text-blue-600 dark:text-blue-400 leading-none mb-1">
                 {events.filter(e => getEventStatus(e) === 'upcoming').length}
               </div>
-              <div className="text-xs text-muted-foreground">Upcoming</div>
+              <div className="text-[10px] uppercase font-bold text-blue-600/70 dark:text-blue-400/70">Upcoming</div>
             </div>
-            <div className="text-center p-2 bg-muted/50 rounded-lg">
-              <div className="text-lg font-bold text-green-600">
+            <div className="text-center p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+              <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400 leading-none mb-1">
                 {events.filter(e => getEventStatus(e) === 'ongoing').length}
               </div>
-              <div className="text-xs text-muted-foreground">Happening Now</div>
+              <div className="text-[10px] uppercase font-bold text-emerald-600/70 dark:text-emerald-400/70">Now</div>
             </div>
-            <div className="text-center p-2 bg-muted/50 rounded-lg">
-              <div className="text-lg font-bold text-orange-600">
+            <div className="text-center p-3 rounded-xl bg-orange-500/10 border border-orange-500/20">
+              <div className="text-2xl font-black text-orange-600 dark:text-orange-400 leading-none mb-1">
                 {events.filter(e => {
                   try {
                     return new Date(e.reg_end_date) >= new Date();
@@ -554,7 +585,7 @@ const EventsGridSection = () => {
                   }
                 }).length}
               </div>
-              <div className="text-xs text-muted-foreground">Registration Open</div>
+              <div className="text-[10px] uppercase font-bold text-orange-600/70 dark:text-orange-400/70">Open</div>
             </div>
           </div>
         </div>
@@ -607,20 +638,20 @@ const EventsGridSection = () => {
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Desktop Filters Sidebar */}
           <div className="hidden lg:block lg:w-80">
-            <Card className="h-fit sticky top-6 glass">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <FilterIcon className="h-5 w-5" />
-                  Find Events
-                </CardTitle>
-                <CardDescription>
+            <SpotlightCard className="h-fit sticky top-6 bg-white/50 dark:bg-black/20 border-white/20 backdrop-blur-md" spotlightColor="rgba(99, 102, 241, 0.15)">
+              <div className="p-6">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="p-2 rounded-lg bg-indigo-500/10 text-indigo-500">
+                    <FilterIcon className="h-5 w-5" />
+                  </div>
+                  <h3 className="text-xl font-bold">Find Events</h3>
+                </div>
+                <p className="text-sm text-muted-foreground mb-6">
                   Filter events by your preferences
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
+                </p>
                 <FilterContent />
-              </CardContent>
-            </Card>
+              </div>
+            </SpotlightCard>
           </div>
 
           {/* Main Content */}
@@ -734,95 +765,114 @@ const EventsGridSection = () => {
 
                     const userRegistered = isUserRegistered(event.id);
                     const registrationOpen = canRegister(event);
+                    const status = getEventStatus(event);
 
+                    let spotlightColor = "rgba(100, 116, 139, 0.25)"; // Default gray (past)
+                    if (status === "ongoing") spotlightColor = "rgba(16, 185, 129, 0.25)"; // Emerald
+                    else if (status === "upcoming") spotlightColor = "rgba(99, 102, 241, 0.25)"; // Indigo
+                    else if (status === "registration-closed") spotlightColor = "rgba(249, 115, 22, 0.25)"; // Orange
+
+                    const eventDateObj = getSafeDate(event.date);
+                    const month = eventDateObj.toLocaleString('default', { month: 'short' }).toUpperCase();
+                    const day = eventDateObj.getDate();
+                    
                     return (
                       <motion.div
                         key={event.id}
                         initial={{ opacity: 0, y: 30 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         transition={{ delay: i * 0.1, duration: 0.6 }}
+                        className="h-full"
                       >
-                        <Card 
-                          className="glass glass-hover cursor-pointer group h-full"
+                        <SpotlightCard 
+                          className="cursor-pointer group h-full flex flex-col overflow-hidden border border-white/10 dark:border-white/5 bg-white/50 dark:bg-black/40 backdrop-blur-md"
+                          spotlightColor={spotlightColor}
                           onClick={() => handleEventClick(event.id)}
                         >
-                          <CardHeader className="pb-3">
-                            <div className="flex justify-between items-start mb-3">
-                              {getStatusBadge(event)}
-                              <Badge variant="secondary" className="text-xs bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300">
-                                <UsersIcon className="h-3 w-3 mr-1" />
-                                {getSafeParticipantCount(event)} participants
-                              </Badge>
-                            </div>
-                            <CardTitle className="text-xl group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors line-clamp-2 mb-2">
-                              {event.name || "Untitled Event"}
-                            </CardTitle>
-                            <CardDescription className="line-clamp-3">
-                              {event.description || "No description available."}
-                            </CardDescription>
-                          </CardHeader>
-                          
-                          <CardContent className="pt-0">
-                            {/* Event Details */}
-                            <div className="space-y-3 mb-4">
-                              <div className="flex items-center gap-2 text-sm">
-                                <CalendarIcon className="h-4 w-4 text-muted-foreground" />
-                                <span className="font-medium">{formatDate(event.date)}</span>
-                                <span className="text-muted-foreground">at {formatTime(event.date)}</span>
-                              </div>
-                              
-                              <div className="flex items-center gap-2 text-sm">
-                                <MapPinIcon className="h-4 w-4 text-muted-foreground" />
-                                <span className="text-muted-foreground">{getSafeLocation(event)}</span>
-                              </div>
-                              
-                              <div className="flex items-center gap-2 text-sm">
-                                <ClockIcon className="h-4 w-4 text-muted-foreground" />
-                                <span className="text-muted-foreground">
-                                  Register by: {formatDate(event.reg_end_date)}
-                                </span>
-                              </div>
-                            </div>
+                           <div className="flex h-full flex-col">
+                              {/* Top Section: Date + Main Info */}
+                              <div className="flex p-6 gap-5 items-start">
+                                {/* Calendar Date Block */}
+                                <div className={`
+                                  flex-shrink-0 w-16 h-16 rounded-2xl flex flex-col items-center justify-center
+                                  shadow-lg border border-white/20
+                                  ${
+                                    status === "ongoing" ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20" :
+                                    status === "upcoming" ? "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20" :
+                                    status === "registration-closed" ? "bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20" :
+                                    "bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/20"
+                                  }
+                                `}>
+                                  <span className="text-[10px] font-bold tracking-wider uppercase opacity-80">{month}</span>
+                                  <span className="text-2xl font-black leading-none">{day}</span>
+                                </div>
 
-                            {/* Event Footer */}
-                            <div className="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-gray-700">
-                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                <UserIcon className="h-4 w-4" />
-                                <span className="truncate">By {getSafeAdminName(event)}</span>
+                                {/* Title & Status */}
+                                <div className="flex-1 min-w-0">
+                                   <div className="flex justify-between items-start gap-2 mb-2">
+                                      <div className="flex flex-wrap gap-2">
+                                        {getStatusBadge(event)}
+                                      </div>
+                                   </div>
+                                   <h3 className="text-xl md:text-2xl font-bold leading-tight group-hover:text-indigo-500 dark:group-hover:text-indigo-400 transition-colors dark:text-white text-gray-900 line-clamp-2 mb-2">
+                                      {event.name || "Untitled Event"}
+                                   </h3>
+                                </div>
                               </div>
-                              
-                              <div className="flex items-center gap-2">
-                                {userRegistered ? (
-                                  <Badge variant="default" className="bg-green-100 text-green-800 hover:bg-green-100 border-0">
-                                    <CheckCircle className="h-3 w-3 mr-1" />
-                                    Registered
-                                  </Badge>
-                                ) : registrationOpen ? (
-                                  <Button 
-                                    size="sm"
-                                    onClick={(e) => handleRegisterClick(event.id, e)}
-                                    className="bg-black hover:bg-gray-800 text-white"
-                                  >
-                                    Register Now
-                                  </Button>
-                                ) : (
-                                  <Badge variant="outline" className="text-orange-600 border-orange-200">
-                                    Registration Closed
-                                  </Badge>
-                                )}
-                                
-                                <Button 
-                                  variant="ghost" 
-                                  size="sm" 
-                                  className="h-8 gap-1 text-xs opacity-0 group-hover:opacity-100 transition-opacity"
-                                >
-                                  Details
-                                  <ArrowRightIcon className="h-3 w-3" />
-                                </Button>
+
+                              {/* Description - Middle */}
+                              <div className="px-6 pb-2 text-sm text-gray-500 dark:text-slate-400 line-clamp-2">
+                                {event.description || "No description available."}
                               </div>
-                            </div>
-                          </CardContent>
-                        </Card>
+
+                              {/* Metadata Strip */}
+                              <div className="px-6 py-4 mt-auto space-y-3">
+                                <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-muted-foreground/80">
+                                  <div className="flex items-center gap-2">
+                                    <ClockIcon className="h-4 w-4 opacity-70" />
+                                    <span>{formatTime(event.date)}</span>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <MapPinIcon className="h-4 w-4 opacity-70" />
+                                    <span className="truncate max-w-[150px]">{getSafeLocation(event)}</span>
+                                  </div>
+                                   <div className="flex items-center gap-2">
+                                    <UsersIcon className="h-4 w-4 opacity-70" />
+                                    <span>{getSafeParticipantCount(event)} registered</span>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Footer Actions */}
+                              <div className="px-6 py-4 border-t border-gray-100 dark:border-white/5 flex items-center justify-between bg-black/5 dark:bg-white/5">
+                                <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+                                  <UserIcon className="h-3 w-3" />
+                                  <span className="truncate max-w-[100px]">By {getSafeAdminName(event)}</span>
+                                </div>
+
+                                <div className="flex items-center gap-3">
+                                   {userRegistered ? (
+                                     <span className="flex items-center gap-1.5 text-sm font-semibold text-green-600 dark:text-green-400 bg-green-500/10 px-3 py-1.5 rounded-full">
+                                       <CheckCircle className="h-4 w-4" />
+                                       Registered
+                                     </span>
+                                   ) : registrationOpen ? (
+                                     <Button 
+                                      size="sm"
+                                      onClick={(e) => handleRegisterClick(event.id, e)}
+                                      className="rounded-full px-5 bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-500/20"
+                                     >
+                                      Register
+                                     </Button>
+                                   ) : (
+                                     <span className="text-xs font-semibold text-orange-500 bg-orange-500/10 px-3 py-1.5 rounded-full uppercase tracking-wide">
+                                      Closed
+                                     </span>
+                                   )}
+                                </div>
+                              </div>
+                           </div>
+                        </SpotlightCard>
                       </motion.div>
                     );
                   })}
@@ -902,78 +952,162 @@ const EventsGridSection = () => {
 
 const EventsFeaturesSection = () => {
   return (
-    <section id="features" className="relative py-32 px-6 bg-background flex justify-center">
-      <div className="max-w-7xl w-full text-center">
-        <motion.h2
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-          className="text-4xl md:text-5xl font-bold mb-4"
-        >
-          Why Attend Our Events
-        </motion.h2>
-
-        <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-16">
-          Transform your learning experience and connect with fellow innovators
-        </p>
-
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {[
-            {
-              title: "Learn from Experts",
-              description: "Gain insights from industry professionals and experienced innovators",
-              icon: <Award className="w-6 h-6" />,
-              gradient: "from-blue-500 to-cyan-500"
-            },
-            {
-              title: "Hands-on Workshops",
-              description: "Practical sessions to enhance your technical skills",
-              icon: <Sparkles className="w-6 h-6" />,
-              gradient: "from-indigo-500 to-purple-500"
-            },
-            {
-              title: "Networking",
-              description: "Connect with like-minded students and professionals",
-              icon: <UsersIcon className="w-6 h-6" />,
-              gradient: "from-green-500 to-emerald-500"
-            },
-            {
-              title: "Skill Development",
-              description: "Enhance your problem-solving and creative thinking abilities",
-              icon: <Trophy className="w-6 h-6" />,
-              gradient: "from-purple-500 to-pink-500"
-            }
-          ].map((feature, i) => (
-            <motion.div
-              key={i}
+    <div className="flex flex-col">
+      {/* SECTION 1: INNOVATION SHOWCASE (STATS) */}
+      <section className="relative py-24 bg-black/[0.04] dark:bg-white/[0.02] border-y border-black/5 dark:border-white/5">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center mb-16">
+            <motion.h2 
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.1, duration: 0.6 }}
-              className="glass glass-hover p-6 text-left"
+              transition={{ duration: 0.8 }}
+              className="text-4xl md:text-5xl font-black mb-4 tracking-tight"
             >
-              <div
-                className={`
-                  mb-4
-                  inline-flex
-                  h-11 w-11
-                  items-center justify-center
-                  rounded-xl
-                  bg-gradient-to-r ${feature.gradient}
-                  shadow-lg
-                `}
-              >
-                {feature.icon}
-              </div>
+              Innovation Showcase
+            </motion.h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Our impact and achievements in student innovation
+            </p>
+          </div>
 
-              <h3 className="text-xl font-bold mb-2">{feature.title}</h3>
-
-              <p className="text-sm text-muted-foreground">
-                {feature.description}
-              </p>
-            </motion.div>
-          ))}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+             {[
+               { label: "Prototypes Built", value: "20+", icon: <Cpu className="w-6 h-6" />, color: "text-indigo-500" },
+               { label: "Student Innovators", value: "50+", icon: <UsersIcon className="w-6 h-6" />, color: "text-blue-500" },
+               { label: "Technologies Used", value: "10+", icon: <Zap className="w-6 h-6" />, color: "text-purple-500" },
+               { label: "Partner Programs", value: "5+", icon: <Globe className="w-6 h-6" />, color: "text-emerald-500" }
+             ].map((stat, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.1, duration: 0.6 }}
+                  className="text-center group cursor-default"
+                >
+                   <div className={`mb-4 mx-auto w-12 h-12 rounded-2xl bg-white/50 dark:bg-white/5 flex items-center justify-center ${stat.color} group-hover:scale-110 transition-transform duration-300 shadow-sm`}>
+                      {stat.icon}
+                   </div>
+                   <div className={`text-4xl md:text-5xl font-black mb-2 ${stat.color}`}>
+                     {stat.value}
+                   </div>
+                   <div className="text-sm font-bold uppercase tracking-wider text-muted-foreground/80">
+                     {stat.label}
+                   </div>
+                </motion.div>
+             ))}
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
+
+      {/* SECTION 2: GET INVOLVED (PROCESS STEPS) */}
+      <section id="features" className="relative py-32 px-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-20">
+            <motion.h2
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+              className="text-4xl md:text-5xl font-black mb-6"
+            >
+              Get Involved
+            </motion.h2>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              Start your innovation journey with I2EDC
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[
+              {
+                step: "01",
+                title: "Submit Your Idea",
+                desc: "Pitch your concept to our innovation cell",
+                icon: <Lightbulb className="w-6 h-6" />,
+                gradient: "from-yellow-400 to-orange-500"
+              },
+              {
+                step: "02",
+                title: "Collaborate & Design",
+                desc: "Form a team and plan your prototype",
+                icon: <PenTool className="w-6 h-6" />,
+                gradient: "from-pink-500 to-rose-500"
+              },
+              {
+                step: "03",
+                title: "Build & Test",
+                desc: "Use campus labs to create your working model",
+                icon: <Hammer className="w-6 h-6" />,
+                gradient: "from-cyan-500 to-blue-500"
+              },
+              {
+                step: "04",
+                title: "Showcase & Scale",
+                desc: "Demonstrate your innovation at InventX or IF",
+                icon: <Rocket className="w-6 h-6" />,
+                gradient: "from-purple-500 to-indigo-500"
+              }
+            ].map((item, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 40 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.1, duration: 0.7 }}
+                className="h-full"
+              >
+                <SpotlightCard
+                  className="h-full border-white/10 dark:border-white/5 bg-white/50 dark:bg-black/40 backdrop-blur-md"
+                  spotlightColor={`rgba(${
+                    i === 0 ? "245, 158, 11" : 
+                    i === 1 ? "236, 72, 153" : 
+                    i === 2 ? "6, 182, 212" : 
+                    "99, 102, 241"
+                  }, 0.15)`}
+                >
+                  <div className="p-8 h-full flex flex-col relative overflow-hidden">
+                     {/* Step Number Background */}
+                     <div className="absolute -right-4 -top-4 text-[8rem] font-black text-black/5 dark:text-white/5 leading-none select-none">
+                       {item.step}
+                     </div>
+
+                     <div className="relative z-10">
+                        <div className={`
+                          w-14 h-14 rounded-2xl flex items-center justify-center mb-6 shadow-lg
+                          bg-gradient-to-br ${item.gradient} text-white
+                        `}>
+                          {item.icon}
+                        </div>
+                        
+                        <div className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2">
+                          Step {item.step}
+                        </div>
+                        
+                        <h3 className="text-xl font-bold mb-3 dark:text-white text-gray-900 leading-tight">
+                          {item.title}
+                        </h3>
+                        
+                        <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+                          {item.desc}
+                        </p>
+                     </div>
+                  </div>
+                </SpotlightCard>
+              </motion.div>
+            ))}
+          </div>
+
+          <div className="mt-16 text-center">
+            <p className="text-muted-foreground mb-6">Have an idea that can make a difference? Get mentorship, resources, and lab access.</p>
+            <div className="flex justify-center gap-4">
+              <Button size="lg" className="rounded-full px-8 bg-white text-black hover:bg-gray-100 dark:bg-white dark:text-black dark:hover:bg-gray-200 font-bold">
+                Start a Project
+              </Button>
+               <Button size="lg" variant="outline" className="rounded-full px-8 border-gray-300 dark:border-white/20 hover:bg-black/5 dark:hover:bg-white/5">
+                Mentor a Team
+              </Button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
   );
 };

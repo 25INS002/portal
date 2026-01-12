@@ -1,12 +1,15 @@
 // services.tsx – Matching homepage theme exactly
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useTheme } from "next-themes";
 import { useMounted } from "@/hooks/useMounted";
 import api from "@/lib/api";
 import SectionDivider from "@/components/SectionDivider";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion"; // Keeping for overlays/interactions
+import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import SpotlightCard from "@/components/ui/SpotlightCard";
 import {
   Card,
   CardContent,
@@ -40,9 +43,15 @@ import {
   ArrowRight,
   Shield,
   Clock,
+  Briefcase,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+
+// Register GSAP plugins
+if (typeof window !== "undefined") {
+  gsap.registerPlugin(ScrollTrigger);
+}
 
 interface CostDiscount {
   plan: string;
@@ -91,113 +100,132 @@ const ServicesHeroSection = () => {
   const { theme } = useTheme();
   const mounted = useMounted();
   const isDark = mounted && theme === "dark";
+  const heroRef = useRef<HTMLDivElement>(null);
+  const textRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!mounted || !heroRef.current || !textRef.current) return;
+
+    const ctx = gsap.context(() => {
+      // Title reveal animation
+      const tl = gsap.timeline();
+
+      tl.from(".hero-text-reveal", {
+        y: 100,
+        opacity: 0,
+        duration: 1,
+        stagger: 0.2,
+        ease: "power4.out",
+      })
+      .from(".hero-subtext", {
+        y: 30,
+        opacity: 0,
+        duration: 0.8,
+        ease: "power2.out",
+      }, "-=0.5")
+      .from(".hero-buttons", {
+        y: 20,
+        opacity: 0,
+        duration: 0.6,
+        ease: "power2.out",
+      }, "-=0.4");
+
+
+
+    }, heroRef);
+
+    return () => ctx.revert();
+  }, [mounted]);
 
   return (
-    <section className="relative min-h-screen w-full overflow-hidden">
-      {/* 🌈 Gradient background (both themes) */}
+    <section ref={heroRef} className="relative min-h-screen w-full overflow-hidden flex items-center justify-center pt-20">
+      {/* 🌈 Gradient background */}
       <div
         className={`
-          absolute inset-0
+          absolute inset-0 transition-opacity duration-500
           ${
             isDark
-              ? "bg-[radial-gradient(ellipse_at_top_left,rgba(99,102,241,0.18),transparent_60%)]"
-              : "bg-[radial-gradient(ellipse_at_top_left,rgba(99,102,241,0.12),transparent_60%)]"
+              ? "bg-[radial-gradient(ellipse_at_top_right,rgba(124,58,237,0.15),transparent_60%),radial-gradient(ellipse_at_bottom_left,rgba(59,130,246,0.15),transparent_60%)]"
+              : "bg-[radial-gradient(ellipse_at_top_right,rgba(124,58,237,0.1),transparent_60%),radial-gradient(ellipse_at_bottom_left,rgba(59,130,246,0.1),transparent_60%)]"
           }
         `}
       />
 
-      {/* CONTENT */}
-      <div className="relative z-10 min-h-screen flex items-end">
-        <div className="w-full pb-[20vh]">
-          <div
-            className="
-              max-w-7xl
-              pl-10
-              sm:pl-16
-              md:pl-24
-              lg:pl-32
-              pr-8
-            "
-          >
-            <motion.div
-              initial={{ opacity: 0, y: 32 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, ease: "easeOut" }}
-              className="max-w-3xl"
-            >
+      <div className="relative z-10 w-full max-w-7xl px-6 md:px-12 flex flex-col items-center text-center">
+         <div ref={textRef} className="max-w-4xl mx-auto">
+            <div className="overflow-hidden mb-2">
               <p
                 className={`
-                  uppercase tracking-widest text-xs mb-6
+                  hero-text-reveal uppercase tracking-[0.2em] text-sm font-semibold mb-6 inline-block
                   ${isDark ? "text-indigo-400" : "text-indigo-600"}
                 `}
               >
-                Professional Services · I2EDC · IIT Jammu
+                Professional Services · I2EDC
               </p>
+            </div>
 
-              <h1
-                className={`
-                  text-5xl md:text-6xl xl:text-7xl font-extrabold leading-tight mb-8
-                  ${isDark ? "text-white" : "text-gray-900"}
-                `}
-              >
-                Expert
-                <br />
-                <span className="bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent">
-                  Services.
+            <h1 className="text-5xl md:text-7xl lg:text-8xl font-extrabold tracking-tight mb-8 leading-[1.1]">
+              <div className="overflow-hidden">
+                <span className={`hero-text-reveal inline-block ${isDark ? "text-white" : "text-gray-900"}`}>
+                  Expert
                 </span>
-              </h1>
-
-              <p
-                className={`
-                  text-lg md:text-xl mb-10
-                  ${isDark ? "text-slate-300" : "text-gray-600"}
-                `}
-              >
-                Access professional services with expert guidance, state-of-the-art facilities, and dedicated support to bring your innovative ideas to life.
-              </p>
-
-              <div className="flex flex-col sm:flex-row gap-4">
-                <button
-                  onClick={() =>
-                    document
-                      .getElementById("services-grid")
-                      ?.scrollIntoView({ behavior: "smooth" })
-                  }
-                  className="
-                    px-8 py-4 rounded-full font-semibold
-                    bg-black text-white
-                    hover:bg-gray-800 transition
-                  "
-                >
-                  Explore Services
-                </button>
-
-                <button
-                  className={`
-                    px-8 py-4 rounded-full font-semibold border transition
-                    ${
-                      isDark
-                        ? "border-white/30 text-white hover:bg-white/10"
-                        : "border-gray-300 text-gray-900 hover:bg-gray-100"
-                    }
-                  `}
-                >
-                  <a href="#features" className="flex items-center gap-2">
-                    <span>Learn More</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </a>
-                </button>
               </div>
-            </motion.div>
-          </div>
-        </div>
+              <div className="overflow-hidden">
+                <span className="hero-text-reveal inline-block bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 bg-clip-text text-transparent pb-2">
+                  Solutions.
+                </span>
+              </div>
+            </h1>
+
+            <p
+              className={`
+                hero-subtext text-lg md:text-xl mb-12 max-w-2xl mx-auto leading-relaxed
+                ${isDark ? "text-slate-300" : "text-gray-600"}
+              `}
+            >
+              Access state-of-the-art facilities, expert mentorship, and premium services designed to accelerate your innovation journey.
+            </p>
+
+            <div className="hero-buttons flex flex-col sm:flex-row gap-4 justify-center items-center">
+              <Button
+                onClick={() =>
+                  document
+                    .getElementById("services-grid")
+                    ?.scrollIntoView({ behavior: "smooth" })
+                }
+                className="
+                  px-8 py-6 rounded-full font-semibold text-base
+                  bg-gradient-to-r from-indigo-600 to-purple-600 text-white
+                  hover:from-indigo-500 hover:to-purple-500
+                  shadow-lg shadow-indigo-500/25
+                  transition-all duration-300 hover:scale-105
+                "
+              >
+                Explore Services
+              </Button>
+
+              <Button
+                variant="outline"
+                className={`
+                  px-8 py-6 rounded-full font-semibold text-base border-2 transition-all duration-300 hover:scale-105
+                  ${
+                    isDark
+                      ? "border-white/20 text-white hover:border-white/40 hover:bg-white/5"
+                      : "border-gray-300 text-gray-900 hover:border-gray-400 hover:bg-gray-50"
+                  }
+                `}
+                onClick={() =>
+                  document
+                    .getElementById("features")
+                    ?.scrollIntoView({ behavior: "smooth" })
+                }
+              >
+                Why Choose Us <ArrowRight className="ml-2 w-4 h-4" />
+              </Button>
+            </div>
+         </div>
       </div>
 
-      {/* HERO → SERVICES TRANSITION */}
-      <div className="absolute bottom-0 left-0 w-full h-64 pointer-events-none">
-        <div className="absolute inset-0 hidden dark:block bg-gradient-to-t from-background via-background/80 to-transparent" />
-        <div className="absolute inset-0 block dark:hidden bg-gradient-to-t from-background to-background" />
-      </div>
     </section>
   );
 };
@@ -554,71 +582,85 @@ const ServicesGridSection = () => {
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.1, duration: 0.6 }}
+                className="h-full"
               >
-                <Card
-                  className="glass glass-hover p-6 text-left cursor-pointer group"
+                <SpotlightCard
+                  className="p-0 overflow-hidden cursor-pointer group h-full border border-border/50 bg-secondary/5 hover:bg-secondary/10 transition-all rounded-3xl"
                   onClick={() => openDetailsOverlay(service)}
                 >
-                  <CardHeader className="p-0 mb-4">
-                    <div className="flex items-start justify-between mb-3">
-                      <CardTitle className="text-xl font-bold group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-                        {service.name}
-                      </CardTitle>
-                      <Badge
-                        variant="secondary"
-                        className="bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300"
-                      >
+                  {/* Image / Thumbnail Area */}
+                  <div className="relative h-48 w-full bg-muted/30 overflow-hidden">
+                    {getMediaUrl(service) ? (
+                      <img
+                        src={getMediaUrl(service)!}
+                        alt={service.name}
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-indigo-500/5 to-purple-500/5">
+                        <Briefcase className="w-12 h-12 text-indigo-500/20" />
+                      </div>
+                    )}
+                    <div className="absolute top-3 right-3">
+                      <Badge className="backdrop-blur-md bg-black/60 text-white border-white/10 shadow-sm hover:bg-black/70">
                         Available
                       </Badge>
                     </div>
-                    <CardDescription className="text-base text-muted-foreground line-clamp-2">
-                      {service.description || "No description available."}
-                    </CardDescription>
-                  </CardHeader>
+                  </div>
 
-                  <CardContent className="p-0 space-y-3 mb-4">
-                    <div className="flex items-start gap-2 text-sm text-muted-foreground">
-                      <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                      <span className="line-clamp-2">{availability}</span>
+                  <div className="p-5 flex flex-col h-[calc(100%-12rem)]">
+                    <div className="mb-4">
+                      <h3 className="text-xl font-bold mb-2 group-hover:text-indigo-500 transition-colors line-clamp-1">
+                        {service.name}
+                      </h3>
+                      <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
+                        {service.description || "Professional service tailored to your needs."}
+                      </p>
                     </div>
 
-                    {discounts.length > 0 ? (
-                      <div className="flex items-center gap-2">
-                        <IndianRupee className="w-4 h-4 text-green-600" />
-                        <span className="text-sm font-semibold">
-                          {startingPrice}
-                        </span>
+                    <div className="mt-auto space-y-4">
+                      {/* Price & Discount */}
+                      <div className="flex items-center justify-between p-3 rounded-xl bg-secondary/50 border border-border/50">
+                        <div className="flex flex-col">
+                          <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">
+                            Pricing
+                          </span>
+                          <div className="flex items-center gap-1 text-green-600 dark:text-green-400 font-bold">
+                            {startingPrice.includes("Starting") ? (
+                                <>
+                                <IndianRupee className="w-3.5 h-3.5" />
+                                <span className="text-lg">{startingPrice.replace(/[^0-9]/g, '')}</span>
+                                </>
+                            ) : (
+                                <span className="text-sm font-medium">{startingPrice}</span>
+                            )}
+                          </div>
+                        </div>
                         {hasAnyDiscount && (
                           <Badge
-                            variant="outline"
-                            className="text-xs bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300"
+                            variant="secondary"
+                            className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
                           >
                             {discounts[0].discount}% OFF
                           </Badge>
                         )}
                       </div>
-                    ) : (
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <IndianRupee className="w-4 h-4" />
-                        <span>Contact for pricing</span>
-                      </div>
-                    )}
-                  </CardContent>
 
-                  <CardFooter className="p-0 pt-4 border-t border-gray-100 dark:border-gray-700">
-                    <Button
-                      variant="outline"
-                      className="w-full border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        openDetailsOverlay(service);
-                      }}
-                    >
-                      <Info className="w-4 h-4 mr-2" />
-                      View Details
-                    </Button>
-                  </CardFooter>
-                </Card>
+                      {/* Footer Info */}
+                      <div className="flex items-center justify-between pt-2 border-t border-dashed border-border/50">
+                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                          <Clock className="w-3.5 h-3.5" />
+                          <span className="truncate max-w-[150px]">
+                            {availability === "Flexible scheduling available" ? "Flexible Schedule" : availability}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1 text-sm font-semibold text-foreground group-hover:translate-x-1 transition-transform">
+                          Details <ArrowRight className="w-4 h-4 ml-1 text-indigo-500" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </SpotlightCard>
               </motion.div>
             );
           })}
@@ -702,240 +744,200 @@ const ServiceDetailsOverlay: React.FC<ServiceDetailsOverlayProps> = ({
   const isDark = mounted && theme === "dark";
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm transition-all duration-300"
-      onClick={onBackdropClick}
-    >
-      <div
-        className="bg-white dark:bg-gray-900 rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
-      >
-<div
-  className="
-    relative p-6
-    bg-white/80 text-gray-900
-    dark:bg-white/10 dark:text-white
-    backdrop-blur-xl
-    border border-black/10 dark:border-white/10
-    transition-all duration-500 ease-in-out
-  "
->
+    <AnimatePresence>
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
+        {/* Backdrop */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={onBackdropClick}
+          className="absolute inset-0 bg-black/80 backdrop-blur-md cursor-pointer"
+        />
 
-
-
-          <button
-            onClick={onClose}
-            className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
-          <div className="pr-12">
-            <h2 className="text-3xl font-bold mb-2">{service.name}</h2>
-            <p className="text-lg">
-              {service.description || "Professional service offering"}
-            </p>
-          </div>
-        </div>
-
-        <div className="overflow-y-auto max-h-[calc(90vh-200px)] p-8">
-          {getMediaUrl(service) ? (
-            <div className="mb-8">
-              <img
-                src={getMediaUrl(service)!}
-                alt={service.name}
-                className="w-full h-64 object-cover rounded-lg shadow-lg"
-              />
-            </div>
-          ) : (
-            <div className="mb-8 flex items-center justify-center h-48 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 rounded-lg">
-              <div className="text-center text-gray-400 dark:text-gray-500">
-                <Image className="w-12 h-12 mx-auto mb-2" />
-                <p>No media available</p>
-              </div>
-            </div>
-          )}
-
-          {service.availability_map &&
-            Object.keys(service.availability_map).length > 0 && (
-              <div className="mb-8">
-                <h3 className="font-semibold text-2xl mb-4 flex items-center gap-2">
-                  <Calendar className="w-6 h-6 text-indigo-600" />
-                  Availability Schedule
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {Object.entries(service.availability_map).map(([day, time]) => (
-                    <div
-                      key={day}
-                      className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg"
-                    >
-                      <span className="font-medium capitalize">{day.toLowerCase()}</span>
-                      <span className="text-gray-600 dark:text-gray-400 font-medium">
-                        {time}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-          <div className="prose prose-lg dark:prose-invert max-w-none mb-8">
-            <ReactMarkdown
-              remarkPlugins={[remarkGfm]}
-              components={{
-                h1: ({ node, ...props }) => (
-                  <h1 className="text-2xl font-bold mb-4 mt-6 border-b pb-2" {...props} />
-                ),
-                h2: ({ node, ...props }) => (
-                  <h2 className="text-xl font-bold mb-3 mt-5" {...props} />
-                ),
-                h3: ({ node, ...props }) => (
-                  <h3 className="text-lg font-bold mb-2 mt-4" {...props} />
-                ),
-                p: ({ node, ...props }) => (
-                  <p className="mb-4 leading-relaxed" {...props} />
-                ),
-                ul: ({ node, ...props }) => (
-                  <ul className="list-disc list-inside mb-4 space-y-2" {...props} />
-                ),
-                li: ({ node, ...props }) => (
-                  <li {...props} />
-                ),
-                strong: ({ node, ...props }) => (
-                  <strong className="font-bold" {...props} />
-                ),
-                a: ({ node, ...props }) => (
-                  <a
-                    className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 underline"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    {...props}
-                  />
-                ),
-              }}
+        {/* Modal Container */}
+        <motion.div
+          layoutId={`service-${service.id}`}
+          className="
+            relative w-full max-w-5xl bg-background border border-border/50 
+            rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh] pointer-events-auto
+          "
+          initial={{ opacity: 0, scale: 0.95, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.95, y: 20 }}
+          transition={{ type: "spring", damping: 25, stiffness: 300, duration: 0.3 }}
+          onClick={(e) => e.stopPropagation()}
+        >
+            {/* Close Button */}
+            <button
+                onClick={onClose}
+                className="absolute top-4 right-4 z-50 p-2 rounded-full bg-black/50 text-white backdrop-blur-md hover:bg-black/70 transition-colors border border-white/10"
             >
-              {getLongDescription(service)}
-            </ReactMarkdown>
-          </div>
+                <X className="w-5 h-5" />
+            </button>
 
-          {getCostDiscounts(service).length > 0 ? (
-            <div className="mb-8">
-              <h3 className="font-semibold text-2xl mb-6 flex items-center gap-2">
-                <IndianRupee className="w-6 h-6 text-green-600" />
-                Pricing Plans
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {getCostDiscounts(service).map((plan, index) => {
-                  const cost = plan.cost || 0;
-                  const discount = plan.discount || 0;
-                  const originalPrice = discount > 0 ? cost / (1 - discount / 100) : cost;
+            {/* Scrollable Content */}
+            <div 
+                className="overflow-y-auto flex-1 custom-scrollbar w-full"
+                style={{ WebkitOverflowScrolling: "touch" }}
+            >
+                {/* Hero Section */}
+                <div className="relative h-64 md:h-80 w-full shrink-0">
+                    {getMediaUrl(service) ? (
+                        <img
+                            src={getMediaUrl(service)!}
+                            alt={service.name}
+                            className="w-full h-full object-cover"
+                        />
+                    ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-indigo-900 to-purple-900 flex items-center justify-center">
+                            <Briefcase className="w-20 h-20 text-white/20" />
+                        </div>
+                    )}
+                    
+                    {/* Gradient Overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
 
-                  return (
-                    <motion.div
-                      key={plan.plan}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.1 }}
-                      className="p-6 rounded-xl border-2 border-gray-200 dark:border-gray-600 hover:border-indigo-300 dark:hover:border-indigo-400 transition-all duration-300 hover:shadow-lg group glass-hover"
-                    >
-                      <div className="flex flex-col h-full">
-                        <div className="flex-1">
-                          <div className="flex justify-between items-start mb-4">
+                    <div className="absolute bottom-0 left-0 p-8 w-full">
+                        <div className="flex gap-2 mb-3">
+                             <Badge className="bg-emerald-500 text-white hover:bg-emerald-600 border-none backdrop-blur-md shadow-lg">
+                                Available
+                             </Badge>
+                             <Badge variant="outline" className="text-white border-white/20 bg-black/20 backdrop-blur-sm">
+                                Professional Service
+                             </Badge>
+                        </div>
+                        <h2 className="text-3xl md:text-5xl font-black text-white mb-2 leading-tight drop-shadow-xl">
+                            {service.name}
+                        </h2>
+                    </div>
+                </div>
+
+                <div className="p-8 md:p-10">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+                        {/* LEFT COLUMN: Details */}
+                        <div className="lg:col-span-2 space-y-10">
+                            
+                            {/* Description */}
                             <div>
-                              <h4 className="text-xl font-bold group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-                                {plan.plan}
-                              </h4>
-                              {plan.description && (
-                                <p className="text-sm text-muted-foreground mt-2">
-                                  {plan.description}
-                                </p>
-                              )}
+                                <h3 className="text-xl font-bold mb-4 flex items-center gap-2 text-foreground">
+                                    <Sparkles className="w-5 h-5 text-indigo-500" />
+                                    About this Service
+                                </h3>
+                                <div className="prose prose-lg dark:prose-invert max-w-none prose-p:text-muted-foreground prose-headings:text-foreground">
+                                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                        {getLongDescription(service)}
+                                    </ReactMarkdown>
+                                </div>
                             </div>
-                            {discount > 0 && (
-                              <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 text-sm">
-                                {discount}% OFF
-                              </Badge>
-                            )}
-                          </div>
 
-                          <div className="mb-4">
-                            {discount > 0 && (
-                              <div className="flex items-center gap-2 mb-1">
-                                <span className="text-sm line-through text-gray-500 dark:text-gray-400">
-                                  ₹{Math.round(originalPrice)}
-                                </span>
-                              </div>
+                            {/* Availability Schedule */}
+                            {service.availability_map && Object.keys(service.availability_map).length > 0 && (
+                                <div className="bg-secondary/30 rounded-2xl p-6 border border-border/50">
+                                    <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
+                                        <Calendar className="w-5 h-5 text-indigo-500" />
+                                        Availability Schedule
+                                    </h3>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        {Object.entries(service.availability_map).map(([day, time]) => (
+                                            <div key={day} className="flex justify-between items-center p-3 bg-background rounded-xl border border-border/50 shadow-sm">
+                                                <span className="font-semibold capitalize text-sm">{day}</span>
+                                                <span className="text-sm text-indigo-600 dark:text-indigo-400 font-medium bg-indigo-50 dark:bg-indigo-900/30 px-2 py-0.5 rounded">
+                                                    {time}
+                                                </span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
                             )}
-                            <div className="flex items-center gap-1">
-                              <IndianRupee className="w-5 h-5 text-green-600" />
-                              <span className="text-3xl font-bold">
-                                {Math.round(cost)}
-                              </span>
-                            </div>
-                          </div>
                         </div>
 
-                        <Button
-                          className="w-full bg-black hover:bg-gray-800 text-white shadow-lg"
-                          onClick={() => onOpenBooking(plan)}
-                          disabled={!isAuthenticated}
-                        >
-                          <Bookmark className="w-4 h-4 mr-2" />
-                          {isAuthenticated ? `Select ${plan.plan}` : "Login to Select"}
-                        </Button>
-                      </div>
-                    </motion.div>
-                  );
-                })}
-              </div>
-            </div>
-          ) : (
-            <div className="mb-8 p-6 bg-gray-50 dark:bg-gray-800 rounded-lg text-center glass">
-              <IndianRupee className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-              <h3 className="text-lg font-semibold mb-2">Custom Pricing</h3>
-              <p className="text-gray-500 dark:text-gray-500 mb-4">
-                Contact us for personalized pricing
-              </p>
-              <Button
-                className="bg-black hover:bg-gray-800 text-white"
-                onClick={() => onOpenBooking()}
-                disabled={!isAuthenticated}
-              >
-                <Bookmark className="w-4 h-4 mr-2" />
-                {isAuthenticated ? "Request Quote" : "Login to Request"}
-              </Button>
-            </div>
-          )}
-        </div>
+                        {/* RIGHT COLUMN: Pricing & Actions */}
+                        <div className="space-y-6">
+                            <div className="bg-secondary/20 rounded-2xl p-6 border border-border/50 sticky top-0">
+                                <h3 className="font-bold text-lg mb-6 flex items-center gap-2">
+                                    <IndianRupee className="w-5 h-5 text-green-500" />
+                                    Pricing Plans
+                                </h3>
+                                
+                                <div className="space-y-4">
+                                    {getCostDiscounts(service).length > 0 ? (
+                                        getCostDiscounts(service).map((plan, index) => {
+                                            const cost = plan.cost || 0;
+                                            const discount = plan.discount || 0;
+                                            return (
+                                                <motion.div
+                                                    key={plan.plan}
+                                                    initial={{ opacity: 0, y: 10 }}
+                                                    animate={{ opacity: 1, y: 0 }}
+                                                    transition={{ delay: index * 0.1 }}
+                                                    className="
+                                                        relative p-5 rounded-xl border-2 border-transparent 
+                                                        bg-background shadow-sm hover:shadow-md transition-all duration-300
+                                                        hover:border-indigo-500/30 group overflow-hidden
+                                                    "
+                                                >
+                                                    {/* Discount Badge */}
+                                                    {discount > 0 && (
+                                                        <div className="absolute top-0 right-0 bg-green-500 text-white text-[10px] font-bold px-2 py-1 rounded-bl-lg">
+                                                            {discount}% OFF
+                                                        </div>
+                                                    )}
 
-        <div className="border-t border-gray-200 dark:border-gray-700 p-6 bg-gray-50 dark:bg-gray-800/50">
-          <div className="flex flex-col sm:flex-row gap-4 justify-between items-center">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <CheckCircle2 className="w-4 h-4 text-green-600" />
-              Professional service with guaranteed quality
+                                                    <div className="mb-2">
+                                                        <h4 className="font-bold text-lg group-hover:text-indigo-500 transition-colors">
+                                                            {plan.plan}
+                                                        </h4>
+                                                        <p className="text-xs text-muted-foreground line-clamp-2">
+                                                            {plan.description || "Standard plan features included."}
+                                                        </p>
+                                                    </div>
+
+                                                    <div className="flex items-end justify-between mt-4">
+                                                        <div className="flex items-center gap-1">
+                                                            <div className="flex flex-col">
+                                                                {discount > 0 && (
+                                                                    <span className="text-xs line-through text-muted-foreground">₹{Math.round(cost / (1 - discount/100))}</span>
+                                                                )}
+                                                                <span className="text-2xl font-black text-foreground">₹{Math.round(cost)}</span>
+                                                            </div>
+                                                        </div>
+                                                        <Button 
+                                                            size="sm" 
+                                                            onClick={() => onOpenBooking(plan)}
+                                                            className="rounded-lg bg-foreground text-background hover:bg-foreground/90 font-semibold"
+                                                        >
+                                                            Select
+                                                        </Button>
+                                                    </div>
+                                                </motion.div>
+                                            );
+                                        })
+                                    ) : (
+                                        <div className="text-center p-8 bg-background rounded-xl border border-dashed border-border">
+                                            <p className="text-muted-foreground mb-4">Contact us for custom pricing details.</p>
+                                            <Button onClick={() => onOpenBooking()} className="w-full">
+                                                Request Quote
+                                            </Button>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="mt-6 pt-6 border-t border-border/50 text-center">
+                                    <p className="text-xs text-muted-foreground mb-4 flex items-center justify-center gap-1.5">
+                                        <Shield className="w-3.5 h-3.5 text-emerald-500" />
+                                        Secure Payment & Verified Service
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
             </div>
-            <div className="flex gap-3">
-              <Button
-                variant="outline"
-                onClick={onClose}
-                className="min-w-24 border-gray-300 dark:border-gray-600"
-              >
-                Close
-              </Button>
-              {getCostDiscounts(service).length > 0 && (
-                <Button
-                  className="min-w-24 bg-black hover:bg-gray-800 text-white shadow-lg"
-                  onClick={() => onOpenBooking()}
-                  disabled={!isAuthenticated}
-                >
-                  <Bookmark className="w-4 h-4 mr-2" />
-                  {isAuthenticated ? "Book Now" : "Login to Book"}
-                </Button>
-              )}
-            </div>
-          </div>
-        </div>
+        </motion.div>
       </div>
-    </div>
+    </AnimatePresence>
   );
 };
 
@@ -1133,25 +1135,29 @@ const ServicesFeaturesSection = () => {
               title: "Expert Guidance",
               description: "Professional mentorship from experienced innovators and industry experts",
               icon: <Users className="w-6 h-6" />,
-              gradient: "from-blue-500 to-cyan-500"
+              gradient: "from-blue-500 to-cyan-500",
+              spotlight: "rgba(6, 182, 212, 0.25)" // Cyan
             },
             {
               title: "Quality Assurance",
               description: "Guaranteed quality standards and professional execution",
               icon: <Shield className="w-6 h-6" />,
-              gradient: "from-green-500 to-emerald-500"
+              gradient: "from-green-500 to-emerald-500",
+              spotlight: "rgba(16, 185, 129, 0.25)" // Emerald
             },
             {
               title: "Quick Turnaround",
               description: "Efficient processes ensuring timely delivery",
               icon: <Clock className="w-6 h-6" />,
-              gradient: "from-yellow-500 to-orange-500"
+              gradient: "from-yellow-500 to-orange-500",
+              spotlight: "rgba(245, 158, 11, 0.25)" // Amber
             },
             {
               title: "Custom Solutions",
               description: "Tailored services for your specific project needs",
               icon: <Target className="w-6 h-6" />,
-              gradient: "from-purple-500 to-pink-500"
+              gradient: "from-purple-500 to-pink-500",
+              spotlight: "rgba(236, 72, 153, 0.25)" // Pink
             }
           ].map((feature, i) => (
             <motion.div
@@ -1159,27 +1165,33 @@ const ServicesFeaturesSection = () => {
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.1, duration: 0.6 }}
-              className="glass glass-hover p-6 text-left"
             >
-              <div
-                className={`
-                  mb-4
-                  inline-flex
-                  h-11 w-11
-                  items-center justify-center
-                  rounded-xl
-                  bg-gradient-to-r ${feature.gradient}
-                  shadow-lg
-                `}
+              <SpotlightCard
+                className="p-6 h-full text-left"
+                spotlightColor={feature.spotlight}
               >
-                {feature.icon}
-              </div>
+                <div
+                  className={`
+                    mb-4
+                    inline-flex
+                    h-11 w-11
+                    items-center justify-center
+                    rounded-xl
+                    bg-gradient-to-r ${feature.gradient}
+                    shadow-lg
+                  `}
+                >
+                  <div className="text-white">
+                    {feature.icon}
+                  </div>
+                </div>
 
-              <h3 className="text-xl font-bold mb-2">{feature.title}</h3>
+                <h3 className="text-xl font-bold mb-2">{feature.title}</h3>
 
-              <p className="text-sm text-muted-foreground">
-                {feature.description}
-              </p>
+                <p className="text-sm text-muted-foreground group-hover:text-gray-700 dark:group-hover:text-gray-300 transition-colors">
+                  {feature.description}
+                </p>
+              </SpotlightCard>
             </motion.div>
           ))}
         </div>

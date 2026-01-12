@@ -32,7 +32,12 @@ export const setAccessToken = (token: string | null) => {
   }
 };
 
-export const getAccessToken = () => accessToken;
+export const getAccessToken = () => {
+  if (typeof window !== "undefined") {
+    return localStorage.getItem("access_token") || accessToken;
+  }
+  return accessToken;
+};
 
 // -----------------------------
 // Axios interceptor

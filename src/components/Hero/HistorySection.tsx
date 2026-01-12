@@ -12,6 +12,7 @@ import { MdTimeline } from "react-icons/md";
 import { TbRoute } from "react-icons/tb";
 
 import { useContent } from "@/context/ContentContext";
+import SpotlightCard from "@/components/ui/SpotlightCard";
 
 const HistorySection = () => {
   const { theme } = useTheme();
@@ -78,7 +79,7 @@ const HistorySection = () => {
         <VerticalTimeline
           lineColor={isDark ? "rgba(255,255,255,0.15)" : "#e5e7eb"}
         >
-          {historyData.map((milestone, index) => (
+          {historyData.map((milestone: any, index: number) => (
             <VerticalTimelineElement
               key={index}
               date={milestone.year}
@@ -95,19 +96,15 @@ const HistorySection = () => {
               }}
               contentArrowStyle={{ display: "none" }}
             >
-              {/* GLASS CARD */}
-              <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6 }}
-                viewport={{ once: true }}
-                className="glass glass-hover p-6"
-              >
-                <h3 className="h4 mb-1">{milestone.event}</h3>
-                <p className="text-sm text-muted-foreground">
-                  {milestone.description}
-                </p>
-              </motion.div>
+                <SpotlightCard
+                  className="p-6 text-left"
+                  spotlightColor={isDark ? "rgba(99, 102, 241, 0.2)" : "rgba(59, 130, 246, 0.2)"}
+                >
+                  <h3 className="h4 mb-1">{milestone.event}</h3>
+                  <p className="text-sm text-muted-foreground">
+                    {milestone.description}
+                  </p>
+                </SpotlightCard>
             </VerticalTimelineElement>
           ))}
         </VerticalTimeline>

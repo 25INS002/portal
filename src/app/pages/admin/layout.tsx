@@ -1,14 +1,14 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { motion } from "framer-motion";
 
 const tabs = [
-    { name: "Media", href: "media" },
-    { name: "Feedback", href: "feedback" },
-    { name: "Assign Access", href: "access" },
-    // { name: "Modules", href: "modules" },
-    { name: "Services", href: "services" },
     { name: "Events", href: "events" },
+    { name: "Services", href: "services" },
+    { name: "Assign Access", href: "access" },
+    { name: "Feedback", href: "feedback" },
+    { name: "Media", href: "media" },
 ];
 
 export default function SuperAdminLayout({
@@ -30,42 +30,47 @@ export default function SuperAdminLayout({
         : pathSegments.join("/");
 
     return (
-        <div className="min-h-screen p-6 text-white">
-            <br />
-            <br />
-            <br />
-            <br />
+        <div className="min-h-screen text-white bg-background">
+            <div className="max-w-7xl mx-auto px-6 pt-32 pb-12">
+                {/* Tabs */}
+                <div className="flex gap-2 mb-8 overflow-x-auto pb-2 scrollbar-hide">
+                    {tabs.map((tab) => {
+                        // Replace the current tab with the new tab, or append if no tab exists
+                        const tabHref = currentTabIndex !== -1 
+                            ? `${basePath}/${tab.href}`
+                            : `${pathname}/${tab.href}`;
+                        
+                        const isActive = pathSegments.includes(tab.href);
+                        return (
+                            <Link
+                                key={tab.name}
+                                href={tabHref}
+                                className={`
+                                    relative px-4 py-2 rounded-lg text-sm font-medium transition-colors
+                                    ${isActive ? "text-white" : "text-gray-400 hover:text-white"}
+                                `}
+                            >
+                                {isActive && (
+                                    <motion.div
+                                        layoutId="admin-tab"
+                                        className="absolute inset-0 bg-blue-600 rounded-lg"
+                                        transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                                    />
+                                )}
+                                {!isActive && (
+                                    <div className="absolute inset-0 bg-white/5 rounded-lg -z-10" />
+                                )}
+                                <span className="relative z-10">{tab.name}</span>
+                            </Link>
+                        );
+                    })}
+                </div>
 
-            {/* Tabs */}
-            <div className="flex gap-2 mb-4 overflow-x-auto flex-row-reverse mx-auto">
-                {tabs.map((tab) => {
-                    // Replace the current tab with the new tab, or append if no tab exists
-                    const tabHref = currentTabIndex !== -1 
-                        ? `${basePath}/${tab.href}`
-                        : `${pathname}/${tab.href}`;
-                    
-                    const isActive = pathSegments.includes(tab.href);
-                    return (
-                        <Link
-                            key={tab.name}
-                            href={tabHref}
-                            className={`px-3 py-1 rounded-md font-medium transition-colors ${isActive
-                                    ? "bg-blue-600 text-white"
-                                    : "bg-gray-800 text-gray-400 hover:bg-gray-700"
-                                }`}
-                        >
-                            {tab.name}
-                        </Link>
-                    );
-                })}
+                {/* Page Content */}
+                <div className="rounded-2xl border border-white/10 overflow-hidden bg-black/20 backdrop-blur-sm min-h-[600px]">
+                    {children}
+                </div>
             </div>
-
-            {/* Page Content */}
-            <div className="p-5 rounded-md shadow-md">{children}</div>
-            <br />
-            <br />
-            <br />
-            <br />
         </div>
     );
 }

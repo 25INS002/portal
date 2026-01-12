@@ -9,13 +9,16 @@ import Header from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { ContentProvider } from "@/context/ContentContext";
 import FloatingActionButton from "@/components/FloatingActionButton";
+import { LenisProvider } from "@/context/LenisProvider";
 
 /* -------------------- WRAPPERS -------------------- */
 
 function PreWrapper({ children }: { children: React.ReactNode }) {
   return (
     <IsMobileProvider>
-      <ScrollProvider>{children}</ScrollProvider>
+      <ScrollProvider>
+        <LenisProvider>{children}</LenisProvider>
+      </ScrollProvider>
     </IsMobileProvider>
   );
 }
@@ -65,3 +68,4 @@ export default function ClientLayout({
     </ContentProvider>
   );
 }
+

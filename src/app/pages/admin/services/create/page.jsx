@@ -3,16 +3,20 @@ import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import api from '@/lib/api';
+import { useRouter } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
 
-// Shadcn components (assuming you have these installed)
+// UI Components
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
+import SpotlightCard from "@/components/ui/SpotlightCard";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ChevronLeft, Plus, Trash2, Upload, Calendar, DollarSign, Clock, Layers } from 'lucide-react';
 
 const AdminServiceCreate = () => {
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [availabilitySlots, setAvailabilitySlots] = useState([]);
   const [plans, setPlans] = useState([]);
@@ -34,7 +38,6 @@ const AdminServiceCreate = () => {
     }
   });
 
-  // Day and time options
   const daysOfWeek = [
     { value: 'MON', label: 'Monday' },
     { value: 'TUE', label: 'Tuesday' },
@@ -53,7 +56,6 @@ const AdminServiceCreate = () => {
     }
   }
 
-  // Add new availability slot
   const addAvailabilitySlot = () => {
     setAvailabilitySlots([
       ...availabilitySlots,
@@ -61,19 +63,16 @@ const AdminServiceCreate = () => {
     ]);
   };
 
-  // Update availability slot
   const updateAvailabilitySlot = (index, field, value) => {
     const updatedSlots = [...availabilitySlots];
     updatedSlots[index][field] = value;
     setAvailabilitySlots(updatedSlots);
   };
 
-  // Remove availability slot
   const removeAvailabilitySlot = (index) => {
     setAvailabilitySlots(availabilitySlots.filter((_, i) => i !== index));
   };
 
-  // Add new plan
   const addPlan = () => {
     setPlans([
       ...plans,
@@ -81,13 +80,11 @@ const AdminServiceCreate = () => {
     ]);
   };
 
-  // Update plan
   const updatePlan = (index, field, value) => {
     const updatedPlans = [...plans];
     updatedPlans[index][field] = value;
     setPlans(updatedPlans);
     
-    // Update form value
     setValue('cost_discount', updatedPlans.map(plan => ({
       plan: plan.plan,
       cost: parseFloat(plan.cost) || 0,
@@ -96,7 +93,6 @@ const AdminServiceCreate = () => {
     })));
   };
 
-  // Remove plan
   const removePlan = (index) => {
     const updatedPlans = plans.filter((_, i) => i !== index);
     setPlans(updatedPlans);
@@ -108,7 +104,6 @@ const AdminServiceCreate = () => {
     })));
   };
 
-  // Handle file upload
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -116,15 +111,12 @@ const AdminServiceCreate = () => {
     }
   };
 
-  // Form submission
   const onSubmit = async (data) => {
-    // Validate plans
     if (plans.length === 0) {
       toast.error('Please add at least one plan');
       return;
     }
 
-    // Validate availability slots
     if (availabilitySlots.length === 0) {
       toast.error('Please add at least one availability slot');
       return;
@@ -134,42 +126,27 @@ const AdminServiceCreate = () => {
 
     try {
       const formData = new FormData();
-      
-      // Append basic fields
       formData.append('name', data.name);
       formData.append('description', data.description);
       formData.append('long_description', data.long_description || '');
       
-      // Append media file if exists
       if (data.media) {
         formData.append('media', data.media);
       }
 
-      // Append plans as JSON
       formData.append('cost_discount', JSON.stringify(data.cost_discount));
-
-      // Append availability slots as JSON
       formData.append('availability_slots', JSON.stringify(availabilitySlots.map(slot => ({
         day_of_week: slot.day_of_week,
         start_time: slot.start_time,
         end_time: slot.end_time
       }))));
 
-      const response = await api.post('/services/create/', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
+      await api.post('/services/create/', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
       });
 
       toast.success('Service created successfully!');
-      reset();
-      setPlans([]);
-      setAvailabilitySlots([]);
-      
-      // Redirect to services list or show success message
-      setTimeout(() => {
-        window.location.href = '/pages/admin/services';
-      }, 2000);
+      router.push('/pages/admin/services');
 
     } catch (error) {
       console.error('Error creating service:', error);
@@ -181,305 +158,258 @@ const AdminServiceCreate = () => {
   };
 
   return (
-    <div className="container mx-auto py-8 px-4 max-w-4xl">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Create New Service</h1>
-        <p className="text-gray-600 mt-2">
-          Add a new service to your platform with availability slots and pricing plans.
-        </p>
-      </div>
+    <div className="min-h-screen w-full relative p-6 pt-32 pb-20">
+       {/* Ambient Background */}
+       <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-purple-500/10 blur-[120px] pointer-events-none rounded-full" />
+       <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-blue-500/10 blur-[120px] pointer-events-none rounded-full" />
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-        {/* Basic Information Card */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Basic Information</CardTitle>
-            <CardDescription>
-              Enter the basic details about your service.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label htmlFor="name" className="text-sm font-medium text-gray-700">
-                Service Name *
-              </Label>
-              <Input
-                id="name"
-                type="text"
-                {...register('name', { required: 'Service name is required' })}
-                className="mt-1"
-                placeholder="e.g., Web Development, Consulting"
-              />
-              {errors.name && (
-                <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>
-              )}
-            </div>
-
-            <div>
-              <Label htmlFor="description" className="text-sm font-medium text-gray-700">
-                Short Description *
-              </Label>
-              <Textarea
-                id="description"
-                {...register('description', { required: 'Description is required' })}
-                className="mt-1"
-                rows={3}
-                placeholder="Brief description of your service..."
-              />
-              {errors.description && (
-                <p className="text-red-500 text-sm mt-1">{errors.description.message}</p>
-              )}
-            </div>
-
-            <div>
-              <Label htmlFor="long_description" className="text-sm font-medium text-gray-700">
-                Detailed Description
-              </Label>
-              <Textarea
-                id="long_description"
-                {...register('long_description')}
-                className="mt-1"
-                rows={5}
-                placeholder="Detailed information about your service, features, benefits..."
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="media" className="text-sm font-medium text-gray-700">
-                Service Image
-              </Label>
-              <Input
-                id="media"
-                type="file"
-                accept="image/*,.pdf,.doc,.docx"
-                onChange={handleFileChange}
-                className="mt-1"
-              />
-              <p className="text-sm text-gray-500 mt-1">
-                Upload an image or document related to your service
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Pricing Plans Card */}
-        <Card>
-          <CardHeader>
-            <div className="flex justify-between items-center">
-              <div>
-                <CardTitle>Pricing Plans</CardTitle>
-                <CardDescription>
-                  Define different pricing plans for your service.
-                </CardDescription>
-              </div>
-              <Button type="button" onClick={addPlan} variant="outline">
-                Add Plan
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {plans.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                No plans added yet. Click "Add Plan" to get started.
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {plans.map((plan, index) => (
-                  <div key={plan.id} className="border rounded-lg p-4 space-y-3">
-                    <div className="flex justify-between items-start">
-                      <h4 className="font-medium">Plan {index + 1}</h4>
-                      <Button
-                        type="button"
-                        onClick={() => removePlan(index)}
-                        variant="destructive"
-                        size="sm"
-                      >
-                        Remove
-                      </Button>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor={`plan-${index}-name`}>Plan Name *</Label>
-                        <Input
-                          id={`plan-${index}-name`}
-                          value={plan.plan}
-                          onChange={(e) => updatePlan(index, 'plan', e.target.value)}
-                          placeholder="e.g., Basic, Premium, Enterprise"
-                        />
-                      </div>
-
-                      <div>
-                        <Label htmlFor={`plan-${index}-cost`}>Cost ($) *</Label>
-                        <Input
-                          id={`plan-${index}-cost`}
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          value={plan.cost}
-                          onChange={(e) => updatePlan(index, 'cost', e.target.value)}
-                          placeholder="0.00"
-                        />
-                      </div>
-
-                      <div>
-                        <Label htmlFor={`plan-${index}-discount`}>Discount ($)</Label>
-                        <Input
-                          id={`plan-${index}-discount`}
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          value={plan.discount}
-                          onChange={(e) => updatePlan(index, 'discount', e.target.value)}
-                          placeholder="0.00"
-                        />
-                      </div>
-
-                      <div className="md:col-span-2">
-                        <Label htmlFor={`plan-${index}-description`}>Description</Label>
-                        <Input
-                          id={`plan-${index}-description`}
-                          value={plan.description}
-                          onChange={(e) => updatePlan(index, 'description', e.target.value)}
-                          placeholder="Describe what this plan includes..."
-                        />
-                      </div>
-                    </div>
-
-                    {plan.cost && (
-                      <div className="text-sm text-gray-600">
-                        Final Price: ${(parseFloat(plan.cost) - (parseFloat(plan.discount) || 0)).toFixed(2)}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Availability Slots Card */}
-        <Card>
-          <CardHeader>
-            <div className="flex justify-between items-center">
-              <div>
-                <CardTitle>Availability Slots</CardTitle>
-                <CardDescription>
-                  Define when your service is available for booking.
-                </CardDescription>
-              </div>
-              <Button type="button" onClick={addAvailabilitySlot} variant="outline">
-                Add Slot
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {availabilitySlots.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                No availability slots added yet. Click "Add Slot" to get started.
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {availabilitySlots.map((slot, index) => (
-                  <div key={slot.id} className="border rounded-lg p-4">
-                    <div className="flex justify-between items-start mb-3">
-                      <h4 className="font-medium">Slot {index + 1}</h4>
-                      <Button
-                        type="button"
-                        onClick={() => removeAvailabilitySlot(index)}
-                        variant="destructive"
-                        size="sm"
-                      >
-                        Remove
-                      </Button>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div>
-                        <Label htmlFor={`slot-${index}-day`}>Day of Week</Label>
-                        <Select
-                          value={slot.day_of_week}
-                          onValueChange={(value) => updateAvailabilitySlot(index, 'day_of_week', value)}
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {daysOfWeek.map(day => (
-                              <SelectItem key={day.value} value={day.value}>
-                                {day.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div>
-                        <Label htmlFor={`slot-${index}-start`}>Start Time</Label>
-                        <Select
-                          value={slot.start_time}
-                          onValueChange={(value) => updateAvailabilitySlot(index, 'start_time', value)}
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {timeOptions.map(time => (
-                              <SelectItem key={time} value={time}>
-                                {time}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div>
-                        <Label htmlFor={`slot-${index}-end`}>End Time</Label>
-                        <Select
-                          value={slot.end_time}
-                          onValueChange={(value) => updateAvailabilitySlot(index, 'end_time', value)}
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {timeOptions.map(time => (
-                              <SelectItem key={time} value={time}>
-                                {time}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-
-                    {slot.start_time && slot.end_time && slot.start_time >= slot.end_time && (
-                      <p className="text-red-500 text-sm mt-2">
-                        End time must be after start time
-                      </p>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Submit Button */}
-        <div className="flex justify-end space-x-4">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => window.history.back()}
-            disabled={loading}
+       <div className="max-w-4xl mx-auto relative z-10">
+          <motion.div 
+             initial={{ opacity: 0, x: -20 }} 
+             animate={{ opacity: 1, x: 0 }}
+             className="mb-8"
           >
-            Cancel
-          </Button>
-          <Button type="submit" disabled={loading}>
-            {loading ? 'Creating Service...' : 'Create Service'}
-          </Button>
-        </div>
-      </form>
+             <Button variant="ghost" className="mb-4 pl-0 hover:bg-transparent hover:text-white text-muted-foreground" onClick={() => router.back()}>
+                <ChevronLeft className="mr-2 h-4 w-4" /> Back to Services
+             </Button>
+             <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">Create New Service</h1>
+             <p className="text-muted-foreground mt-2 text-lg">Define your service details, pricing plans, and availability.</p>
+          </motion.div>
+
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+            
+            {/* Basic Info */}
+            <SpotlightCard className="p-8 bg-white/5 border-white/10" spotlightColor="rgba(255,255,255,0.05)">
+               <div className="flex items-center gap-3 mb-6">
+                  <div className="p-2 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                     <Layers className="w-5 h-5 text-blue-400" />
+                  </div>
+                  <h2 className="text-xl font-semibold text-white">Basic Information</h2>
+               </div>
+
+               <div className="space-y-6">
+                  <div className="grid md:grid-cols-2 gap-6">
+                     <div className="space-y-2">
+                        <Label htmlFor="name" className="text-gray-300">Service Name *</Label>
+                        <Input 
+                           id="name" 
+                           {...register('name', { required: 'Required' })} 
+                           className="bg-black/20 border-white/10 focus:border-blue-500/50 text-white placeholder:text-gray-600"
+                           placeholder="e.g. Graphic Design"
+                        />
+                        {errors.name && <span className="text-red-400 text-xs">{errors.name.message}</span>}
+                     </div>
+                     <div className="space-y-2">
+                        <Label htmlFor="media" className="text-gray-300">Service Image</Label>
+                        <div className="relative group cursor-pointer">
+                           <Input 
+                              id="media" 
+                              type="file" 
+                              onChange={handleFileChange} 
+                              className="absolute inset-0 opacity-0 cursor-pointer z-10" 
+                           />
+                           <div className="h-10 bg-black/20 border border-white/10 rounded-md flex items-center px-3 text-sm text-gray-400 group-hover:border-white/20 transition-colors">
+                              <Upload className="mr-2 h-4 w-4" />
+                              <span className="truncate">
+                                {watch('media') ? watch('media').name : "Upload Image..."}
+                              </span>
+                           </div>
+                        </div>
+                     </div>
+                  </div>
+
+                  <div className="space-y-2">
+                     <Label htmlFor="description" className="text-gray-300">Short Description *</Label>
+                     <Textarea 
+                        id="description" 
+                        {...register('description', { required: 'Required' })} 
+                        className="bg-black/20 border-white/10 focus:border-blue-500/50 text-white placeholder:text-gray-600 resize-none"
+                        rows={3}
+                        placeholder="A brief summary of what you offer..."
+                     />
+                  </div>
+
+                  <div className="space-y-2">
+                     <Label htmlFor="long_description" className="text-gray-300">Detailed Description</Label>
+                     <Textarea 
+                        id="long_description" 
+                        {...register('long_description')} 
+                        className="bg-black/20 border-white/10 focus:border-blue-500/50 text-white placeholder:text-gray-600 min-h-[150px]"
+                        placeholder="Full details, deliverables, and benefits..."
+                     />
+                  </div>
+               </div>
+            </SpotlightCard>
+
+            {/* Pricing Plans */}
+            <SpotlightCard className="p-8 bg-white/5 border-white/10" spotlightColor="rgba(255,255,255,0.05)">
+               <div className="flex justify-between items-center mb-6">
+                  <div className="flex items-center gap-3">
+                     <div className="p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+                        <DollarSign className="w-5 h-5 text-emerald-400" />
+                     </div>
+                     <h2 className="text-xl font-semibold text-white">Pricing Plans</h2>
+                  </div>
+                  <Button type="button" onClick={addPlan} size="sm" className="bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600/30 border border-emerald-500/30">
+                     <Plus className="w-4 h-4 mr-2" /> Add Plan
+                  </Button>
+               </div>
+
+               <div className="space-y-4">
+                  <AnimatePresence>
+                     {plans.map((plan, index) => (
+                        <motion.div 
+                           key={plan.id}
+                           initial={{ opacity: 0, height: 0 }}
+                           animate={{ opacity: 1, height: "auto" }}
+                           exit={{ opacity: 0, height: 0 }}
+                           className="p-4 rounded-xl bg-white/5 border border-white/5 relative group"
+                        >
+                           <Button 
+                              type="button" 
+                              variant="ghost" 
+                              size="icon"
+                              className="absolute top-2 right-2 text-muted-foreground hover:text-red-400 hover:bg-red-500/10 opacity-0 group-hover:opacity-100 transition-opacity"
+                              onClick={() => removePlan(index)}
+                           >
+                              <Trash2 className="w-4 h-4" />
+                           </Button>
+
+                           <div className="grid md:grid-cols-4 gap-4 mb-3">
+                              <div className="md:col-span-2 space-y-2">
+                                 <Label className="text-xs text-muted-foreground">Plan Name</Label>
+                                 <Input 
+                                    value={plan.plan} 
+                                    onChange={(e) => updatePlan(index, 'plan', e.target.value)} 
+                                    className="h-9 bg-black/40 border-white/10" 
+                                    placeholder="e.g. Standard"
+                                 />
+                              </div>
+                              <div className="space-y-2">
+                                 <Label className="text-xs text-muted-foreground">Cost ($)</Label>
+                                 <Input 
+                                    type="number"
+                                    value={plan.cost} 
+                                    onChange={(e) => updatePlan(index, 'cost', e.target.value)} 
+                                    className="h-9 bg-black/40 border-white/10" 
+                                    placeholder="0.00"
+                                 />
+                              </div>
+                              <div className="space-y-2">
+                                 <Label className="text-xs text-muted-foreground">Discount ($)</Label>
+                                 <Input 
+                                    type="number"
+                                    value={plan.discount} 
+                                    onChange={(e) => updatePlan(index, 'discount', e.target.value)} 
+                                    className="h-9 bg-black/40 border-white/10" 
+                                    placeholder="0.00"
+                                 />
+                              </div>
+                           </div>
+                           <div className="space-y-2">
+                              <Label className="text-xs text-muted-foreground">Description</Label>
+                              <Input 
+                                 value={plan.description} 
+                                 onChange={(e) => updatePlan(index, 'description', e.target.value)} 
+                                 className="h-9 bg-black/40 border-white/10" 
+                                 placeholder="Plan details..."
+                              />
+                           </div>
+                        </motion.div>
+                     ))}
+                  </AnimatePresence>
+                  {plans.length === 0 && (
+                     <div className="text-center py-8 text-muted-foreground text-sm border border-dashed border-white/10 rounded-xl bg-white/5">
+                        No pricing plans added. Add at least one plan.
+                     </div>
+                  )}
+               </div>
+            </SpotlightCard>
+
+            {/* Availability */}
+            <SpotlightCard className="p-8 bg-white/5 border-white/10" spotlightColor="rgba(255,255,255,0.05)">
+               <div className="flex justify-between items-center mb-6">
+                  <div className="flex items-center gap-3">
+                     <div className="p-2 rounded-lg bg-orange-500/10 border border-orange-500/20">
+                        <Clock className="w-5 h-5 text-orange-400" />
+                     </div>
+                     <h2 className="text-xl font-semibold text-white">Availability</h2>
+                  </div>
+                  <Button type="button" onClick={addAvailabilitySlot} size="sm" className="bg-orange-600/20 text-orange-400 hover:bg-orange-600/30 border border-orange-500/30">
+                     <Plus className="w-4 h-4 mr-2" /> Add Slot
+                  </Button>
+               </div>
+
+               <div className="space-y-3">
+                  <AnimatePresence>
+                     {availabilitySlots.map((slot, index) => (
+                        <motion.div 
+                           key={slot.id}
+                           initial={{ opacity: 0, scale: 0.95 }}
+                           animate={{ opacity: 1, scale: 1 }}
+                           exit={{ opacity: 0, scale: 0.95 }}
+                           className="flex flex-col md:flex-row items-center gap-3 p-3 rounded-lg bg-white/5 border border-white/5"
+                        >
+                           <Select value={slot.day_of_week} onValueChange={(v) => updateAvailabilitySlot(index, 'day_of_week', v)}>
+                              <SelectTrigger className="w-full md:w-[150px] bg-black/40 border-white/10 h-9">
+                                 <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent className="bg-gray-900 border-white/10">
+                                 {daysOfWeek.map(d => <SelectItem key={d.value} value={d.value}>{d.label}</SelectItem>)}
+                              </SelectContent>
+                           </Select>
+
+                           <div className="flex items-center gap-2 flex-1 w-full">
+                              <Select value={slot.start_time} onValueChange={(v) => updateAvailabilitySlot(index, 'start_time', v)}>
+                                 <SelectTrigger className="flex-1 bg-black/40 border-white/10 h-9">
+                                    <SelectValue />
+                                 </SelectTrigger>
+                                 <SelectContent className="bg-gray-900 border-white/10 h-[200px]">
+                                    {timeOptions.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                                 </SelectContent>
+                              </Select>
+                              <span className="text-muted-foreground">-</span>
+                              <Select value={slot.end_time} onValueChange={(v) => updateAvailabilitySlot(index, 'end_time', v)}>
+                                 <SelectTrigger className="flex-1 bg-black/40 border-white/10 h-9">
+                                    <SelectValue />
+                                 </SelectTrigger>
+                                 <SelectContent className="bg-gray-900 border-white/10 h-[200px]">
+                                    {timeOptions.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                                 </SelectContent>
+                              </Select>
+                           </div>
+
+                           <Button 
+                              type="button" 
+                              variant="ghost" 
+                              size="icon" 
+                              className="text-muted-foreground hover:text-red-400"
+                              onClick={() => removeAvailabilitySlot(index)}
+                           >
+                              <Trash2 className="w-4 h-4" />
+                           </Button>
+                        </motion.div>
+                     ))}
+                  </AnimatePresence>
+                  {availabilitySlots.length === 0 && (
+                     <div className="text-center py-8 text-muted-foreground text-sm border border-dashed border-white/10 rounded-xl bg-white/5">
+                        No availability slots defined.
+                     </div>
+                  )}
+               </div>
+            </SpotlightCard>
+
+            <div className="flex justify-end gap-4 pt-4">
+               <Button type="button" variant="outline" className="border-white/10 hover:bg-white/5 text-white" onClick={() => router.back()}>Cancel</Button>
+               <Button type="submit" disabled={loading} className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white shadow-lg shadow-blue-500/20 px-8">
+                  {loading ? (
+                     <span className="flex items-center gap-2"><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> creating...</span>
+                  ) : "Create Service"}
+               </Button>
+            </div>
+
+          </form>
+       </div>
     </div>
   );
 };

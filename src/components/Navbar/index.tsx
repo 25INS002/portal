@@ -6,6 +6,8 @@ import { Menu, X, Sun, Moon, ArrowRight } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useAuth } from "@/context/AuthContext";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
+import Link from "next/link";
 
 const navItems = [
   { label: "Home", href: "/" },
@@ -21,6 +23,7 @@ export default function Header() {
   const { theme, setTheme } = useTheme();
   const isDark = theme === "dark";
   const { isAuthenticated } = useAuth();
+  const pathname = usePathname();
 
   const [mounted, setMounted] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -124,30 +127,42 @@ export default function Header() {
             {/* DESKTOP NAV */}
             <div
               className="
-    hidden md:flex absolute left-1/2 -translate-x-1/2
-    rounded-full px-1 py-1
-    backdrop-blur-md border
-    bg-white/40 dark:bg-white/5
-    border-black/10 dark:border-white/10
-  "
+                hidden md:flex absolute left-1/2 -translate-x-1/2
+                rounded-full px-1 py-1
+                backdrop-blur-md border
+                bg-white/40 dark:bg-white/5
+                border-black/10 dark:border-white/10
+              "
             >
               {navItems.map((item) => {
-                if (item.label !== "Login")
-                  return (
-                    <a
-                      key={item.label}
-                      href={item.href}
-                      className="
-        px-5 py-2 rounded-full
-        text-[11px] uppercase tracking-widest font-semibold
-        transition-colors duration-200
-        text-gray-800 hover:text-gray-950 hover:bg-black/5
-        dark:text-white/80 dark:hover:text-white dark:hover:bg-white/10
-      "
-                    >
-                      {item.label}
-                    </a>
-                  );
+                if (item.label === "Login") return null;
+                
+                const isActive = pathname === item.href;
+                
+                return (
+                  <Link
+                    key={item.label}
+                    href={item.href}
+                    className={`
+                      relative px-5 py-2 rounded-full
+                      text-[11px] uppercase tracking-widest font-semibold
+                      transition-colors duration-200
+                      ${isActive 
+                        ? "text-black dark:text-white" 
+                        : "text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
+                      }
+                    `}
+                  >
+                    {isActive && (
+                      <motion.span
+                        layoutId="nav-pill"
+                        className="absolute inset-0 bg-white/50 dark:bg-white/10 rounded-full shadow-sm"
+                        transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                      />
+                    )}
+                    <span className="relative z-10">{item.label}</span>
+                  </Link>
+                );
               })}
             </div>
 

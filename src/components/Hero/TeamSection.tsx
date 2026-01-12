@@ -1,159 +1,212 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { useTheme } from "next-themes";
 import { useContent } from "@/context/ContentContext";
+import { useMounted } from "@/hooks/useMounted";
+import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import SpotlightCard from "@/components/ui/SpotlightCard";
+
+// Register GSAP plugins
+if (typeof window !== "undefined") {
+  gsap.registerPlugin(ScrollTrigger);
+}
+
+interface TeamMember {
+  name: string;
+  role: string;
+  image: string;
+}
 
 const TeamSection = () => {
   const { theme } = useTheme();
   const isDark = theme === "dark";
-  const { content, loading, error } = useContent();
+  const mounted = useMounted();
+  const { content } = useContent();
+  const sectionRef = useRef<HTMLElement>(null);
+  const coreCardsRef = useRef<HTMLDivElement>(null);
+  const clubCardsRef = useRef<HTMLDivElement>(null);
 
   const teamData = content.team ?? {
     core_members: [
       {
-        name: "Ashutosh Vishwakarma",
-        role: "Founder & Lead Engineer",
-        image:
-          "https://images.unsplash.com/photo-1607746882042-944635dfe10e?auto=format&fit=crop&w=1000&q=80",
+        name: "Dr. Navneet Kumar",
+        role: "PIC, I2EDC",
+        image: "",
       },
       {
-        name: "Ashutosh Vishwakarma",
-        role: "AI & Robotics Specialist",
-        image:
-          "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=1000&q=80",
+        name: "Dr. Arvind",
+        role: "CIO, I2EDC",
+        image: "",
       },
     ],
     club_heads: [
       {
-        name: "Ashutosh Vishwakarma",
-        role: "Full Stack Developer",
-        image:
-          "https://images.unsplash.com/photo-1603415526960-f8f0a7090f88?auto=format&fit=crop&w=1000&q=80",
+        name: "Mohammad Israil",
+        role: "OIC, ProtoSpace",
+        image: "",
       },
       {
-        name: "Ashutosh Vishwakarma",
-        role: "Design & UI/UX",
-        image:
-          "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=1000&q=80",
+        name: "Drish Mahajan",
+        role: "Student Lead",
+        image: "",
       },
     ],
   };
 
-  const renderTeam = (members: any[], delayBase = 0) => (
-    <div className="flex flex-wrap justify-center gap-10">
-      {members.map((member, index) => (
-        <motion.div
+  // GSAP scroll animations
+  useEffect(() => {
+    if (!mounted) return;
+
+    const ctx = gsap.context(() => {
+      const coreCards = coreCardsRef.current?.querySelectorAll(".team-card");
+      if (coreCards) {
+        gsap.fromTo(
+          coreCards,
+          { opacity: 0, y: 30 },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.5,
+            ease: "power2.out",
+            stagger: 0.1,
+            scrollTrigger: {
+              trigger: coreCardsRef.current,
+              start: "top 85%",
+              toggleActions: "play none none reverse",
+            },
+          }
+        );
+      }
+
+      const clubCards = clubCardsRef.current?.querySelectorAll(".team-card");
+      if (clubCards) {
+        gsap.fromTo(
+          clubCards,
+          { opacity: 0, y: 30 },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.5,
+            ease: "power2.out",
+            stagger: 0.1,
+            scrollTrigger: {
+              trigger: clubCardsRef.current,
+              start: "top 85%",
+              toggleActions: "play none none reverse",
+            },
+          }
+        );
+      }
+    }, sectionRef);
+
+    return () => ctx.revert();
+  }, [mounted]);
+
+  const renderTeam = (members: TeamMember[], ref: React.RefObject<HTMLDivElement | null>) => (
+    <div ref={ref} className="flex flex-wrap justify-center gap-6">
+      {members.map((member: TeamMember, index: number) => (
+        <SpotlightCard
           key={`${member.name}-${index}`}
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: delayBase + index * 0.12 }}
-          whileHover={{ y: -6 }}
-          className={`
-            w-64
-            rounded-2xl
-            p-6
-            border
-            backdrop-blur-xl
-            transition-all
-            duration-500
-            ${
-              isDark
-                ? `
-                  bg-white/[0.06]
-                  border-white/[0.12]
-                  hover:bg-white/[0.09]
-                  hover:border-white/[0.18]
-                  shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]
-                `
-                : `
-                  bg-white/[0.9]
-                  border-black/[0.08]
-                  hover:bg-white
-                  hover:border-black/[0.12]
-                  shadow-[inset_0_1px_0_rgba(255,255,255,0.9)]
-                `
-            }
-          `}
+          className="team-card w-64 p-6 flex flex-col items-center"
+          spotlightColor={isDark ? "rgba(34, 211, 238, 0.15)" : "rgba(34, 211, 238, 0.08)"}
         >
           {/* Avatar */}
-          <div className="w-28 h-28 mx-auto mb-5 rounded-full overflow-hidden border border-white/20">
-            <img
-              src={member.image}
-              alt={member.name}
-              className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
-            />
+          <div className={`
+              w-24 h-24 mb-5 rounded-full overflow-hidden 
+              border-2 ${isDark ? "border-white/10" : "border-gray-200"}
+              flex items-center justify-center
+              transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3
+              ${!member.image ? (isDark ? "bg-slate-800" : "bg-gray-100") : ""}
+            `}
+          >
+            {member.image ? (
+              <img
+                src={member.image}
+                alt={member.name}
+                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+              />
+            ) : (
+              <span className={`text-xl font-bold ${isDark ? "text-slate-500" : "text-gray-400"}`}>
+                {member.name.split(' ').map(n => n[0]).join('')}
+              </span>
+            )}
           </div>
 
           {/* Name */}
-          <h3
-            className={`text-lg font-semibold text-center ${
-              isDark ? "text-white" : "text-gray-900"
-            }`}
-          >
+          <h3 className={`text-base font-bold text-center mb-1 ${isDark ? "text-white" : "text-gray-900"}`}>
             {member.name}
           </h3>
 
           {/* Role */}
-          <p
-            className={`text-sm text-center mt-1 ${
-              isDark ? "text-slate-300" : "text-gray-600"
-            }`}
-          >
+          <p className={`text-sm text-center ${isDark ? "text-cyan-400" : "text-cyan-600"}`}>
             {member.role}
           </p>
-        </motion.div>
+
+          {/* Social Icons (Show on Hover) */}
+           <div className="flex gap-3 mt-4 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
+             <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-white/10 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-cyan-500 hover:text-white transition-colors cursor-pointer">
+               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
+             </div>
+             <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-white/10 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-cyan-500 hover:text-white transition-colors cursor-pointer">
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23a11.5 11.5 0 0 0 10.212 5.957c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+             </div>
+           </div>
+        </SpotlightCard>
       ))}
     </div>
   );
 
   return (
-    <section className="relative w-full bg-background overflow-hidden">
-      {/* PROTOTYPES → TEAM TRANSITION */}
-      <div className="absolute top-0 left-0 w-full h-40 pointer-events-none">
-        <div className="absolute inset-0 hidden dark:block bg-gradient-to-b from-background via-background/80 to-transparent" />
-        <div className="absolute inset-0 block dark:hidden bg-gradient-to-b from-background to-background" />
-      </div>
-
-      <div className="relative z-10 max-w-6xl mx-auto px-6 md:px-20 lg:pt-40 pb-28 text-center">
+    <section ref={sectionRef} className="relative w-full bg-background overflow-hidden">
+      <div className="relative z-10 max-w-6xl mx-auto px-6 md:px-16 py-24 lg:py-32 text-center">
         {/* Title */}
-        <motion.h2
-          initial={{ opacity: 0, y: 30 }}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
+          transition={{ duration: 0.6 }}
           viewport={{ once: true }}
-          className="h2 mb-16"
+          className="mb-16"
         >
-          Meet the{" "}
-          <span className="bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
-            Team
+          <span className={`
+            inline-block px-4 py-1.5 rounded-full text-xs font-medium tracking-wider uppercase mb-6
+            ${isDark ? "bg-cyan-500/10 text-cyan-400" : "bg-cyan-100 text-cyan-600"}
+          `}>
+            Our People
           </span>
-        </motion.h2>
+          <h2 className="h2">
+            Meet the{" "}
+            <span className="bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
+              Team
+            </span>
+          </h2>
+        </motion.div>
 
         {/* Core Team */}
         <motion.h3
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
-          transition={{ duration: 0.6 }}
+          transition={{ duration: 0.5 }}
           viewport={{ once: true }}
-          className="text-xl font-semibold mb-10 text-cyan-400"
+          className={`text-lg font-semibold mb-8 ${isDark ? "text-cyan-400" : "text-cyan-600"}`}
         >
           Core Team
         </motion.h3>
-        {renderTeam(teamData.core_members)}
+        {renderTeam(teamData.core_members, coreCardsRef)}
 
         {/* Club Heads */}
         <motion.h3
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
-          transition={{ duration: 0.6 }}
+          transition={{ duration: 0.5 }}
           viewport={{ once: true }}
-          className="text-xl font-semibold mt-20 mb-10 text-green-400"
+          className={`text-lg font-semibold mt-16 mb-8 ${isDark ? "text-green-400" : "text-green-600"}`}
         >
           Club Heads & Student Leaders
         </motion.h3>
-        {renderTeam(teamData.club_heads, 0.2)}
+        {renderTeam(teamData.club_heads, clubCardsRef)}
       </div>
     </section>
   );

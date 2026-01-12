@@ -2,12 +2,18 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
 import api from "@/lib/api";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { CalendarIcon, ClockIcon, UserIcon, PlusIcon, SearchIcon, UsersIcon, CalendarDaysIcon, ArrowRightIcon, FilterIcon, ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
+import SpotlightCard from "@/components/ui/SpotlightCard";
+import { 
+  Calendar, Clock, User, Plus, Search, Users, 
+  Filter, ChevronLeft, ChevronRight, SlidersHorizontal,
+  LayoutGrid, List as ListIcon, MoreVertical,
+  CalendarDays, MapPin, Sparkles
+} from "lucide-react";
 import { toast } from "sonner";
 import {
   Select,
@@ -16,6 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useTheme } from "next-themes";
 
 interface Event {
   id: number;
@@ -31,6 +38,7 @@ interface Event {
   admin_username?: string;
   created_at?: string;
   updated_at?: string;
+  location?: string;
 }
 
 interface EventFilters {
@@ -39,8 +47,10 @@ interface EventFilters {
   sort: "newest" | "oldest" | "name" | "participants";
 }
 
-const EventLists = () => {
+export default function EventLists() {
   const router = useRouter();
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState<EventFilters>({
@@ -49,9 +59,8 @@ const EventLists = () => {
     sort: "newest"
   });
   const [currentPage, setCurrentPage] = useState(1);
-  const [eventsPerPage] = useState(6); // 2 columns × 3 rows = 6 events per page
+  const [eventsPerPage] = useState(6);
 
-  // Fetch events on component mount
   useEffect(() => {
     fetchEvents();
   }, []);
@@ -61,7 +70,6 @@ const EventLists = () => {
       setLoading(true);
       const response = await api.get("/events/admin-list/");
       setEvents(response.data);
-     
     } catch (err: any) {
       toast.error("Failed to load events", {
         description: err?.response?.data?.message || "Please try again later",
@@ -70,53 +78,6 @@ const EventLists = () => {
       setLoading(false);
     }
   };
-
-  // Filter and sort events
-  const filteredEvents = events.filter(event => {
-    const matchesSearch = event.name.toLowerCase().includes(filters.search.toLowerCase()) ||
-                         event.description.toLowerCase().includes(filters.search.toLowerCase());
-    
-    const now = new Date();
-    const startDate = new Date(event.date);
-    const endDate = new Date(event.duration);
-    const regEndDate = new Date(event.reg_end_date);
-
-    const matchesStatus = (() => {
-      switch (filters.status) {
-        case "upcoming":
-          return startDate > now;
-        case "ongoing":
-          return startDate <= now && endDate >= now;
-        case "past":
-          return endDate < now;
-        case "registration-open":
-          return regEndDate >= now;
-        default:
-          return true;
-      }
-    })();
-
-    return matchesSearch && matchesStatus;
-  }).sort((a, b) => {
-    switch (filters.sort) {
-      case "oldest":
-        return new Date(a.date).getTime() - new Date(b.date).getTime();
-      case "name":
-        return a.name.localeCompare(b.name);
-      case "participants":
-        return (b.participants?.length || 0) - (a.participants?.length || 0);
-      default: // newest
-        return new Date(b.date).getTime() - new Date(a.date).getTime();
-    }
-  });
-
-  // Pagination logic
-  const indexOfLastEvent = currentPage * eventsPerPage;
-  const indexOfFirstEvent = indexOfLastEvent - eventsPerPage;
-  const currentEvents = filteredEvents.slice(indexOfFirstEvent, indexOfLastEvent);
-  const totalPages = Math.ceil(filteredEvents.length / eventsPerPage);
-
-  const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
   const getEventStatus = (event: Event) => {
     const now = new Date();
@@ -130,345 +91,266 @@ const EventLists = () => {
     return "upcoming";
   };
 
-  const getStatusBadge = (event: Event) => {
+  const filteredEvents = events.filter(event => {
+    const matchesSearch = event.name.toLowerCase().includes(filters.search.toLowerCase()) ||
+                         event.description.toLowerCase().includes(filters.search.toLowerCase());
+    
     const status = getEventStatus(event);
-    const variants = {
-      upcoming: { label: "Upcoming", color: "bg-blue-100 text-blue-800 border-blue-200" },
-      ongoing: { label: "Ongoing", color: "bg-green-100 text-green-800 border-green-200" },
-      past: { label: "Completed", color: "bg-gray-100 text-gray-800 border-gray-200" },
-      "registration-closed": { label: "Registration Closed", color: "bg-orange-100 text-orange-800 border-orange-200" }
-    };
+    const matchesStatus = filters.status === "all" || 
+      (filters.status === "registration-open" 
+        ? new Date(event.reg_end_date) >= new Date() 
+        : status === filters.status);
 
-    return (
-      <Badge variant="outline" className={`text-xs ${variants[status].color}`}>
-        {variants[status].label}
-      </Badge>
-    );
+    return matchesSearch && matchesStatus;
+  }).sort((a, b) => {
+    switch (filters.sort) {
+      case "oldest": return new Date(a.date).getTime() - new Date(b.date).getTime();
+      case "name": return a.name.localeCompare(b.name);
+      case "participants": return (b.participants?.length || 0) - (a.participants?.length || 0);
+      default: return new Date(b.date).getTime() - new Date(a.date).getTime();
+    }
+  });
+
+  const indexOfLastEvent = currentPage * eventsPerPage;
+  const indexOfFirstEvent = indexOfLastEvent - eventsPerPage;
+  const currentEvents = filteredEvents.slice(indexOfFirstEvent, indexOfLastEvent);
+  const totalPages = Math.ceil(filteredEvents.length / eventsPerPage);
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "upcoming": return "text-blue-500 bg-blue-500/10 border-blue-500/20";
+      case "ongoing": return "text-emerald-500 bg-emerald-500/10 border-emerald-500/20";
+      case "past": return "text-slate-500 bg-slate-500/10 border-slate-500/20";
+      default: return "text-orange-500 bg-orange-500/10 border-orange-500/20";
+    }
   };
-
-  const handleEventClick = (eventId: number) => {
-    router.push(`/pages/admin/events/view/${eventId}`);
-  };
-
-  const handleCreateEvent = () => {
-    router.push("/pages/admin/events/create");
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
-  };
-
-  const formatDateTime = (dateString: string) => {
-    return new Date(dateString).toLocaleString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen py-8 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-            <p className="text-muted-foreground">Loading events...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
-    <div className="min-h-screen py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto">
-        {/* Header Section */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+    <div className="min-h-screen w-full bg-background p-6 md:p-12 relative overflow-hidden">
+      {/* Ambient Background */}
+      <div className="absolute top-0 left-0 w-full h-[500px] bg-indigo-500/10 blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-0 right-0 w-full h-[500px] bg-purple-500/10 blur-[120px] pointer-events-none" />
+
+      <div className="relative z-10 max-w-7xl mx-auto space-y-10">
+        
+        {/* HEADER */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+            <motion.h1 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400"
+            >
               Event Management
-            </h1>
-            <p className="text-muted-foreground mt-2">
-              Manage and view all events in one place
-            </p>
+            </motion.h1>
+            <motion.p 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="text-muted-foreground mt-2 text-lg"
+            >
+              Overview of all scheduled events and activities
+            </motion.p>
           </div>
           
-          <Button 
-            onClick={handleCreateEvent}
-            className="bg-primary hover:bg-primary/90 flex items-center gap-2"
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.2 }}
           >
-            <PlusIcon className="h-4 w-4" />
-            Create New Event
-          </Button>
+            <Button 
+              onClick={() => router.push("/pages/admin/events/create")}
+              className="h-12 px-8 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white shadow-lg shadow-indigo-500/25 transition-all hover:scale-105"
+            >
+              <Plus className="mr-2 h-5 w-5" />
+              Create New Event
+            </Button>
+          </motion.div>
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-6">
-          {/* Filters Sidebar */}
-          <Card className="lg:w-80 h-fit">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FilterIcon className="h-5 w-5" />
+        {/* QUICK STATS */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {[
+            { label: "Total Events", value: events.length, icon: CalendarDays, color: "text-indigo-500" },
+            { label: "Upcoming", value: events.filter(e => getEventStatus(e) === 'upcoming').length, icon: Sparkles, color: "text-blue-500" },
+            { label: "Active Now", value: events.filter(e => getEventStatus(e) === 'ongoing').length, icon: Clock, color: "text-emerald-500" },
+            { label: "Reg. Open", value: events.filter(e => new Date(e.reg_end_date) >= new Date()).length, icon: Users, color: "text-orange-500" },
+          ].map((stat, i) => (
+            <SpotlightCard key={i} className="p-6 flex items-center gap-4 bg-white/40 dark:bg-white/5 border-white/20" spotlightColor="rgba(255,255,255,0.1)">
+              <div className={`p-3 rounded-xl bg-white/10 ${stat.color}`}>
+                <stat.icon className="w-6 h-6" />
+              </div>
+              <div>
+                <div className="text-2xl font-bold">{stat.value}</div>
+                <div className="text-xs text-muted-foreground uppercase tracking-wider">{stat.label}</div>
+              </div>
+            </SpotlightCard>
+          ))}
+        </div>
+
+        <div className="grid lg:grid-cols-[280px_1fr] gap-8">
+          {/* FILTERS SIDEBAR */}
+          <div className="space-y-6">
+            <div className="p-6 rounded-3xl bg-white/40 dark:bg-white/5 border border-white/20 backdrop-blur-xl sticky top-8">
+              <div className="flex items-center gap-2 mb-6 text-foreground font-semibold">
+                <SlidersHorizontal className="w-5 h-5" />
                 Filters
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {/* Search Input */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Search</label>
-                <div className="relative">
-                  <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search events..."
-                    value={filters.search}
-                    onChange={(e) => {
-                      setFilters({ ...filters, search: e.target.value });
-                      setCurrentPage(1); // Reset to first page when searching
-                    }}
-                    className="pl-10"
-                  />
-                </div>
               </div>
 
-              {/* Status Filter */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Status</label>
-                <Select
-                  value={filters.status}
-                  onValueChange={(value: EventFilters["status"]) => {
-                    setFilters({ ...filters, status: value });
-                    setCurrentPage(1); // Reset to first page when filtering
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Filter by status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Events</SelectItem>
-                    <SelectItem value="upcoming">Upcoming</SelectItem>
-                    <SelectItem value="ongoing">Ongoing</SelectItem>
-                    <SelectItem value="past">Completed</SelectItem>
-                    <SelectItem value="registration-open">Registration Open</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Sort Filter */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Sort By</label>
-                <Select
-                  value={filters.sort}
-                  onValueChange={(value: EventFilters["sort"]) => {
-                    setFilters({ ...filters, sort: value });
-                    setCurrentPage(1); // Reset to first page when sorting
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Sort by" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="newest">Newest First</SelectItem>
-                    <SelectItem value="oldest">Oldest First</SelectItem>
-                    <SelectItem value="name">Name (A-Z)</SelectItem>
-                    <SelectItem value="participants">Most Participants</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Results Count */}
-              <div className="pt-4 border-t">
-                <div className="text-sm text-muted-foreground">
-                  Showing {currentEvents.length} of {filteredEvents.length} events
-                </div>
-                <div className="text-xs text-muted-foreground mt-1">
-                  Page {currentPage} of {totalPages}
-                </div>
-              </div>
-
-              {/* Quick Stats */}
-              {events.length > 0 && (
-                <div className="space-y-3 pt-4 border-t">
-                  <h4 className="text-sm font-medium">Quick Stats</h4>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="text-center p-2 bg-muted/50 rounded">
-                      <div className="text-lg font-bold text-primary">{events.length}</div>
-                      <div className="text-xs text-muted-foreground">Total</div>
-                    </div>
-                    <div className="text-center p-2 bg-muted/50 rounded">
-                      <div className="text-lg font-bold text-blue-600">
-                        {events.filter(e => getEventStatus(e) === 'upcoming').length}
-                      </div>
-                      <div className="text-xs text-muted-foreground">Upcoming</div>
-                    </div>
-                    <div className="text-center p-2 bg-muted/50 rounded">
-                      <div className="text-lg font-bold text-green-600">
-                        {events.filter(e => getEventStatus(e) === 'ongoing').length}
-                      </div>
-                      <div className="text-xs text-muted-foreground">Ongoing</div>
-                    </div>
-                    <div className="text-center p-2 bg-muted/50 rounded">
-                      <div className="text-lg font-bold text-orange-600">
-                        {events.filter(e => new Date(e.reg_end_date) >= new Date()).length}
-                      </div>
-                      <div className="text-xs text-muted-foreground">Reg Open</div>
-                    </div>
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Search</label>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input 
+                      placeholder="Find events..." 
+                      className="pl-9 bg-white/50 dark:bg-black/20 border-black/5 dark:border-white/10"
+                      value={filters.search}
+                      onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
+                    />
                   </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Status</label>
+                  <Select value={filters.status} onValueChange={(v: any) => setFilters(prev => ({ ...prev, status: v }))}>
+                    <SelectTrigger className="bg-white/50 dark:bg-black/20 border-black/5 dark:border-white/10">
+                      <SelectValue placeholder="All Statuses" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Events</SelectItem>
+                      <SelectItem value="upcoming">Upcoming</SelectItem>
+                      <SelectItem value="ongoing">Ongoing</SelectItem>
+                      <SelectItem value="past">Completed</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Sort</label>
+                  <Select value={filters.sort} onValueChange={(v: any) => setFilters(prev => ({ ...prev, sort: v }))}>
+                    <SelectTrigger className="bg-white/50 dark:bg-black/20 border-black/5 dark:border-white/10">
+                      <SelectValue placeholder="Sort By" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="newest">Newest First</SelectItem>
+                      <SelectItem value="oldest">Oldest First</SelectItem>
+                      <SelectItem value="name">Name (A-Z)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* EVENT GRID */}
+          <div className="space-y-6">
+            <AnimatePresence mode="popLayout">
+              {loading ? (
+                 <div className="flex justify-center py-20">
+                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                 </div>
+              ) : currentEvents.length === 0 ? (
+                <motion.div 
+                  initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                  className="text-center py-20 rounded-3xl bg-white/40 dark:bg-white/5 border border-white/10"
+                >
+                  <Search className="w-12 h-12 mx-auto text-muted-foreground mb-4 opacity-50" />
+                  <h3 className="text-xl font-medium">No events found</h3>
+                  <p className="text-muted-foreground">Try adjusting your filters</p>
+                </motion.div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {currentEvents.map((event, i) => {
+                    const status = getEventStatus(event);
+                    const date = new Date(event.date);
+                    const month = date.toLocaleString('default', { month: 'short' });
+                    const day = date.getDate();
+
+                    return (
+                      <SpotlightCard
+                        key={event.id}
+                        onClick={() => router.push(`/pages/admin/events/view/${event.id}`)}
+                        className="flex flex-col h-full cursor-pointer group bg-white/60 dark:bg-white/5 border-gray-200 dark:border-white/10 hover:border-indigo-500/50 dark:hover:border-white/20 transition-all duration-300"
+                        spotlightColor={isDark ? "rgba(255,255,255,0.08)" : "rgba(99, 102, 241, 0.05)"}
+                      >
+                         <div className="p-6 flex-1">
+                           <div className="flex justify-between items-start mb-4">
+                             <div className={`px-3 py-1 rounded-full text-xs font-semibold border ${getStatusColor(status)} backdrop-blur-sm`}>
+                               {status.charAt(0).toUpperCase() + status.slice(1)}
+                             </div>
+                             {/* Date Block */}
+                             <div className="flex flex-col items-center justify-center w-12 h-12 bg-white/50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl backdrop-blur-sm group-hover:bg-indigo-500/10 group-hover:border-indigo-500/20 transition-colors">
+                               <span className="text-[10px] uppercase font-bold text-muted-foreground">{month}</span>
+                               <span className="text-lg font-bold leading-none text-foreground">{day}</span>
+                             </div>
+                           </div>
+
+                           <h3 className="text-xl font-bold mb-2 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors line-clamp-1">
+                             {event.name}
+                           </h3>
+                           
+                           <div className="flex items-center gap-4 text-xs font-medium text-muted-foreground mb-4">
+                             <div className="flex items-center gap-1.5">
+                               <Clock className="w-3.5 h-3.5" />
+                               {date.toLocaleTimeString(undefined, { hour: '2-digit', minute:'2-digit' })}
+                             </div>
+                             <div className="flex items-center gap-1.5">
+                               <Users className="w-3.5 h-3.5" />
+                               {event.participants?.length || 0} joined
+                             </div>
+                           </div>
+
+                           <p className="text-sm text-muted-foreground/80 line-clamp-2 h-10">
+                             {event.description}
+                           </p>
+                         </div>
+
+                         <div className="px-6 py-4 border-t border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-white/[0.02] flex items-center justify-between">
+                            <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+                              <div className="w-6 h-6 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-[10px] text-white shadow-sm">
+                                {event.admin_username?.[0]?.toUpperCase() || "A"}
+                              </div>
+                              <span className="group-hover:text-foreground transition-colors">{event.admin_username || "Admin"}</span>
+                            </div>
+                            <span className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 flex items-center gap-1 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300">
+                              Manage <ChevronRight className="w-3 h-3" />
+                            </span>
+                         </div>
+                      </SpotlightCard>
+                    );
+                  })}
                 </div>
               )}
-            </CardContent>
-          </Card>
+            </AnimatePresence>
 
-          {/* Main Content */}
-          <div className="flex-1">
-            {/* Events Grid */}
-            {filteredEvents.length === 0 ? (
-              <Card>
-                <CardContent className="text-center py-12">
-                  <CalendarDaysIcon className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">No events found</h3>
-                  <p className="text-muted-foreground mb-4">
-                    {filters.search || filters.status !== "all" 
-                      ? "Try adjusting your filters to see more results." 
-                      : "Get started by creating your first event."
-                    }
-                  </p>
-                  {(filters.search || filters.status !== "all") ? (
-                    <Button 
-                      variant="outline" 
-                      onClick={() => setFilters({ search: "", status: "all", sort: "newest" })}
-                    >
-                      Clear Filters
-                    </Button>
-                  ) : (
-                    <Button onClick={handleCreateEvent}>
-                      <PlusIcon className="h-4 w-4 mr-2" />
-                      Create Event
-                    </Button>
-                  )}
-                </CardContent>
-              </Card>
-            ) : (
-              <>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                  {currentEvents.map((event) => (
-                    <Card 
-                      key={event.id} 
-                      className="cursor-pointer transition-all hover:shadow-md hover:border-primary/50 group"
-                      onClick={() => handleEventClick(event.id)}
-                    >
-                      <CardHeader className="pb-3">
-                        <div className="flex justify-between items-start mb-2">
-                          {getStatusBadge(event)}
-                          <Badge variant="secondary" className="text-xs">
-                            {event.participants?.length || 0} participants
-                          </Badge>
-                        </div>
-                        <CardTitle className="text-lg group-hover:text-primary transition-colors line-clamp-2">
-                          {event.name}
-                        </CardTitle>
-                        <CardDescription className="line-clamp-2">
-                          {event.description}
-                        </CardDescription>
-                      </CardHeader>
-                      
-                      <CardContent className="pt-0">
-                        {/* Event Dates */}
-                        <div className="space-y-2 mb-4">
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <CalendarIcon className="h-3 w-3" />
-                            <span>{formatDate(event.date)}</span>
-                          </div>
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <ClockIcon className="h-3 w-3" />
-                            <span>{formatDateTime(event.date)} - {formatDateTime(event.duration)}</span>
-                          </div>
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <UserIcon className="h-3 w-3" />
-                            <span>Registers until: {formatDate(event.reg_end_date)}</span>
-                          </div>
-                        </div>
-
-                        {/* Admin Info */}
-                        <div className="flex items-center justify-between pt-3 border-t">
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <UsersIcon className="h-3 w-3" />
-                            <span className="truncate">
-                              {event.admin_username || `Admin #${event.admin}`}
-                            </span>
-                          </div>
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className="h-8 gap-1 text-xs opacity-0 group-hover:opacity-100 transition-opacity"
-                          >
-                            View Details
-                            <ArrowRightIcon className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex justify-center gap-2 pt-6">
+                <Button 
+                  variant="outline" size="icon" 
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="rounded-full w-10 h-10"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </Button>
+                <div className="flex items-center px-4 font-mono text-sm">
+                  {currentPage} / {totalPages}
                 </div>
-
-                {/* Pagination */}
-                {totalPages > 1 && (
-                  <div className="flex justify-center items-center gap-2 mt-8">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => paginate(Math.max(1, currentPage - 1))}
-                      disabled={currentPage === 1}
-                    >
-                      <ChevronLeftIcon className="h-4 w-4" />
-                    </Button>
-                    
-                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                      // Show pages around current page
-                      let pageNum;
-                      if (totalPages <= 5) {
-                        pageNum = i + 1;
-                      } else if (currentPage <= 3) {
-                        pageNum = i + 1;
-                      } else if (currentPage >= totalPages - 2) {
-                        pageNum = totalPages - 4 + i;
-                      } else {
-                        pageNum = currentPage - 2 + i;
-                      }
-
-                      return (
-                        <Button
-                          key={pageNum}
-                          variant={currentPage === pageNum ? "default" : "outline"}
-                          size="sm"
-                          onClick={() => paginate(pageNum)}
-                        >
-                          {pageNum}
-                        </Button>
-                      );
-                    })}
-                    
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => paginate(Math.min(totalPages, currentPage + 1))}
-                      disabled={currentPage === totalPages}
-                    >
-                      <ChevronRightIcon className="h-4 w-4" />
-                    </Button>
-                  </div>
-                )}
-              </>
+                <Button 
+                  variant="outline" size="icon" 
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  className="rounded-full w-10 h-10"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+              </div>
             )}
           </div>
         </div>
       </div>
     </div>
   );
-};
-
-export default EventLists;
+}

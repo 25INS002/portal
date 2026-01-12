@@ -3,20 +3,14 @@ import React, { useState, useEffect } from "react";
 import { toast } from "sonner";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
 import api from "@/lib/api";
 
-// Shadcn components
+// Shadcn & UI components
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  CardFooter,
-} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import SpotlightCard from "@/components/ui/SpotlightCard";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,14 +20,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -42,12 +28,17 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
-  MoreHorizontal,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+// Lucide Icons
+import {
   Plus,
   Search,
-  Edit,
   Trash2,
-  Eye,
   Calendar,
   DollarSign,
   Users,
@@ -55,9 +46,13 @@ import {
   TrendingUp,
   Clock,
   Filter,
-  LayoutGrid,
-  Table as TableIcon,
+  MoreVertical,
+  ChevronRight,
+  Sparkles,
+  Layers,
+  Activity
 } from "lucide-react";
+import { useTheme } from "next-themes";
 
 // Type definitions
 interface Service {
@@ -90,13 +85,14 @@ interface ServiceStats {
   popular_plans: Array<{
     plan__plan: string;
     count: number;
+    description?: string; // Added to fix potential type error based on usage
   }>;
 }
 
-type ViewMode = "grid" | "table";
-
 const AdminServicesPage: React.FC = () => {
   const router = useRouter();
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [searchTerm, setSearchTerm] = useState<string>("");
@@ -104,7 +100,6 @@ const AdminServicesPage: React.FC = () => {
   const [serviceToDelete, setServiceToDelete] = useState<Service | null>(null);
   const [deleting, setDeleting] = useState<boolean>(false);
   const [stats, setStats] = useState<{ [key: number]: ServiceStats }>({});
-  const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
   // Fetch services on component mount
@@ -167,10 +162,6 @@ const AdminServicesPage: React.FC = () => {
     }
   };
 
-  const handleCardClick = (serviceId: number): void => {
-    router.push(`/pages/admin/services/${serviceId}/requests`);
-  };
-
   const filteredServices = services.filter(
     (service) =>
       service.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -223,529 +214,254 @@ const AdminServicesPage: React.FC = () => {
     return serviceStats.popular_plans[0].plan__plan || "N/A";
   };
 
-  // Card View Component
-  const ServiceCardsView: React.FC = () => (
-    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-      {filteredServices.map((service) => {
-        const serviceStats = stats[service.id];
-        const completionRate = getCompletionRate(service.id);
-        const popularPlan = getPopularPlan(service.id);
-
-        return (
-          <Card
-            key={service.id}
-            className="group hover:shadow-md transition-all duration-300 cursor-pointer"
-            onClick={() => handleCardClick(service.id)}
-          >
-            <CardHeader className="pb-3">
-              <div className="flex justify-between items-start">
-                <div className="flex-1 min-w-0">
-                  <CardTitle className="text-lg font-semibold line-clamp-1 group-hover:text-primary transition-colors">
-                    {service.name}
-                  </CardTitle>
-                  <CardDescription className="line-clamp-2 mt-2">
-                    {service.description}
-                  </CardDescription>
-                </div>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="opacity-0 group-hover:opacity-100 transition-opacity"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48">
-                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild>
-                      <Link
-                        href={`/pages/admin/services/${service.id}`}
-                        className="cursor-pointer flex items-center"
-                      >
-                        <Eye className="h-4 w-4 mr-2" />
-                        View Details
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link
-                        href={`/pages/admin/services/${service.id}`}
-                        className="cursor-pointer flex items-center"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <Edit className="h-4 w-4 mr-2" />
-                        Edit Service
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeleteClick(service);
-                      }}
-                      className="text-destructive cursor-pointer flex items-center"
-                    >
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Delete Service
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            </CardHeader>
-
-            <CardContent className="pb-4">
-              <div className="space-y-4">
-                {/* Pricing & Plans */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <div className="p-2 bg-primary/10 rounded-lg">
-                      <DollarSign className="h-4 w-4 text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">
-                        {getStartingPrice(service)}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        Starting price
-                      </p>
-                    </div>
-                  </div>
-                  <Badge
-                    variant="secondary"
-                    className="flex items-center space-x-1"
-                  >
-                    <Package className="h-3 w-3" />
-                    <span>{getPlanCount(service)} plans</span>
-                  </Badge>
-                </div>
-
-                {/* Stats */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <div className="flex items-center space-x-1 text-sm">
-                      <Users className="h-4 w-4 text-primary" />
-                      <span className="font-medium">
-                        {serviceStats?.total_requests || 0}
-                      </span>
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      Total requests
-                    </p>
-                  </div>
-                  <div className="space-y-1">
-                    <div className="flex items-center space-x-1 text-sm">
-                      <TrendingUp className="h-4 w-4 text-green-600" />
-                      <span className="font-medium">{completionRate}</span>
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      Completion rate
-                    </p>
-                  </div>
-                </div>
-
-                {/* Popular Plan */}
-                {popularPlan !== "N/A" && (
-                  <div className="bg-muted rounded-lg p-3">
-                    <div className="flex items-center space-x-2 text-sm">
-                      <span className="font-medium">Most Popular:</span>
-                      <Badge variant="outline" className="capitalize">
-                        {popularPlan}
-                      </Badge>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-
-            <CardFooter className="pt-4 border-t">
-              <div className="w-full flex justify-between items-center text-sm">
-                <div className="flex items-center space-x-2 text-muted-foreground">
-                  <Clock className="h-4 w-4" />
-                  <span>{formatDate(service.created_at)}</span>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm font-medium">
-                    {service.admin?.first_name || service.admin?.username}
-                  </p>
-                  <p className="text-xs text-muted-foreground">Admin</p>
-                </div>
-              </div>
-            </CardFooter>
-          </Card>
-        );
-      })}
-    </div>
-  );
-
-  // Table View Component
-  const ServiceTableView: React.FC = () => (
-    <Card>
-      <CardContent className="p-0">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Service Name</TableHead>
-              <TableHead>Description</TableHead>
-              <TableHead>Plans</TableHead>
-              <TableHead>Requests</TableHead>
-              <TableHead>Completion</TableHead>
-              <TableHead>Price</TableHead>
-              <TableHead>Created</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredServices.map((service) => {
-              const serviceStats = stats[service.id];
-              const completionRate = getCompletionRate(service.id);
-
-              return (
-                <TableRow
-                  key={service.id}
-                  className="group cursor-pointer hover:bg-muted/50 transition-colors"
-                  onClick={() => handleCardClick(service.id)}
-                >
-                  <TableCell className="font-medium">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
-                        <Package className="h-5 w-5 text-primary" />
-                      </div>
-                      <span className="group-hover:text-primary transition-colors">
-                        {service.name}
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="max-w-[200px]">
-                      <p className="text-sm text-muted-foreground line-clamp-2">
-                        {service.description}
-                      </p>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge
-                      variant="secondary"
-                      className="flex items-center space-x-1 w-fit"
-                    >
-                      <Package className="h-3 w-3" />
-                      <span>{getPlanCount(service)}</span>
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="space-y-1">
-                      <div className="flex items-center space-x-2">
-                        <Users className="h-4 w-4 text-primary" />
-                        <span className="font-medium">
-                          {serviceStats?.total_requests || 0}
-                        </span>
-                      </div>
-                      {serviceStats?.pending_requests > 0 && (
-                        <Badge
-                          variant="outline"
-                          className="bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-950 dark:text-orange-300 dark:border-orange-800"
-                        >
-                          {serviceStats.pending_requests} pending
-                        </Badge>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center space-x-2">
-                      <div className="w-16 bg-secondary rounded-full h-2">
-                        <div
-                          className="bg-green-600 h-2 rounded-full transition-all duration-300"
-                          style={{ width: getCompletionRate(service.id) }}
-                        />
-                      </div>
-                      <span className="text-sm font-medium min-w-10">
-                        {completionRate}
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="font-semibold text-green-600">
-                    {getStartingPrice(service)}
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {formatDate(service.created_at)}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end space-x-2">
-                      <Button
-                        asChild
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 w-8 p-0"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <Link href={`/pages/admin/services/${service.id}`}>
-                          <Eye className="h-4 w-4" />
-                        </Link>
-                      </Button>
-                      <Button
-                        asChild
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 w-8 p-0"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <Link href={`/pages/admin/services/${service.id}/edit`}>
-                          <Edit className="h-4 w-4" />
-                        </Link>
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteClick(service);
-                        }}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
-      </CardContent>
-    </Card>
-  );
-
-  if (loading) {
-    return (
-      <div className="min-h-screen py-8 px-4">
-        <div className="container mx-auto">
-          <div className="flex items-center justify-center h-96">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-              <p className="text-lg font-medium">Loading services...</p>
-              <p className="text-muted-foreground text-sm mt-2">
-                Please wait while we fetch your services
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto">
+    <div className="w-full relative">
+       {/* Ambient Background - localized to this section content area if needed, or rely on layout */}
+       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-purple-500/5 blur-[100px] pointer-events-none rounded-full" />
+       <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-blue-500/5 blur-[100px] pointer-events-none rounded-full" />
+
+      <div className="relative z-10 space-y-8">
         {/* Header */}
-        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 gap-6">
-          <div className="space-y-2">
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">Services Management</h1>
-            <p className="text-lg text-muted-foreground max-w-2xl">
-              Manage all your services, pricing plans, and monitor performance
-              metrics
-            </p>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <motion.h1 
+              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+              className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-white/60"
+            >
+              Services Management
+            </motion.h1>
+            <motion.p 
+              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
+              className="text-muted-foreground mt-1"
+            >
+              Manage all your services, pricing plans, and monitor performance metrics
+            </motion.p>
           </div>
-          <Button asChild size="lg">
-            <Link href="/pages/admin/services/create">
-              <Plus className="h-5 w-5 mr-2" />
-              Create New Service
-            </Link>
-          </Button>
+          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.2 }}>
+            <Button asChild size="lg" className="rounded-full bg-white text-black hover:bg-white/90 shadow-lg shadow-white/10">
+              <Link href="/pages/admin/services/create">
+                <Plus className="h-5 w-5 mr-2" />
+                Create New Service
+              </Link>
+            </Button>
+          </motion.div>
         </div>
 
         {/* Stats Summary */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">
-                    Total Services
-                  </p>
-                  <p className="text-2xl font-bold">{services.length}</p>
-                </div>
-                <div className="p-3 bg-primary/10 rounded-xl">
-                  <Package className="h-6 w-6 text-primary" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">
-                    Total Plans
-                  </p>
-                  <p className="text-2xl font-bold">
-                    {services.reduce(
-                      (total, service) => total + getPlanCount(service),
-                      0
-                    )}
-                  </p>
-                </div>
-                <div className="p-3 bg-green-100 dark:bg-green-950 rounded-xl">
-                  <DollarSign className="h-6 w-6 text-green-600 dark:text-green-400" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">
-                    Active Requests
-                  </p>
-                  <p className="text-2xl font-bold">
-                    {Object.values(stats).reduce(
-                      (total, stat) => total + (stat?.pending_requests || 0),
-                      0
-                    )}
-                  </p>
-                </div>
-                <div className="p-3 bg-orange-100 dark:bg-orange-950 rounded-xl">
-                  <Clock className="h-6 w-6 text-orange-600 dark:text-orange-400" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">
-                    Total Requests
-                  </p>
-                  <p className="text-2xl font-bold">
-                    {Object.values(stats).reduce(
-                      (total, stat) => total + (stat?.total_requests || 0),
-                      0
-                    )}
-                  </p>
-                </div>
-                <div className="p-3 bg-purple-100 dark:bg-purple-950 rounded-xl">
-                  <TrendingUp className="h-6 w-6 text-purple-600 dark:text-purple-400" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[
+            { 
+              label: "Total Services", 
+              value: services.length, 
+              icon: Package, 
+              color: "text-blue-400 border-blue-500/20 bg-blue-500/10" 
+            },
+            { 
+              label: "Total Plans", 
+              value: services.reduce((t, s) => t + getPlanCount(s), 0), 
+              icon: DollarSign, 
+              color: "text-emerald-400 border-emerald-500/20 bg-emerald-500/10" 
+            },
+            { 
+              label: "Active Requests", 
+              value: Object.values(stats).reduce((t, s) => t + (s?.pending_requests || 0), 0), 
+              icon: Clock, 
+              color: "text-orange-400 border-orange-500/20 bg-orange-500/10" 
+            },
+            { 
+              label: "Total Requests", 
+              value: Object.values(stats).reduce((t, s) => t + (s?.total_requests || 0), 0), 
+              icon: TrendingUp, 
+              color: "text-purple-400 border-purple-500/20 bg-purple-500/10" 
+            },
+          ].map((stat, i) => (
+             <SpotlightCard key={i} className="p-5 flex items-center justify-between bg-white/5 border-white/10" spotlightColor="rgba(255,255,255,0.05)">
+               <div>
+                  <p className="text-sm font-medium text-muted-foreground">{stat.label}</p>
+                  <p className="text-3xl font-bold mt-1 text-white">{stat.value}</p>
+               </div>
+               <div className={`p-3 rounded-xl border ${stat.color}`}>
+                   <stat.icon className="w-5 h-5" />
+               </div>
+             </SpotlightCard>
+          ))}
         </div>
 
         {/* Search and Controls */}
-        <Card className="mb-6">
-          <CardContent className="p-6">
-            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
-              <div className="flex flex-col sm:flex-row gap-4 flex-1 w-full">
-                <div className="relative flex-1 max-w-md">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                  <Input
-                    placeholder="Search services by name or description..."
-                    value={searchTerm}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                      setSearchTerm(e.target.value)
-                    }
-                    className="pl-10"
-                  />
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <Filter className="h-4 w-4 text-muted-foreground" />
-                  <select
-                    className="border border-input rounded-md px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring"
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
-                  >
-                    <option value="all">All Services</option>
-                    <option value="active">With Requests</option>
-                    <option value="no-requests">No Requests</option>
-                  </select>
-                </div>
+        <div className="p-5 rounded-2xl bg-white/5 border border-white/10 flex flex-col md:flex-row gap-4">
+           <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
+              <Input
+                placeholder="Search services by name or description..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 bg-black/20 border-white/10 focus:border-purple-500/50 transition-colors"
+              />
+           </div>
+           
+           <div className="flex items-center gap-3">
+              <div className="flex items-center space-x-2 px-3 py-2 bg-black/20 border border-white/10 rounded-md">
+                <Filter className="h-4 w-4 text-muted-foreground" />
+                <Select
+                  value={statusFilter}
+                  onValueChange={(value) => setStatusFilter(value)}
+                >
+                  <SelectTrigger className="bg-transparent border-none text-sm text-muted-foreground focus:ring-0 p-0 h-auto w-[110px] [&>svg]:hidden">
+                    <SelectValue placeholder="All Services" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-gray-900 border-white/10">
+                    <SelectItem value="all">All Services</SelectItem>
+                    <SelectItem value="active">With Requests</SelectItem>
+                    <SelectItem value="no-requests">No Requests</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-
-              <div className="flex items-center space-x-4 w-full lg:w-auto">
-                <div className="flex items-center space-x-1 bg-muted rounded-lg p-1">
-                  <Button
-                    variant={viewMode === "grid" ? "default" : "ghost"}
-                    size="sm"
-                    onClick={() => setViewMode("grid")}
-                    className="h-8 px-3"
-                  >
-                    <LayoutGrid className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant={viewMode === "table" ? "default" : "ghost"}
-                    size="sm"
-                    onClick={() => setViewMode("table")}
-                    className="h-8 px-3"
-                  >
-                    <TableIcon className="h-4 w-4" />
-                  </Button>
-                </div>
-
-                <div className="text-sm text-muted-foreground bg-muted px-3 py-2 rounded-md">
-                  <span className="font-medium">{filteredServices.length}</span>{" "}
-                  of <span className="font-medium">{services.length}</span>{" "}
-                  services
-                </div>
+              
+              <div className="px-3 py-2 bg-black/20 border border-white/10 rounded-md text-sm text-muted-foreground">
+                 <span className="font-semibold text-white">{filteredServices.length}</span> results
               </div>
-            </div>
-          </CardContent>
-        </Card>
+           </div>
+        </div>
 
         {/* Services List */}
-        {filteredServices.length === 0 ? (
-          <Card>
-            <CardContent className="p-12 text-center">
-              <div className="mx-auto w-24 h-24 bg-muted rounded-full flex items-center justify-center mb-6">
-                <Package className="h-12 w-12 text-muted-foreground" />
-              </div>
-              <h3 className="text-xl font-semibold mb-3">
-                {searchTerm ? "No services found" : "No services created yet"}
-              </h3>
-              <p className="text-muted-foreground mb-8 max-w-md mx-auto text-lg">
-                {searchTerm
-                  ? `No services match "${searchTerm}". Try adjusting your search terms or create a new service.`
-                  : "Get started by creating your first service to offer to users. Create pricing plans and start accepting requests."}
+        {loading ? (
+           <div className="flex justify-center py-24">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+           </div>
+        ) : filteredServices.length === 0 ? (
+           <div className="text-center py-24 rounded-2xl border border-dashed border-white/10 bg-white/5">
+              <Package className="w-12 h-12 mx-auto text-muted-foreground mb-4 opacity-50" />
+              <h3 className="text-xl font-medium text-white mb-2">No services found</h3>
+              <p className="text-muted-foreground mb-6">
+                {searchTerm ? "Try adjusting your search terms" : "Get started by creating your first service"}
               </p>
-              <Button asChild size="lg">
-                <Link href="/pages/admin/services/create">
-                  <Plus className="h-5 w-5 mr-2" />
-                  Create Your First Service
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
-        ) : viewMode === "grid" ? (
-          <ServiceCardsView />
+              {!searchTerm && (
+                <Button asChild>
+                  <Link href="/pages/admin/services/create">Create Service</Link>
+                </Button>
+              )}
+           </div>
         ) : (
-          <ServiceTableView />
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+             <AnimatePresence mode="popLayout">
+               {filteredServices.map((service, i) => {
+                 const serviceStats = stats[service.id];
+                 const completionRate = getCompletionRate(service.id);
+                 const popularPlan = getPopularPlan(service.id);
+                 
+                 return (
+                   <SpotlightCard 
+                      key={service.id}
+                      className="group cursor-pointer bg-black/20 border-white/10 hover:border-white/20"
+                      spotlightColor="rgba(255,255,255,0.08)"
+                      onClick={() => router.push(`/pages/admin/services/${service.id}/requests`)}
+                   >
+                      {/* Header */}
+                      <div className="p-6 pb-2">
+                         <div className="flex justify-between items-start mb-4">
+                            <div className="flex-1">
+                               <div className="flex items-center gap-2 mb-2">
+                                  <h3 className="text-lg font-bold text-white group-hover:text-purple-400 transition-colors line-clamp-1">
+                                    {service.name}
+                                  </h3>
+                                  <Badge variant="outline" className="bg-purple-500/10 text-purple-400 border-purple-500/20 text-[10px] px-1.5 py-0">
+                                    {getPlanCount(service)} PLANS
+                                  </Badge>
+                               </div>
+                               <p className="text-sm text-muted-foreground line-clamp-2 h-10">
+                                  {service.description}
+                               </p>
+                            </div>
+                            
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-8 w-8 -mr-2 text-muted-foreground hover:text-white" onClick={e => e.stopPropagation()}>
+                                  <MoreVertical className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="bg-gray-900 border-white/10">
+                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                <DropdownMenuSeparator className="bg-white/10" />
+                                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); router.push(`/pages/admin/services/${service.id}`) }}>
+                                   View Details
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); router.push(`/pages/admin/services/${service.id}/edit`) }}>
+                                   Edit Service
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator className="bg-white/10" />
+                                <DropdownMenuItem className="text-red-400 focus:text-red-400" onClick={(e) => { e.stopPropagation(); handleDeleteClick(service); }}>
+                                   Delete
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                         </div>
+
+                         {/* Pricing */}
+                         <div className="flex items-baseline gap-2 mb-6">
+                            <span className="text-2xl font-bold text-white">{getStartingPrice(service)}</span>
+                            <span className="text-xs text-muted-foreground">starting price</span>
+                         </div>
+                      </div>
+
+                      {/* Stats Area */}
+                      <div className="px-6 py-4 bg-white/5 border-t border-white/5 space-y-4">
+                         <div className="grid grid-cols-2 gap-4">
+                            <div>
+                               <div className="text-xs text-muted-foreground mb-1 flex items-center gap-1">
+                                  <Users className="w-3 h-3" /> Total Requests
+                               </div>
+                               <div className="text-lg font-semibold text-white">{serviceStats?.total_requests || 0}</div>
+                            </div>
+                            <div>
+                               <div className="text-xs text-muted-foreground mb-1 flex items-center gap-1">
+                                  <Activity className="w-3 h-3" /> Completion
+                               </div>
+                               <div className="text-lg font-semibold text-emerald-400">{completionRate}</div>
+                            </div>
+                         </div>
+                         
+                         {popularPlan !== "N/A" && (
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground pt-2 border-t border-dashed border-white/10">
+                              <Sparkles className="w-3 h-3 text-yellow-500" />
+                              Most Popular:
+                              <span className="text-white font-medium">{popularPlan}</span>
+                            </div>
+                         )}
+                      </div>
+
+                      {/* Footer */}
+                      <div className="px-6 py-3 border-t border-white/5 flex justify-between items-center text-xs text-muted-foreground">
+                         <div className="flex items-center gap-1.5">
+                            <Clock className="w-3 h-3" /> {formatDate(service.created_at)}
+                         </div>
+                         <div className="flex items-center gap-1.5 group-hover:text-purple-400 transition-colors">
+                            Manage Requests <ChevronRight className="w-3 h-3" />
+                         </div>
+                      </div>
+                   </SpotlightCard>
+                 );
+               })}
+             </AnimatePresence>
+          </div>
         )}
 
         {/* Delete Confirmation Dialog */}
         <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-          <DialogContent className="sm:max-w-md">
+          <DialogContent className="sm:max-w-md border-white/10 bg-gray-900/95 backdrop-blur-xl">
             <DialogHeader>
-              <DialogTitle className="flex items-center space-x-2 text-destructive">
+              <DialogTitle className="flex items-center space-x-2 text-red-500">
                 <Trash2 className="h-5 w-5" />
                 <span>Delete Service</span>
               </DialogTitle>
-              <DialogDescription className="pt-4">
-                <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4 mb-4">
-                  <p className="text-destructive font-medium">
+              <DialogDescription className="pt-4 text-muted-foreground">
+                <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 mb-4">
+                  <p className="text-red-500 font-medium">
                     This action cannot be undone
                   </p>
                 </div>
-                <p className="text-foreground">
-                  Are you sure you want to delete the service{" "}
-                  <strong>"{serviceToDelete?.name}"</strong>? All associated
-                  data including pricing plans and request history will be
-                  permanently removed.
+                <p>
+                  Are you sure you want to delete <strong className="text-white">"{serviceToDelete?.name}"</strong>? 
+                  All associated data including pricing plans and request history will be permanently removed.
                 </p>
               </DialogDescription>
             </DialogHeader>
@@ -754,7 +470,7 @@ const AdminServicesPage: React.FC = () => {
                 variant="outline"
                 onClick={() => setDeleteDialogOpen(false)}
                 disabled={deleting}
-                className="flex-1"
+                className="flex-1 border-white/10 hover:bg-white/5 hover:text-white"
               >
                 Cancel
               </Button>
@@ -762,16 +478,9 @@ const AdminServicesPage: React.FC = () => {
                 variant="destructive"
                 onClick={handleDeleteConfirm}
                 disabled={deleting}
-                className="flex-1"
+                className="flex-1 bg-red-600 hover:bg-red-700"
               >
-                {deleting ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Deleting...
-                  </>
-                ) : (
-                  "Delete Service"
-                )}
+                {deleting ? "Deleting..." : "Delete Service"}
               </Button>
             </DialogFooter>
           </DialogContent>
