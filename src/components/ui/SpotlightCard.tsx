@@ -8,6 +8,7 @@ interface SpotlightCardProps {
   children: React.ReactNode;
   className?: string;
   onClick?: () => void;
+  disableAnimations?: boolean;
   spotlightColor?: string;
 }
 
@@ -15,14 +16,20 @@ export default function SpotlightCard({
   children,
   className = "",
   onClick,
-  spotlightColor = "rgba(99, 102, 241, 0.25)", // Default indigo
+  spotlightColor,
+  disableAnimations = false,
 }: SpotlightCardProps) {
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
+  
+  // Default color if not provided, theme-aware
+  const finalSpotlightColor = spotlightColor || (isDark ? "rgba(255, 255, 255, 0.1)" : "transparent");
   const divRef = useRef<HTMLDivElement>(null);
   const [isFocused, setIsFocused] = useState(false);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [opacity, setOpacity] = useState(0);
-  const { theme } = useTheme();
-  const isDark = theme === "dark";
+  // Removed local theme hook since we moved it up
+
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!divRef.current || isFocused) return;
@@ -60,8 +67,8 @@ export default function SpotlightCard({
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       onClick={onClick}
-      whileHover={{ y: -5 }}
-      whileTap={{ scale: 0.98 }}
+      whileHover={disableAnimations ? {} : { y: -5 }}
+      whileTap={disableAnimations ? {} : { scale: 0.98 }}
       className={`
         relative overflow-hidden rounded-2xl border transition-colors duration-300
         ${
@@ -76,7 +83,7 @@ export default function SpotlightCard({
         className="pointer-events-none absolute -inset-px opacity-0 transition duration-300"
         style={{
           opacity,
-          background: `radial-gradient(600px circle at ${position.x}px ${position.y}px, ${spotlightColor}, transparent 40%)`,
+          background: `radial-gradient(600px circle at ${position.x}px ${position.y}px, ${finalSpotlightColor}, transparent 40%)`,
         }}
       />
       

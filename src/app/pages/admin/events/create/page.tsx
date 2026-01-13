@@ -5,11 +5,27 @@ import api from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import SpotlightCard from "@/components/ui/SpotlightCard";
 import { Label } from "@/components/ui/label";
-import { CalendarIcon, ClockIcon, UserIcon, CalendarDaysIcon, Loader2, UsersIcon } from "lucide-react";
+import { 
+  CalendarIcon, 
+  ClockIcon, 
+  UserIcon, 
+  CalendarDays, 
+  Loader2, 
+  Users, 
+  Info, 
+  ShieldAlert, 
+  Sparkles,
+  Type,
+  FileText,
+  Clock, 
+  Crown,
+  Star,
+  CalendarClock
+} from "lucide-react";
 import { useRouter } from "next/navigation";
-
+import { motion } from "framer-motion";
 import { toast } from "sonner";
 import {
   Select,
@@ -18,6 +34,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface User {
   id: number;
@@ -254,100 +272,125 @@ export default function CreateEventForm() {
   };
 
   return (
-    <div className="min-h-screen  py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-2xl mx-auto">
-        <Card className="shadow-lg border-border">
-          <CardHeader className="text-center pb-1">
-            <div className="mx-auto w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
-              <CalendarDaysIcon className="w-6 h-6 text-primary" />
+    <div className="min-h-screen w-full bg-background py-10 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+        {/* Ambient background effects */}
+        <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] rounded-full bg-purple-500/10 blur-[120px] pointer-events-none" />
+        <div className="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] rounded-full bg-blue-500/10 blur-[120px] pointer-events-none" />
+
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="max-w-3xl mx-auto relative z-10"
+      >
+        <SpotlightCard className="border-gray-200 dark:border-white/10 bg-white dark:bg-black/40 backdrop-blur-xl shadow-sm dark:shadow-2xl" disableAnimations>
+          <div className="p-8">
+            <div className="text-center mb-8">
+                <motion.div 
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: "spring", stiffness: 200, damping: 15 }}
+                    className="mx-auto w-16 h-16 bg-gradient-to-br from-primary/10 to-purple-500/10 dark:from-primary/20 dark:to-purple-500/20 rounded-2xl flex items-center justify-center mb-4 border border-gray-100 dark:border-white/10 shadow-inner"
+                >
+                    <CalendarDays className="w-8 h-8 text-primary" />
+                </motion.div>
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 via-primary to-purple-600 dark:from-white dark:via-primary dark:to-purple-400 bg-clip-text text-transparent mb-2">
+                    Create New Event
+                </h1>
+                <p className="text-muted-foreground flex items-center justify-center gap-2">
+                    <Sparkles className="h-4 w-4 text-yellow-400" />
+                    Fill in the details below to launch your event
+                </p>
             </div>
-            <CardTitle className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-              Create New Event
-            </CardTitle>
-            <CardDescription className="text-muted-foreground">
-              Fill in the details below to create a new event for participants to join.
-            </CardDescription>
-          </CardHeader>
           
-          <CardContent className="pt-4">
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-8">
               {/* Event Name */}
-              <div className="space-y-2">
-                <Label htmlFor="name" className="text-sm font-medium">
+              <div className="space-y-2 group">
+                <Label htmlFor="name" className="text-sm font-medium flex items-center gap-2 text-foreground/80 group-focus-within:text-primary transition-colors">
+                  <Type className="h-4 w-4" />
                   Event Name <span className="text-destructive">*</span>
                 </Label>
                 <div className="relative">
                   <Input
                     id="name"
                     name="name"
-                    placeholder="Enter event name"
+                    placeholder="Enter a catchy event name"
                     value={formData.name}
                     onChange={handleChange}
-                    className="pl-10"
+                    className="pl-10 bg-gray-50 dark:bg-black/20 border-gray-200 dark:border-white/10 focus:border-primary/50 focus:ring-primary/20 h-11 transition-all hover:bg-gray-100 dark:hover:bg-black/30 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400"
                     required
                   />
-                  <CalendarIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <CalendarIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-muted-foreground group-focus-within:text-primary transition-colors" />
                 </div>
               </div>
 
               {/* Admin Selection */}
-              <div className="space-y-2">
-                <Label htmlFor="admin" className="text-sm font-medium">
+              <div className="space-y-2 group">
+                <Label htmlFor="admin" className="text-sm font-medium flex items-center gap-2 text-foreground/80 group-focus-within:text-primary transition-colors">
+                  <ShieldAlert className="h-4 w-4" />
                   Event Admin <span className="text-destructive">*</span>
                 </Label>
                 {loadingStaff ? (
-                  <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                  <div className="flex items-center space-x-2 text-sm text-muted-foreground bg-black/20 p-3 rounded-md border border-white/5">
+                    <Loader2 className="h-4 w-4 animate-spin text-primary" />
                     <span>Loading admin users...</span>
                   </div>
                 ) : (
                   <Select value={formData.admin.toString()} onValueChange={handleAdminChange}>
-                    <SelectTrigger className="pl-10">
+                    <SelectTrigger className="pl-10 bg-gray-50 dark:bg-black/20 border-gray-200 dark:border-white/10 focus:border-primary/50 focus:ring-primary/20 h-11 transition-all hover:bg-gray-100 dark:hover:bg-black/30 text-gray-900 dark:text-white">
                       <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
-                        <UsersIcon className="h-4 w-4 text-muted-foreground" />
+                        <Users className="h-4 w-4 text-gray-500 dark:text-muted-foreground group-focus-within:text-primary transition-colors" />
                       </div>
                       <SelectValue placeholder="Select an admin" />
                     </SelectTrigger>
-                    <SelectContent>
-                      {/* Current user option if they are staff */}
+                    <SelectContent className="bg-white dark:bg-black/90 border-gray-200 dark:border-white/10 backdrop-blur-xl text-gray-900 dark:text-white">
+                      {/* Current user option */}
                       {currentUser && isUserStaff(currentUser) && (
-                        <SelectItem value={currentUser.id.toString()}>
-                          {getUserDisplayName(currentUser)} (You)
-                          {currentUser.is_superadmin && " 👑"}
-                          {currentUser.is_staff && !currentUser.is_superadmin && " ⭐"}
+                        <SelectItem value={currentUser.id.toString()} className="focus:bg-white/10 cursor-pointer">
+                            <div className="flex items-center gap-2">
+                                <span>{getUserDisplayName(currentUser)} (You)</span>
+                                {currentUser.is_superadmin && <Badge variant="secondary" className="h-5 px-1 bg-red-500/20 text-red-300 border-0 hover:bg-red-500/30">Superadmin</Badge>}
+                                {currentUser.is_staff && !currentUser.is_superadmin && <Badge variant="secondary" className="h-5 px-1 bg-blue-500/20 text-blue-300 border-0 hover:bg-blue-500/30">Staff</Badge>}
+                            </div>
                         </SelectItem>
                       )}
                       
                       {/* Other staff users */}
                       {staffUsers
-                        .filter(user => user.id !== currentUser?.id) // Exclude current user if already shown
+                        .filter(user => user.id !== currentUser?.id)
                         .map((user) => (
-                          <SelectItem key={user.id} value={user.id.toString()}>
-                            {getUserDisplayName(user)}
-                            {user.is_superadmin && " 👑"}
-                            {user.is_staff && !user.is_superadmin && " ⭐"}
+                          <SelectItem key={user.id} value={user.id.toString()} className="focus:bg-gray-100 dark:focus:bg-white/10 cursor-pointer">
+                            <div className="flex items-center gap-2">
+                                <span>{getUserDisplayName(user)}</span>
+                                {user.is_superadmin && <Badge variant="secondary" className="h-5 px-1 bg-red-500/20 text-red-300 border-0 hover:bg-red-500/30">Superadmin</Badge>}
+                                {user.is_staff && !user.is_superadmin && <Badge variant="secondary" className="h-5 px-1 bg-blue-500/20 text-blue-300 border-0 hover:bg-blue-500/30">Staff</Badge>}
+                            </div>
                           </SelectItem>
                         ))}
                     </SelectContent>
                   </Select>
                 )}
-                <p className="text-xs text-muted-foreground">
-                  Select the admin who will manage this event
-                </p>
                 
                 {/* Current selection info */}
                 {formData.admin > 0 && !loadingStaff && (
-                  <div className="bg-muted/30 rounded-lg p-2 mt-2">
-                    <p className="text-xs text-muted-foreground">
-                      Selected admin:{" "}
-                      <span className="font-medium">
+                  <motion.div 
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    className="bg-primary/5 rounded-lg p-3 border border-primary/10 flex items-center gap-3"
+                  >
+                    <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center">
+                        <Users className="h-4 w-4 text-primary" />
+                    </div>
+                    <div className="text-xs">
+                      <p className="text-muted-foreground">Selected Admin</p>
+                      <p className="font-medium text-foreground">
                         {getUserDisplayName(
                           staffUsers.find(u => u.id === formData.admin) || 
                           (currentUser?.id === formData.admin ? currentUser : {} as User)
                         )}
-                      </span>
-                    </p>
-                  </div>
+                      </p>
+                    </div>
+                  </motion.div>
                 )}
               </div>
 
@@ -355,8 +398,9 @@ export default function CreateEventForm() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Event Start Date & Time */}
                 <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="date" className="text-sm font-medium">
+                  <div className="space-y-2 group">
+                    <Label htmlFor="date" className="text-sm font-medium flex items-center gap-2 text-foreground/80 group-focus-within:text-primary transition-colors">
+                      <CalendarIcon className="h-4 w-4" />
                       Start Date & Time <span className="text-destructive">*</span>
                     </Label>
                     <div className="relative">
@@ -366,16 +410,17 @@ export default function CreateEventForm() {
                         name="date"
                         value={formatDateForInput(formData.date)}
                         onChange={handleChange}
-                        className="pl-10"
+                        className="pl-10 bg-gray-50 dark:bg-black/20 border-gray-200 dark:border-white/10 focus:border-primary/50 focus:ring-primary/20 h-11 transition-all hover:bg-gray-100 dark:hover:bg-black/30 dark-calendar text-gray-900 dark:text-white"
                         required
                       />
-                      <CalendarIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <CalendarDays className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-muted-foreground group-focus-within:text-primary transition-colors" />
                     </div>
                   </div>
 
                   {/* Event End Date & Time */}
-                  <div className="space-y-2">
-                    <Label htmlFor="duration" className="text-sm font-medium">
+                  <div className="space-y-2 group">
+                    <Label htmlFor="duration" className="text-sm font-medium flex items-center gap-2 text-foreground/80 group-focus-within:text-primary transition-colors">
+                      <Clock className="h-4 w-4" />
                       End Date & Time <span className="text-destructive">*</span>
                     </Label>
                     <div className="relative">
@@ -385,19 +430,20 @@ export default function CreateEventForm() {
                         name="duration"
                         value={formatDateForInput(formData.duration)}
                         onChange={handleChange}
-                        className="pl-10"
+                        className="pl-10 bg-gray-50 dark:bg-black/20 border-gray-200 dark:border-white/10 focus:border-primary/50 focus:ring-primary/20 h-11 transition-all hover:bg-gray-100 dark:hover:bg-black/30 dark-calendar text-gray-900 dark:text-white"
                         required
                       />
-                      <ClockIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <ClockIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-muted-foreground group-focus-within:text-primary transition-colors" />
                     </div>
                   </div>
                 </div>
 
                 {/* Registration End Date */}
                 <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="reg_end_date" className="text-sm font-medium">
-                      Registration End Date <span className="text-destructive">*</span>
+                  <div className="space-y-2 group">
+                    <Label htmlFor="reg_end_date" className="text-sm font-medium flex items-center gap-2 text-foreground/80 group-focus-within:text-primary transition-colors">
+                      <CalendarClock className="h-4 w-4" />
+                      Registration End <span className="text-destructive">*</span>
                     </Label>
                     <div className="relative">
                       <Input
@@ -406,37 +452,48 @@ export default function CreateEventForm() {
                         name="reg_end_date"
                         value={formData.reg_end_date}
                         onChange={handleChange}
-                        className="pl-10"
+                        className="pl-10 bg-gray-50 dark:bg-black/20 border-gray-200 dark:border-white/10 focus:border-primary/50 focus:ring-primary/20 h-11 transition-all hover:bg-gray-100 dark:hover:bg-black/30 dark-calendar text-gray-900 dark:text-white"
                         required
                       />
-                      <UserIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <CalendarClock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-muted-foreground group-focus-within:text-primary transition-colors" />
                     </div>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs text-muted-foreground ml-1">
                       Registration closes at 11:59 PM on this date
                     </p>
                   </div>
 
                   {/* Event Duration Display */}
-                  <div className="bg-muted/50 rounded-lg p-3">
-                    <Label className="text-sm font-medium mb-2 block">Event Duration</Label>
+                  <div className="bg-gray-50 dark:bg-white/5 rounded-lg p-4 border border-gray-200 dark:border-white/10 h-[calc(100%-24px)] flex flex-col justify-center">
+                    <Label className="text-sm font-medium mb-2 flex items-center gap-2 text-foreground/80">
+                        <Clock className="h-3 w-3" />
+                        Duration Preview
+                    </Label>
                     {formData.date && formData.duration ? (
-                      <div className="text-sm text-muted-foreground">
-                        <div>Starts: {new Date(formData.date).toLocaleString()}</div>
-                        <div>Ends: {new Date(formData.duration).toLocaleString()}</div>
-                        <div className="mt-1 text-xs">
-                          Duration: {calculateDuration(formData.date, formData.duration)}
+                      <div className="text-sm text-muted-foreground space-y-1">
+                         <div className="flex justify-between">
+                            <span>Starts:</span>
+                            <span className="text-foreground">{new Date(formData.date).toLocaleDateString()}</span>
+                         </div>
+                         <div className="flex justify-between">
+                            <span>Ends:</span>
+                            <span className="text-foreground">{new Date(formData.duration).toLocaleDateString()}</span>
+                         </div>
+                        <div className="pt-2 mt-2 border-t border-white/10 text-xs font-medium text-primary flex items-center gap-2">
+                          <Sparkles className="h-3 w-3" />
+                          {calculateDuration(formData.date, formData.duration)}
                         </div>
                       </div>
                     ) : (
-                      <p className="text-sm text-muted-foreground">Fill in dates to see duration</p>
+                      <p className="text-sm text-muted-foreground italic">Select start and end dates to see duration</p>
                     )}
                   </div>
                 </div>
               </div>
 
               {/* Short Description */}
-              <div className="space-y-2">
-                <Label htmlFor="description" className="text-sm font-medium">
+              <div className="space-y-2 group">
+                <Label htmlFor="description" className="text-sm font-medium flex items-center gap-2 text-foreground/80 group-focus-within:text-primary transition-colors">
+                  <FileText className="h-4 w-4" />
                   Short Description <span className="text-destructive">*</span>
                 </Label>
                 <Textarea
@@ -445,17 +502,18 @@ export default function CreateEventForm() {
                   placeholder="Brief description of your event (will be shown in listings)"
                   value={formData.description}
                   onChange={handleChange}
-                  className="min-h-[80px] resize-vertical"
+                  className="min-h-[80px] resize-vertical bg-gray-50 dark:bg-black/20 border-gray-200 dark:border-white/10 focus:border-primary/50 focus:ring-primary/20 transition-all hover:bg-gray-100 dark:hover:bg-black/30 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400"
                   required
                 />
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-muted-foreground ml-1">
                   Keep it concise - this appears in event previews
                 </p>
               </div>
 
               {/* Long Description */}
-              <div className="space-y-2">
-                <Label htmlFor="long_description" className="text-sm font-medium">
+              <div className="space-y-2 group">
+                <Label htmlFor="long_description" className="text-sm font-medium flex items-center gap-2 text-foreground/80 group-focus-within:text-primary transition-colors">
+                  <FileText className="h-4 w-4" />
                   Detailed Description
                 </Label>
                 <Textarea
@@ -464,19 +522,16 @@ export default function CreateEventForm() {
                   placeholder="Comprehensive details about your event, schedule, requirements, etc."
                   value={formData.long_description}
                   onChange={handleChange}
-                  className="min-h-[120px] resize-vertical"
+                  className="min-h-[120px] resize-vertical bg-gray-50 dark:bg-black/20 border-gray-200 dark:border-white/10 focus:border-primary/50 focus:ring-primary/20 transition-all hover:bg-gray-100 dark:hover:bg-black/30 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400"
                 />
-                <p className="text-xs text-muted-foreground">
-                  Provide detailed information for interested participants
-                </p>
               </div>
 
               {/* Action Buttons */}
-              <div className="flex gap-3 pt-4">
+              <div className="flex gap-4 pt-4">
                 <Button 
                   type="submit" 
                   disabled={loading || loadingStaff}
-                  className="flex-1 bg-primary hover:bg-primary/90"
+                  className="flex-1 bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 text-white font-medium h-12 rounded-lg shadow-lg hover:shadow-primary/25 transition-all duration-300"
                 >
                   {loading ? (
                     <>
@@ -484,7 +539,10 @@ export default function CreateEventForm() {
                       Creating Event...
                     </>
                   ) : (
-                    "Create Event"
+                    <>
+                        <Sparkles className="mr-2 h-4 w-4" />
+                        Create Event
+                    </>
                   )}
                 </Button>
                 
@@ -493,29 +551,30 @@ export default function CreateEventForm() {
                   variant="outline" 
                   onClick={handleReset}
                   disabled={loading || loadingStaff}
+                  className="h-12 border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 hover:bg-gray-100 dark:hover:bg-white/10 text-gray-900 dark:text-white"
                 >
                   Clear Form
                 </Button>
               </div>
 
-              {/* Form Tips */}
-              <div className="bg-muted/50 rounded-lg p-4">
-                <h4 className="text-sm font-medium mb-2 flex items-center gap-2">
-                  <InfoIcon className="h-4 w-4" />
-                  Form Tips
-                </h4>
-                <ul className="text-xs text-muted-foreground space-y-1">
-                  <li>• Fields marked with * are required</li>
-                  <li>• Only staff and superadmins can be assigned as event admins</li>
-                  <li>• Registration end date should be before event start date</li>
-                  <li>• Event end date must be after start date</li>
-                  <li>• 👑 indicates superadmin, ⭐ indicates staff member</li>
-                </ul>
-              </div>
+               {/* Form Tips */}
+               <Alert className="bg-blue-50 dark:bg-blue-500/5 border-blue-200 dark:border-blue-500/20 text-blue-800 dark:text-blue-200">
+                 <Info className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                 <AlertTitle className="text-blue-800 dark:text-blue-400 mb-2">Helpful Tips</AlertTitle>
+                 <AlertDescription>
+                     <ul className="text-xs space-y-1 text-blue-700 dark:text-blue-200/70">
+                         <li className="flex items-center gap-2"><div className="w-1 h-1 rounded-full bg-blue-500 dark:bg-blue-400" /> Fields marked with * are required</li>
+                         <li className="flex items-center gap-2"><div className="w-1 h-1 rounded-full bg-blue-500 dark:bg-blue-400" /> Only staff and superadmins can be assigned as event admins</li>
+                         <li className="flex items-center gap-2"><div className="w-1 h-1 rounded-full bg-blue-500 dark:bg-blue-400" /> Registration must close before the event starts</li>
+                         <li className="flex items-center gap-2"><div className="w-1 h-1 rounded-full bg-blue-500 dark:bg-blue-400" /> <span className="text-red-600 dark:text-red-300 bg-red-100 dark:bg-red-500/20 px-1 rounded text-[10px]">Superadmin</span> has full control</li>
+                     </ul>
+                 </AlertDescription>
+               </Alert>
+
             </form>
-          </CardContent>
-        </Card>
-      </div>
+          </div>
+        </SpotlightCard>
+      </motion.div>
     </div>
   );
 }
@@ -539,12 +598,3 @@ function calculateDuration(start: string, end: string): string {
   
   return parts.join(', ') || 'Less than 1 minute';
 }
-
-// Simple Info icon component
-const InfoIcon = ({ className }: { className?: string }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor">
-    <circle cx="12" cy="12" r="10" strokeWidth="2"/>
-    <path d="M12 16v-4" strokeWidth="2" strokeLinecap="round"/>
-    <path d="M12 8h.01" strokeWidth="2" strokeLinecap="round"/>
-  </svg>
-);

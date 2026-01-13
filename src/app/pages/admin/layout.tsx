@@ -45,9 +45,10 @@ export default function SuperAdminLayout({
                             <Link
                                 key={tab.name}
                                 href={tabHref}
+                                prefetch={false}
                                 className={`
                                     relative px-4 py-2 rounded-lg text-sm font-medium transition-colors
-                                    ${isActive ? "text-white" : "text-gray-400 hover:text-white"}
+                                    ${isActive ? "text-white" : "text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"}
                                 `}
                             >
                                 {isActive && (
@@ -58,7 +59,7 @@ export default function SuperAdminLayout({
                                     />
                                 )}
                                 {!isActive && (
-                                    <div className="absolute inset-0 bg-white/5 rounded-lg -z-10" />
+                                    <div className="absolute inset-0 bg-gray-100 dark:bg-white/5 rounded-lg -z-10" />
                                 )}
                                 <span className="relative z-10">{tab.name}</span>
                             </Link>
@@ -67,7 +68,7 @@ export default function SuperAdminLayout({
                 </div>
 
                 {/* Page Content */}
-                <div className="rounded-2xl border border-white/10 overflow-hidden bg-black/20 backdrop-blur-sm min-h-[600px]">
+                <div className="rounded-2xl border border-gray-200 dark:border-white/10 overflow-hidden bg-white dark:bg-black/20 backdrop-blur-sm min-h-[600px] shadow-sm dark:shadow-none">
                     {children}
                 </div>
             </div>

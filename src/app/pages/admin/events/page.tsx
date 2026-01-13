@@ -171,18 +171,20 @@ export default function EventLists() {
         {/* QUICK STATS */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
-            { label: "Total Events", value: events.length, icon: CalendarDays, color: "text-indigo-500" },
-            { label: "Upcoming", value: events.filter(e => getEventStatus(e) === 'upcoming').length, icon: Sparkles, color: "text-blue-500" },
-            { label: "Active Now", value: events.filter(e => getEventStatus(e) === 'ongoing').length, icon: Clock, color: "text-emerald-500" },
-            { label: "Reg. Open", value: events.filter(e => new Date(e.reg_end_date) >= new Date()).length, icon: Users, color: "text-orange-500" },
+            { label: "Total Events", value: events.length, icon: CalendarDays, color: "text-indigo-400", bg: "bg-indigo-500/10", border: "border-indigo-500/20" },
+            { label: "Upcoming", value: events.filter(e => getEventStatus(e) === 'upcoming').length, icon: Sparkles, color: "text-blue-400", bg: "bg-blue-500/10", border: "border-blue-500/20" },
+            { label: "Active Now", value: events.filter(e => getEventStatus(e) === 'ongoing').length, icon: Clock, color: "text-emerald-400", bg: "bg-emerald-500/10", border: "border-emerald-500/20" },
+            { label: "Reg. Open", value: events.filter(e => new Date(e.reg_end_date) >= new Date()).length, icon: Users, color: "text-orange-400", bg: "bg-orange-500/10", border: "border-orange-500/20" },
           ].map((stat, i) => (
-            <SpotlightCard key={i} className="p-6 flex items-center gap-4 bg-white/40 dark:bg-white/5 border-white/20" spotlightColor="rgba(255,255,255,0.1)">
-              <div className={`p-3 rounded-xl bg-white/10 ${stat.color}`}>
-                <stat.icon className="w-6 h-6" />
-              </div>
-              <div>
-                <div className="text-2xl font-bold">{stat.value}</div>
-                <div className="text-xs text-muted-foreground uppercase tracking-wider">{stat.label}</div>
+            <SpotlightCard key={i} className="p-6 relative overflow-hidden bg-white dark:bg-white/5 border-gray-200 dark:border-white/10 h-full shadow-sm dark:shadow-none" spotlightColor={isDark ? "rgba(255,255,255,0.05)" : "rgba(99, 102, 241, 0.05)"}>
+              <div className="flex flex-col h-full justify-between relative z-10 gap-6">
+                <div className="flex justify-between items-start">
+                  <div className="text-[11px] font-semibold text-gray-500 dark:text-muted-foreground/70 uppercase tracking-wider">{stat.label}</div>
+                  <div className={`h-10 w-10 flex items-center justify-center rounded-xl border ${stat.bg} ${stat.border} ${stat.color}`}>
+                    <stat.icon className="w-5 h-5" />
+                  </div>
+                </div>
+                <div className="text-4xl font-bold text-gray-900 dark:text-white tracking-tight">{stat.value}</div>
               </div>
             </SpotlightCard>
           ))}
@@ -191,7 +193,7 @@ export default function EventLists() {
         <div className="grid lg:grid-cols-[280px_1fr] gap-8">
           {/* FILTERS SIDEBAR */}
           <div className="space-y-6">
-            <div className="p-6 rounded-3xl bg-white/40 dark:bg-white/5 border border-white/20 backdrop-blur-xl sticky top-8">
+            <div className="p-6 rounded-3xl bg-white dark:bg-white/5 border border-gray-200 dark:border-white/20 backdrop-blur-xl sticky top-8 shadow-sm dark:shadow-none">
               <div className="flex items-center gap-2 mb-6 text-foreground font-semibold">
                 <SlidersHorizontal className="w-5 h-5" />
                 Filters
@@ -204,7 +206,7 @@ export default function EventLists() {
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input 
                       placeholder="Find events..." 
-                      className="pl-9 bg-white/50 dark:bg-black/20 border-black/5 dark:border-white/10"
+                      className="pl-9 bg-gray-50 dark:bg-black/20 border-gray-200 dark:border-white/10 text-gray-900 dark:text-white"
                       value={filters.search}
                       onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
                     />
@@ -214,7 +216,7 @@ export default function EventLists() {
                 <div className="space-y-2">
                   <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Status</label>
                   <Select value={filters.status} onValueChange={(v: any) => setFilters(prev => ({ ...prev, status: v }))}>
-                    <SelectTrigger className="bg-white/50 dark:bg-black/20 border-black/5 dark:border-white/10">
+                    <SelectTrigger className="bg-gray-50 dark:bg-black/20 border-gray-200 dark:border-white/10 text-gray-900 dark:text-white">
                       <SelectValue placeholder="All Statuses" />
                     </SelectTrigger>
                     <SelectContent>
@@ -229,7 +231,7 @@ export default function EventLists() {
                 <div className="space-y-2">
                   <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Sort</label>
                   <Select value={filters.sort} onValueChange={(v: any) => setFilters(prev => ({ ...prev, sort: v }))}>
-                    <SelectTrigger className="bg-white/50 dark:bg-black/20 border-black/5 dark:border-white/10">
+                    <SelectTrigger className="bg-gray-50 dark:bg-black/20 border-gray-200 dark:border-white/10 text-gray-900 dark:text-white">
                       <SelectValue placeholder="Sort By" />
                     </SelectTrigger>
                     <SelectContent>
@@ -253,7 +255,7 @@ export default function EventLists() {
               ) : currentEvents.length === 0 ? (
                 <motion.div 
                   initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                  className="text-center py-20 rounded-3xl bg-white/40 dark:bg-white/5 border border-white/10"
+                  className="text-center py-20 rounded-3xl bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10"
                 >
                   <Search className="w-12 h-12 mx-auto text-muted-foreground mb-4 opacity-50" />
                   <h3 className="text-xl font-medium">No events found</h3>
@@ -271,7 +273,7 @@ export default function EventLists() {
                       <SpotlightCard
                         key={event.id}
                         onClick={() => router.push(`/pages/admin/events/view/${event.id}`)}
-                        className="flex flex-col h-full cursor-pointer group bg-white/60 dark:bg-white/5 border-gray-200 dark:border-white/10 hover:border-indigo-500/50 dark:hover:border-white/20 transition-all duration-300"
+                        className="flex flex-col h-full cursor-pointer group bg-white dark:bg-white/5 border-gray-200 dark:border-white/10 hover:border-indigo-500/50 dark:hover:border-white/20 transition-all duration-300 shadow-sm dark:shadow-none"
                         spotlightColor={isDark ? "rgba(255,255,255,0.08)" : "rgba(99, 102, 241, 0.05)"}
                       >
                          <div className="p-6 flex-1">
@@ -280,13 +282,13 @@ export default function EventLists() {
                                {status.charAt(0).toUpperCase() + status.slice(1)}
                              </div>
                              {/* Date Block */}
-                             <div className="flex flex-col items-center justify-center w-12 h-12 bg-white/50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl backdrop-blur-sm group-hover:bg-indigo-500/10 group-hover:border-indigo-500/20 transition-colors">
-                               <span className="text-[10px] uppercase font-bold text-muted-foreground">{month}</span>
-                               <span className="text-lg font-bold leading-none text-foreground">{day}</span>
+                             <div className="flex flex-col items-center justify-center w-12 h-12 bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl backdrop-blur-sm group-hover:bg-indigo-500/10 group-hover:border-indigo-500/20 transition-colors">
+                               <span className="text-[10px] uppercase font-bold text-gray-500 dark:text-muted-foreground">{month}</span>
+                               <span className="text-lg font-bold leading-none text-gray-900 dark:text-foreground">{day}</span>
                              </div>
                            </div>
 
-                           <h3 className="text-xl font-bold mb-2 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors line-clamp-1">
+                           <h3 className="text-xl font-bold mb-2 text-gray-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors line-clamp-1">
                              {event.name}
                            </h3>
                            

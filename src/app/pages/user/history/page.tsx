@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import api from "@/lib/api";
 import ServiceRequestRemarks from "@/components/ServiceManager/Chat";
+import { parseRemarks } from "@/utils/parseRemarks";
 import {
   Card,
   CardContent,
@@ -17,6 +18,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   Calendar,
   Clock,
   AlertCircle,
@@ -25,8 +33,8 @@ import {
   IndianRupee,
   Download,
   Eye,
-  User,
 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface ServiceRequest {
   id: number;
@@ -88,6 +96,11 @@ const HistoryPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState("services");
+
+  const [selectedRequest, setSelectedRequest] = useState<ServiceRequest | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [eventDetailsOpen, setEventDetailsOpen] = useState(false);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -152,8 +165,6 @@ const HistoryPage: React.FC = () => {
 
       setEvents(participatingEvents);
       setEventParticipations(participationMap);
-      console.log("Participating events:", participatingEvents);
-      console.log("Participation map:", participationMap);
     } catch (error) {
       console.error("Error fetching events:", error);
       setEvents([]);
@@ -173,47 +184,47 @@ const HistoryPage: React.FC = () => {
       PENDING: {
         variant: "secondary" as const,
         label: "Pending",
-        color: "text-yellow-600 bg-yellow-100",
+        color: "text-yellow-400 bg-yellow-400/10 border-yellow-400/20",
       },
       APPROVED: {
         variant: "default" as const,
         label: "Approved",
-        color: "text-green-600 bg-green-100",
+        color: "text-emerald-400 bg-emerald-400/10 border-emerald-400/20",
       },
       IN_QUEUE: {
         variant: "secondary" as const,
         label: "In Queue",
-        color: "text-blue-600 bg-blue-100",
+        color: "text-blue-400 bg-blue-400/10 border-blue-400/20",
       },
       IN_PROGRESS: {
         variant: "default" as const,
         label: "In Progress",
-        color: "text-blue-600 bg-blue-100",
+        color: "text-blue-400 bg-blue-400/10 border-blue-400/20",
       },
       COMPLETED: {
         variant: "default" as const,
         label: "Completed",
-        color: "text-green-600 bg-green-100",
+        color: "text-green-400 bg-green-400/10 border-green-400/20",
       },
       REJECTED: {
         variant: "destructive" as const,
         label: "Rejected",
-        color: "text-red-600 bg-red-100",
+        color: "text-red-400 bg-red-400/10 border-red-400/20",
       },
       CANCELLED: {
         variant: "destructive" as const,
         label: "Cancelled",
-        color: "text-red-600 bg-red-100",
+        color: "text-red-400 bg-red-400/10 border-red-400/20",
       },
     };
 
     const config = statusConfig[status as keyof typeof statusConfig] || {
       variant: "secondary",
       label: status,
-      color: "text-gray-600 bg-gray-100",
+      color: "text-gray-400 bg-gray-400/10 border-gray-400/20",
     };
     return (
-      <Badge variant={config.variant} className={config.color}>
+      <Badge variant="outline" className={`${config.color} border py-0.5 px-3 uppercase text-[10px] tracking-wider font-semibold rounded-full`}>
         {config.label}
       </Badge>
     );
@@ -237,32 +248,32 @@ const HistoryPage: React.FC = () => {
       COMPLETED: {
         variant: "default" as const,
         label: "Completed",
-        color: "text-gray-600 bg-gray-100",
+        color: "text-gray-400 bg-gray-400/10 border-gray-400/20",
       },
       REGISTRATION_CLOSED: {
         variant: "secondary" as const,
         label: "Registration Closed",
-        color: "text-orange-600 bg-orange-100",
+        color: "text-orange-400 bg-orange-400/10 border-orange-400/20",
       },
       UPCOMING_SOON: {
         variant: "default" as const,
         label: "Upcoming Soon",
-        color: "text-blue-600 bg-blue-100",
+        color: "text-blue-400 bg-blue-400/10 border-blue-400/20",
       },
       UPCOMING: {
         variant: "secondary" as const,
         label: "Upcoming",
-        color: "text-green-600 bg-green-100",
+        color: "text-green-400 bg-green-400/10 border-green-400/20",
       },
     };
 
     const config = statusConfig[status as keyof typeof statusConfig] || {
       variant: "secondary",
       label: status,
-      color: "text-gray-600 bg-gray-100",
+      color: "text-gray-400 bg-gray-400/10 border-gray-400/20",
     };
     return (
-      <Badge variant={config.variant} className={config.color}>
+      <Badge variant="outline" className={`${config.color} border py-0.5 px-3 uppercase text-[10px] tracking-wider font-semibold rounded-full`}>
         {config.label}
       </Badge>
     );
@@ -418,6 +429,7 @@ For any queries, contact us at support@i2edc.com
 
       const doc = new jsPDF();
       const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
 
       // Add header
       doc.setFontSize(20);
@@ -572,476 +584,288 @@ For queries: events@i2edc.com
 
   if (loading || isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br mt-24">
-        <div className="max-w-6xl mx-auto p-8">
-          <div className="space-y-8">
-            <Skeleton className="h-12 w-64" />
-            <Skeleton className="h-10 w-full" />
+      <div className="min-h-screen bg-black text-white pt-24 px-8">
+        <div className="max-w-6xl mx-auto p-8 space-y-8">
+            <Skeleton className="h-12 w-64 bg-white/10" />
+            <Skeleton className="h-10 w-full bg-white/10" />
             <div className="space-y-4">
               {[...Array(3)].map((_, i) => (
-                <Skeleton key={i} className="h-32 w-full" />
+                <Skeleton key={i} className="h-32 w-full bg-white/5" />
               ))}
             </div>
-          </div>
         </div>
       </div>
     );
   }
 
+  // Dialog Content Components
+  const RequestDetailsContent = ({ request }: { request: ServiceRequest }) => (
+    <div className="space-y-6">
+       <div className="grid grid-cols-2 gap-4">
+          <div>
+             <h4 className="text-xs uppercase text-muted-foreground font-semibold mb-1">Service</h4>
+             <p className="text-white font-medium">{request.service.name}</p>
+          </div>
+          <div>
+             <h4 className="text-xs uppercase text-gray-500 dark:text-muted-foreground font-semibold mb-1">Plan</h4>
+             <p className="text-gray-900 dark:text-white font-medium">{request.plan.plan}</p>
+          </div>
+          <div>
+             <h4 className="text-xs uppercase text-gray-500 dark:text-muted-foreground font-semibold mb-1">Cost</h4>
+             <p className="text-gray-900 dark:text-white font-medium">₹{request.plan.cost} {request.plan.discount > 0 && <span className="text-green-600 dark:text-green-400 text-xs">(-{request.plan.discount}%)</span>}</p>
+          </div>
+          <div>
+             <h4 className="text-xs uppercase text-gray-500 dark:text-muted-foreground font-semibold mb-1">Status</h4>
+             {getStatusBadge(request.status)}
+          </div>
+       </div>
+       
+       <div className="bg-gray-100 dark:bg-white/5 p-4 rounded-xl border border-gray-200 dark:border-white/10 transition-colors">
+          <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">Subject</h4>
+          <p className="text-sm text-gray-700 dark:text-muted-foreground mb-4">{request.request_msg.subject}</p>
+          
+          <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">Message</h4>
+          <p className="text-sm text-gray-700 dark:text-muted-foreground whitespace-pre-wrap">{request.request_msg.body}</p>
+       </div>
+    </div>
+  );
+
   return (
-    <div className="min-h-screen bg-gradient-to-br mt-24">
-      <div className="max-w-6xl mx-auto p-8">
+
+    <div className="min-h-screen bg-gray-50 dark:bg-[#020202] text-gray-900 dark:text-white pt-24 px-4 md:px-8 pb-12 transition-colors duration-300">
+      <div className="max-w-5xl mx-auto space-y-8">
+        
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent mb-2">
-            My History
-          </h1>
-          <p className="text-slate-600 dark:text-slate-400">
-            View your service requests and event registrations
-          </p>
+        <div>
+           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">My History</h1>
+           <p className="text-gray-500 dark:text-muted-foreground">Manage your service requests and event registrations</p>
         </div>
 
-        {error && (
-          <Alert variant="destructive" className="mb-6">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Error</AlertTitle>
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
+        {/* Tabs */}
+        <Tabs defaultValue="services" value={activeTab} onValueChange={setActiveTab} className="w-full">
+           <div className="flex bg-gray-100 dark:bg-white/5 backdrop-blur-md rounded-xl p-1 border border-gray-200 dark:border-white/10 shadow-sm dark:shadow-none mb-6">
+              {[
+                { id: "services", label: "Services", icon: Package, count: serviceRequests.length },
+                { id: "events", label: "Events", icon: Calendar, count: participatingEvents.length }
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={clsx(
+                    "relative flex-1 flex items-center justify-center gap-2 h-10 rounded-lg text-xs font-bold uppercase tracking-wider transition-all duration-300 z-0",
+                    activeTab === tab.id
+                      ? "text-gray-900 dark:text-white"
+                      : "text-gray-500 dark:text-muted-foreground hover:text-gray-700 dark:hover:text-gray-300"
+                  )}
+                >
+                  {activeTab === tab.id && (
+                    <motion.div
+                      layoutId="history-active-tab"
+                      className="absolute inset-0 bg-white dark:bg-white/10 shadow-sm rounded-lg -z-10 border border-gray-200 dark:border-white/5"
+                      transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                    />
+                  )}
+                  <tab.icon className="w-4 h-4" />
+                  {tab.label} ({tab.count})
+                </button>
+              ))}
+           </div>
 
-        <Tabs
-          value={activeTab}
-          onValueChange={setActiveTab}
-          className="space-y-6"
-        >
-          <TabsList
-            className="
-    flex w-full gap-2 p-1
-    rounded-xl
-    bg-slate-100/60 dark:bg-slate-800/60
-
-    overflow-x-auto
-    overflow-y-visible      
-    h-auto                
-
-    sm:grid sm:grid-cols-2 sm:overflow-visible
-  "
-          >
-            <TabsTrigger
-              value="services"
-              className="
-    flex flex-col items-center justify-center
-    gap-1
-    px-3 py-2
-    min-h-[3.25rem]  
-    rounded-lg
-    text-xs leading-tight
-
-    data-[state=active]:bg-white
-    data-[state=active]:shadow-sm
-    dark:data-[state=active]:bg-slate-900
-
-    sm:flex-row sm:gap-2 sm:text-sm sm:min-h-[2.75rem]
-  "
-            >
-              <Package className="w-4 h-4 shrink-0" />
-              <span>Services</span>
-              <span className="text-[10px] text-muted-foreground sm:text-xs">
-                ({serviceRequests.length})
-              </span>
-            </TabsTrigger>
-
-            <TabsTrigger
-              value="events"
-              className="
-    flex flex-col items-center justify-center
-    gap-1
-    px-3 py-2
-    min-h-[6.25rem]
-    rounded-lg
-    text-xs leading-tight
-
-    data-[state=active]:bg-white
-    data-[state=active]:shadow-sm
-    dark:data-[state=active]:bg-slate-900
-
-    sm:flex-row sm:gap-2 sm:text-sm sm:min-h-[2.75rem]
-  "
-            >
-              <Users className="w-4 h-4 shrink-0" />
-              <span>Events</span>
-              <span className="text-[10px] text-muted-foreground sm:text-xs">
-                ({participatingEvents.length})
-              </span>
-            </TabsTrigger>
-          </TabsList>
-
-          {/* Service Requests Tab */}
-          <TabsContent value="services" className="space-y-6">
-            {serviceRequests.length === 0 ? (
-              <Card
-                className="
-border border-slate-200/60 dark:border-slate-700/60
-bg-white/70 dark:bg-slate-900/60
-backdrop-blur-md shadow-sm hover:shadow-md transition
-"
-              >
-                <CardContent className="p-8 text-center">
-                  <Package className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-                  <h3 className="text-xl font-semibold text-gray-600 dark:text-gray-400 mb-2">
-                    No Service Requests
-                  </h3>
-                  <p className="text-gray-500 dark:text-gray-500 mb-4">
-                    You haven't made any service requests yet.
-                  </p>
-                  <a href="/pages/services">
-                    <Button>Browse Services</Button>
-                  </a>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="space-y-4">
-                {serviceRequests.map((request) => {
-                  const finalPrice =
-                    request.plan.cost * (1 - request.plan.discount / 100);
-
-                  return (
-                    <Card
-                      key={request.id}
-                      className="border border-slate-200/60 dark:border-slate-700/60
-bg-white/70 dark:bg-slate-900/60
-backdrop-blur-md shadow-sm hover:shadow-md transition"
+           <TabsContent value="services" className="space-y-4">
+              {serviceRequests.length === 0 ? (
+                 <div className="text-center py-20 bg-white/5 rounded-2xl border border-white/10 border-dashed">
+                    <Package className="w-12 h-12 mx-auto text-muted-foreground mb-4 opacity-50" />
+                    <h3 className="text-lg font-medium text-white">No history yet</h3>
+                    <p className="text-sm text-muted-foreground">You haven't made any requests.</p>
+                 </div>
+              ) : (
+                 serviceRequests.map(request => (
+                    <motion.div
+                       initial={{ opacity: 0, y: 10 }}
+                       animate={{ opacity: 1, y: 0 }}
+                       transition={{ duration: 0.3 }}
+                       key={request.id}
                     >
-                      <CardHeader className="pb-4">
-                        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
-                          <div>
-                            <CardTitle className="text-xl flex items-center gap-2">
-                              {request.service.name}
-                              {getStatusBadge(request.status)}
-                            </CardTitle>
-                            <CardDescription className="flex items-center gap-2 mt-2">
-                              <Calendar className="w-4 h-4" />
-                              Requested {formatDate(request.requested_at)}
-                            </CardDescription>
-                          </div>
-                          <div className="text-right">
-                            <div className="flex items-center gap-1 text-lg font-bold text-green-600">
-                              <IndianRupee className="w-5 h-5" />
-                              {finalPrice.toFixed(2)}
+                    <Card className="bg-white dark:bg-[#0A0A0A] border-gray-200 dark:border-white/10 text-gray-900 dark:text-white hover:border-gray-300 dark:hover:border-white/20 transition-all shadow-sm dark:shadow-none">
+                       <CardHeader className="pb-3 border-b border-gray-100 dark:border-white/5 mb-3">
+                         <div className="flex justify-between items-start">
+                            <div>
+                               <CardTitle className="text-gray-900 dark:text-white text-lg font-semibold">{request.service.name}</CardTitle>
+                               <CardDescription className="text-gray-500 dark:text-muted-foreground mt-1 flex items-center gap-2">
+                                 <Clock className="w-3 h-3" /> {formatDate(request.requested_at)}
+                               </CardDescription>
                             </div>
-                            {request.plan.discount > 0 && (
-                              <div className="text-sm text-gray-500 line-through">
-                                ₹{request.plan.cost}
-                              </div>
-                            )}
-                            <div className="text-sm text-gray-500">
-                              {request.plan.plan} Plan
+                            {getStatusBadge(request.status)}
+                         </div>
+                       </CardHeader>
+                      <CardContent className="space-y-4">
+                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                               <p className="text-xs font-semibold text-muted-foreground uppercase mb-1">Subject</p>
+                               <p className="text-sm font-medium">{request.request_msg.subject}</p>
                             </div>
-                          </div>
+                            <div>
+                               <p className="text-xs font-semibold text-muted-foreground uppercase mb-1">Plan</p>
+                               <p className="text-sm font-medium">{request.plan.plan} Plan</p>
+                            </div>
+                         </div>
+                         <div>
+                            <p className="text-xs font-semibold text-muted-foreground uppercase mb-1">Message</p>
+                            <p className="text-sm text-muted-foreground line-clamp-2">{request.request_msg.body}</p>
+                         </div>
+                         
+                         {/* Remarks Section */}
+                         <div className="mt-4 pt-4 border-t border-white/5">
+                            <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-2">Remarks</h4>
+                            <div className="bg-black/20 p-3 rounded-lg border border-white/5 text-sm text-muted-foreground">
+                               <ServiceRequestRemarks 
+                                  requestId={request.id} 
+                                  rawRemark={request.remark ?? undefined} 
+                                  onNewRemark={(newRemark) => {
+                                      // Optimistic update
+                                      request.remark = request.remark ? request.remark + "\n" + JSON.stringify(newRemark) : JSON.stringify(newRemark);
+                                  }} 
+                               />
+                            </div>
+                         </div>
+                      </CardContent>
+                      <CardFooter className="flex justify-between pt-4 border-t border-white/5 bg-white/[0.02]">
+                         <div className="flex flex-col">
+                             <span className="text-2xl font-bold text-green-400">₹{request.plan.cost * (1 - request.plan.discount / 100)}</span>
+                             {request.plan.discount > 0 && <span className="text-xs text-muted-foreground line-through">₹{request.plan.cost}</span>}
+                         </div>
+                         <div className="flex gap-2">
+                             <Button variant="outline" size="sm" onClick={() => downloadPDFReceipt(request)} className="border-white/10 bg-black/20 hover:bg-white/10 text-white h-9">
+                                <Download className="w-3 h-3 mr-2" /> Receipt
+                             </Button>
+                             <Button size="sm" onClick={() => { setSelectedRequest(request); setDetailsOpen(true); }} className="bg-white text-black hover:bg-white/90 h-9">
+                                <Eye className="w-3 h-3 mr-2" /> Details
+                             </Button>
+                         </div>
+                      </CardFooter>
+                   </Card>
+                   </motion.div>
+                ))
+              )}
+           </TabsContent>
+
+           <TabsContent value="events" className="space-y-4">
+              {participatingEvents.length === 0 ? (
+                 <div className="text-center py-20 bg-white/5 rounded-2xl border border-white/10 border-dashed">
+                    <Users className="w-12 h-12 mx-auto text-muted-foreground mb-4 opacity-50" />
+                    <h3 className="text-lg font-medium text-white">No events joined</h3>
+                    <p className="text-sm text-muted-foreground">Join an event to see it here.</p>
+                 </div>
+              ) : (
+                 participatingEvents.map(event => (
+                    <motion.div
+                       initial={{ opacity: 0, y: 10 }}
+                       animate={{ opacity: 1, y: 0 }}
+                       transition={{ duration: 0.3 }}
+                       key={event.id}
+                    >
+                    <Card className="bg-white dark:bg-[#0A0A0A] border-gray-200 dark:border-white/10 text-gray-900 dark:text-white hover:border-gray-300 dark:hover:border-white/20 transition-all shadow-sm dark:shadow-none">
+                       <CardHeader className="pb-3 border-b border-gray-100 dark:border-white/5 mb-3">
+                        <div className="flex justify-between items-start">
+                           <div>
+                              <CardTitle className="text-gray-900 dark:text-white text-lg font-semibold">{event.name}</CardTitle>
+                              <CardDescription className="text-gray-500 dark:text-muted-foreground mt-1 flex items-center gap-2">
+                                <Calendar className="w-3 h-3" /> {formatEventDate(event.date)}
+                              </CardDescription>
+                           </div>
+                           {getEventStatusBadge(event)}
                         </div>
                       </CardHeader>
+                      <CardContent className="space-y-4">
+                         <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 mb-3">
+                            <p className="text-emerald-500 dark:text-emerald-400 text-xs font-medium flex items-center gap-2">
+                               <Users className="w-3 h-3" /> Registration Confirmed • Ticket E-{event.id}-{user?.id}
+                            </p>
+                         </div>
+                         
+                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                               <p className="text-xs font-semibold text-gray-500 dark:text-muted-foreground uppercase mb-1">Duration</p>
+                               <p className="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-2">
+                                  <Clock className="w-3 h-3 text-gray-400" /> {event.duration}
+                               </p>
+                            </div>
+                            <div>
+                               <p className="text-xs font-semibold text-gray-500 dark:text-muted-foreground uppercase mb-1">Participants</p>
+                               <p className="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-2">
+                                  <Users className="w-3 h-3 text-gray-400" /> {event.participants.length} joined
+                               </p>
+                            </div>
+                         </div>
 
-                      <CardContent className="pb-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div>
-                            <h4 className="font-semibold text-sm text-gray-500 mb-1">
-                              Subject
-                            </h4>
-                            <p className="text-gray-900 dark:text-white">
-                              {request.request_msg.subject}
-                            </p>
-                          </div>
-                          <div>
-                            <h4 className="font-semibold text-sm text-gray-500 mb-1">
-                              Description
-                            </h4>
-                            <p className="text-gray-600 dark:text-gray-400 line-clamp-2">
-                              {request.request_msg.body}
-                            </p>
-                          </div>
-                          <ServiceRequestRemarks
-                            requestId={request.id}
-                            rawRemark={request.remark}
-                            onNewRemark={(newRemark) => {
-                              request.remark = request.remark
-                                ? request.remark +
-                                  "\n" +
-                                  JSON.stringify(newRemark)
-                                : JSON.stringify(newRemark);
-                            }}
-                          />
-                        </div>
+                         <div>
+                            <p className="text-xs font-semibold text-gray-500 dark:text-muted-foreground uppercase mb-1">Description</p>
+                            <p className="text-sm text-gray-600 dark:text-muted-foreground">{event.description}</p>
+                         </div>
                       </CardContent>
-
-                      <CardFooter
-                        className="
-    flex flex-col gap-3
-    pt-4 border-t
-    sm:flex-row sm:justify-between sm:items-center
-  "
-                      >
-                        {/* Left info */}
-                        <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-500">
-                          <Clock className="w-4 h-4 shrink-0" />
-                          <span className="leading-tight">
-                            Last updated {formatDate(request.updated_at)}
-                          </span>
-                        </div>
-
-                        {/* Actions */}
-                        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="w-full sm:w-auto"
-                            onClick={() => downloadPDFReceipt(request)}
-                          >
-                            <Download className="w-4 h-4 mr-2 shrink-0" />
-                            Download PDF
-                          </Button>
-
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="w-full sm:w-auto"
-                            onClick={() => {
-                              alert(
-                                `Service Request Details:\n\nSubject: ${
-                                  request.request_msg.subject
-                                }\nDescription: ${
-                                  request.request_msg.body
-                                }\nStatus: ${request.status}\nPlan: ${
-                                  request.plan.plan
-                                }\nCost: ₹${request.plan.cost}\nDiscount: ${
-                                  request.plan.discount
-                                }%\nFinal Amount: ₹${finalPrice.toFixed(2)}`
-                              );
-                            }}
-                          >
-                            <Eye className="w-4 h-4 mr-2 shrink-0" />
-                            View Details
-                          </Button>
-                        </div>
-                      </CardFooter>
+                       <CardFooter className="flex justify-between pt-4 border-t border-gray-100 dark:border-white/5 bg-gray-50/[0.5] dark:bg-white/[0.02]">
+                          <div className="text-xs text-gray-500 dark:text-muted-foreground">
+                             Reg ends: {formatDate(event.reg_end_date)}
+                          </div>
+                          <div className="flex gap-2">
+                              <Button variant="outline" size="sm" onClick={() => downloadEventTicket(event)} className="border-gray-200 dark:border-white/10 bg-white dark:bg-black/20 hover:bg-gray-100 dark:hover:bg-white/10 text-gray-900 dark:text-white h-9">
+                                 <Download className="w-3 h-3 mr-2" /> Ticket
+                              </Button>
+                              <Button size="sm" onClick={() => { setSelectedEvent(event); setEventDetailsOpen(true); }} className="bg-black dark:bg-white text-white dark:text-black hover:bg-black/90 dark:hover:bg-white/90 h-9">
+                                 <Eye className="w-3 h-3 mr-2" /> Details
+                              </Button>
+                          </div>
+                       </CardFooter>
                     </Card>
-                  );
-                })}
-              </div>
-            )}
-          </TabsContent>
-
-          {/* Event Registrations Tab */}
-          <TabsContent value="events" className="space-y-6">
-            {participatingEvents.length === 0 ? (
-              <Card
-                className="
-border border-slate-200/60 dark:border-slate-700/60
-bg-white/70 dark:bg-slate-900/60
-backdrop-blur-md shadow-sm hover:shadow-md transition
-"
-              >
-                <CardContent className="p-8 text-center">
-                  <Users className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-                  <h3 className="text-xl font-semibold text-gray-600 dark:text-gray-400 mb-2">
-                    No Event Registrations
-                  </h3>
-                  <p className="text-gray-500 dark:text-gray-500 mb-4">
-                    You haven't registered for any events yet.
-                  </p>
-                  <a href="/pages/events">
-                    <Button>Browse Events</Button>
-                  </a>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="space-y-4">
-                {participatingEvents.map((event) => (
-                  <Card
-                    key={event.id}
-                    className="border border-slate-200/60 dark:border-slate-700/60
-bg-white/70 dark:bg-slate-900/60
-backdrop-blur-md shadow-sm hover:shadow-md transition"
-                  >
-                    <CardHeader className="pb-4">
-                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
-                        {/* LEFT */}
-                        <div>
-                          <CardTitle className="text-xl">
-                            {event.name} {getEventStatusBadge(event)}
-                          </CardTitle>
-
-                          <CardDescription className="flex items-center gap-2 mt-2">
-                            <Calendar className="w-4 h-4 shrink-0" />
-                            {formatEventDate(event.date)}
-                          </CardDescription>
-                        </div>
-
-                        {/* RIGHT */}
-                        <div className="text-left sm:text-right flex flex-col gap-1">
-                          <div className="text-sm text-gray-500">
-                            {event.participants.length} participants
-                          </div>
-
-                          <div className="text-xs text-gray-400">
-                            Reg ends: {formatDate(event.reg_end_date)}
-                          </div>
-                        </div>
-                      </div>
-                    </CardHeader>
-
-                    <CardContent className="pb-4">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <h4 className="font-semibold text-sm text-gray-500 mb-1 flex items-center gap-2">
-                            <Clock className="w-4 h-4" />
-                            Duration
-                          </h4>
-                          <p className="text-gray-900 dark:text-white">
-                            {event.duration}
-                          </p>
-                        </div>
-                        <div>
-                          <h4 className="font-semibold text-sm text-gray-500 mb-1">
-                            Description
-                          </h4>
-                          <p className="text-gray-600 dark:text-gray-400">
-                            {event.description}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="mt-4 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                        <h4 className="font-semibold text-sm text-green-700 dark:text-green-300 mb-1">
-                          Registration Information
-                        </h4>
-                        <p className="text-green-600 dark:text-green-400 text-sm">
-                          Status: Registered • Participants:{" "}
-                          {event.participants.length} • Registration ends:{" "}
-                          {formatDate(event.reg_end_date)}
-                        </p>
-                      </div>
-                    </CardContent>
-
-                    <CardFooter
-                      className="
-    flex flex-col gap-3
-    pt-4 border-t
-
-    sm:flex-row sm:justify-between sm:items-center
-  "
-                    >
-                      {/* Left info */}
-                      <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-500">
-                        <User className="w-4 h-4 shrink-0" />
-                        <span className="leading-tight break-all">
-                          Ticket: E-{event.id}-{user?.id || "USER"}
-                        </span>
-                      </div>
-
-                      {/* Actions */}
-                      <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="w-full sm:w-auto"
-                          onClick={() => downloadEventTicket(event)}
-                        >
-                          <Download className="w-4 h-4 mr-2 shrink-0" />
-                          Download Ticket
-                        </Button>
-
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="w-full sm:w-auto"
-                          onClick={() => {
-                            alert(
-                              `Event Details:\n\nName: ${event.name}
-Date: ${formatEventDate(event.date)}
-Duration: ${event.duration}
-Status: ${getEventStatus(event)}
-Participants: ${event.participants.length}
-Registration Ends: ${formatDate(event.reg_end_date)}
-Description: ${event.description}
-
-Detailed Info: ${event.long_description || "No additional details"}`
-                            );
-                          }}
-                        >
-                          <Eye className="w-4 h-4 mr-2 shrink-0" />
-                          View Details
-                        </Button>
-                      </div>
-                    </CardFooter>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </TabsContent>
+                    </motion.div>
+                 ))
+              )}
+           </TabsContent>
         </Tabs>
 
-        {/* Statistics Summary */}
-        <Card className="mt-8">
-          <CardHeader>
-            <CardTitle>Summary</CardTitle>
-          </CardHeader>
+        {/* Dialogs */}
+        <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
+           <DialogContent className="bg-white dark:bg-[#0A0A0A] border-gray-200 dark:border-white/10 text-gray-900 dark:text-white max-w-2xl">
+              <DialogHeader>
+                 <DialogTitle>Service Request Details</DialogTitle>
+                 <DialogDescription className="text-gray-500 dark:text-muted-foreground">
+                    Full details of your service request #{selectedRequest?.id}
+                 </DialogDescription>
+              </DialogHeader>
+{selectedRequest && <RequestDetailsContent request={selectedRequest} />}
+           </DialogContent>
+        </Dialog>
 
-          <CardContent>
-            <div
-              className="
-        grid grid-cols-1 gap-3
-        sm:grid-cols-2 sm:gap-4
-        md:grid-cols-4
-      "
-            >
-              {/* Service Requests */}
-              <div className="rounded-xl p-4 text-center bg-blue-50 dark:bg-blue-900/20">
-                <div className="text-2xl sm:text-3xl font-bold text-blue-600">
-                  {serviceRequests.length}
-                </div>
-                <div className="text-xs sm:text-sm text-blue-600 mt-1">
-                  Service Requests
-                </div>
-              </div>
+        <Dialog open={eventDetailsOpen} onOpenChange={setEventDetailsOpen}>
+           <DialogContent className="bg-white dark:bg-[#0A0A0A] border-gray-200 dark:border-white/10 text-gray-900 dark:text-white max-w-2xl">
+               <DialogHeader>
+                 <DialogTitle>Event Details</DialogTitle>
+                 <DialogDescription className="text-gray-500 dark:text-muted-foreground">
+                    Information about the event
+                 </DialogDescription>
+              </DialogHeader>
+              {selectedEvent && (
+                 <div className="space-y-6">
+                    <div className="space-y-1">
+                       <h3 className="text-xl font-bold">{selectedEvent.name}</h3>
+                       <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                          <Calendar className="w-4 h-4" /> {formatEventDate(selectedEvent.date)}
+                       </div>
+                    </div>
+                     <div className="bg-gray-100 dark:bg-white/5 p-4 rounded-xl border border-gray-200 dark:border-white/10 transition-colors">
+                        <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">{selectedEvent.description}</p>
+                     </div>
+                     {selectedEvent.long_description && (
+                         <div>
+                            <h4 className="text-sm font-semibold uppercase text-gray-500 dark:text-muted-foreground mb-2">About Event</h4>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">{selectedEvent.long_description}</p>
+                         </div>
+                     )}
+                 </div>
+              )}
+           </DialogContent>
+        </Dialog>
 
-              {/* Completed Services */}
-              <div className="rounded-xl p-4 text-center bg-green-50 dark:bg-green-900/20">
-                <div className="text-2xl sm:text-3xl font-bold text-green-600">
-                  {
-                    serviceRequests.filter((r) => r.status === "COMPLETED")
-                      .length
-                  }
-                </div>
-                <div className="text-xs sm:text-sm text-green-600 mt-1">
-                  Completed Services
-                </div>
-              </div>
-
-              {/* Event Registrations */}
-              <div className="rounded-xl p-4 text-center bg-purple-50 dark:bg-purple-900/20">
-                <div className="text-2xl sm:text-3xl font-bold text-purple-600">
-                  {participatingEvents.length}
-                </div>
-                <div className="text-xs sm:text-sm text-purple-600 mt-1">
-                  Event Registrations
-                </div>
-              </div>
-
-              {/* Events Attended */}
-              <div className="rounded-xl p-4 text-center bg-orange-50 dark:bg-orange-900/20">
-                <div className="text-2xl sm:text-3xl font-bold text-orange-600">
-                  {
-                    participatingEvents.filter(
-                      (e) => getEventStatus(e) === "COMPLETED"
-                    ).length
-                  }
-                </div>
-                <div className="text-xs sm:text-sm text-orange-600 mt-1">
-                  Events Attended
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </div>
   );

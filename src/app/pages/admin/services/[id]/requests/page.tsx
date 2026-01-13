@@ -4,19 +4,13 @@ import { toast } from "sonner";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import api from "@/lib/api";
+import { motion, AnimatePresence } from "framer-motion";
 
 // Shadcn components
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  CardFooter,
-} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import SpotlightCard from "@/components/ui/SpotlightCard";
 
 import {
   Table,
@@ -43,24 +37,22 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  MoreHorizontal,
   Search,
   Edit,
-  Trash2,
   Eye,
   ArrowLeft,
   Filter,
-  Calendar,
   User,
   DollarSign,
   Clock,
   CheckCircle,
   XCircle,
-  AlertCircle,
   RefreshCw,
   Download,
   BarChart3,
+  AlertCircle
 } from "lucide-react";
+import clsx from "clsx";
 
 // Type definitions
 interface User {
@@ -231,22 +223,22 @@ const ServiceRequestsPage: React.FC = () => {
       PENDING: {
         variant: "secondary" as const,
         icon: Clock,
-        color: "text-yellow-600",
+        className: "text-amber-500 bg-amber-500/10 border-amber-500/20",
       },
       IN_PROGRESS: {
         variant: "default" as const,
         icon: RefreshCw,
-        color: "text-blue-600",
+        className: "text-blue-400 bg-blue-500/10 border-blue-500/20",
       },
       COMPLETED: {
         variant: "default" as const,
         icon: CheckCircle,
-        color: "text-green-600",
+        className: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
       },
       CANCELLED: {
         variant: "destructive" as const,
         icon: XCircle,
-        color: "text-red-600",
+        className: "text-red-400 bg-red-500/10 border-red-500/20",
       },
     };
 
@@ -255,15 +247,10 @@ const ServiceRequestsPage: React.FC = () => {
     const IconComponent = config.icon;
 
     return (
-      <Badge
-        variant={config.variant}
-        className="flex items-center space-x-1 w-fit"
-      >
-        <IconComponent className={`h-3 w-3 ${config.color}`} />
-        <span className="capitalize">
-          {status.toLowerCase().replace("_", " ")}
-        </span>
-      </Badge>
+      <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${config.className}`}>
+        <IconComponent className="w-3.5 h-3.5" />
+        <span className="capitalize">{status.toLowerCase().replace("_", " ")}</span>
+      </div>
     );
   };
 
@@ -305,342 +292,286 @@ const ServiceRequestsPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen py-8 px-4">
-        <div className="container mx-auto">
-          <div className="flex items-center justify-center h-96">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-              <p className="text-lg font-medium">Loading service requests...</p>
-              <p className="text-muted-foreground text-sm mt-2">
-                Please wait while we fetch the data
-              </p>
-            </div>
-          </div>
+      <div className="min-h-screen py-24 flex justify-center">
+        <div className="flex flex-col items-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-4"></div>
+          <p className="text-lg font-medium text-white">Loading service requests...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen py-8 px-4">
-      <div className="container mx-auto">
+    <div className="min-h-screen w-full bg-background p-6 md:p-12 relative overflow-hidden">
+      {/* Ambient Background */}
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-purple-500/10 blur-[100px] pointer-events-none rounded-full" />
+      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-blue-500/10 blur-[100px] pointer-events-none rounded-full" />
+
+      <div className="relative z-10 max-w-7xl mx-auto space-y-8">
+        
         {/* Header */}
-        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 gap-6">
-          <div className="space-y-2 flex-1">
-            <div className="flex items-center space-x-4">
-              <Button
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+          <div>
+             <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => router.back()}
-                className="flex items-center space-x-2"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                <span>Back</span>
-              </Button>
-              <div className="flex-1">
-                <h1 className="text-4xl font-bold">Service Requests</h1>
-                {service && (
-                  <p className="text-lg text-muted-foreground">
-                    Managing requests for <strong>{service.name}</strong>
-                  </p>
-                )}
-              </div>
-            </div>
+                className="flex items-center text-muted-foreground hover:text-gray-900 dark:hover:text-white pl-0 mb-2 hover:bg-transparent"
+             >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back
+             </Button>
+             <motion.h1 
+               initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+               className="text-4xl font-bold text-gray-900 dark:text-white mb-1"
+             >
+               Service Requests
+             </motion.h1>
+             {service && (
+                <motion.p 
+                   initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
+                   className="text-muted-foreground text-lg"
+                >
+                   Managing requests for <span className="text-gray-900 dark:text-white font-medium">{service.name}</span>
+                </motion.p>
+             )}
           </div>
 
-          <div className="flex items-center space-x-4">
-            <Button
-              variant="outline"
-              size="sm"
-              className="flex items-center space-x-2"
-            >
-              <Download className="h-4 w-4" />
-              <span>Export</span>
-            </Button>
-            <Button asChild size="sm">
-              <Link href={`/pages/admin/services/${serviceId}`}>
-                <Eye className="h-4 w-4 mr-2" />
-                View Service
-              </Link>
-            </Button>
+          <div className="flex items-center gap-3">
+             <Button variant="outline" className="bg-white dark:bg-white/5 border-gray-200 dark:border-white/10 hover:bg-gray-100 dark:hover:bg-white/10 text-gray-900 dark:text-white">
+                <Download className="h-4 w-4 mr-2" />
+                Export
+             </Button>
+             <Button asChild className="bg-white text-black hover:bg-white/90">
+               <Link href={`/pages/admin/services/${serviceId}`}>
+                 <Eye className="h-4 w-4 mr-2" />
+                 View Service
+               </Link>
+             </Button>
           </div>
         </div>
 
         {/* Stats Summary */}
         {stats && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">
-                      Total Requests
-                    </p>
-                    <p className="text-2xl font-bold">{stats.total_requests}</p>
-                  </div>
-                  <div className="p-3 bg-primary/10 rounded-xl">
-                    <BarChart3 className="h-6 w-6 text-primary" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">
-                      Pending
-                    </p>
-                    <p className="text-2xl font-bold">
-                      {stats.pending_requests}
-                    </p>
-                  </div>
-                  <div className="p-3 bg-yellow-100 dark:bg-yellow-950 rounded-xl">
-                    <Clock className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">
-                      Completed
-                    </p>
-                    <p className="text-2xl font-bold">
-                      {stats.completed_requests}
-                    </p>
-                  </div>
-                  <div className="p-3 bg-green-100 dark:bg-green-950 rounded-xl">
-                    <CheckCircle className="h-6 w-6 text-green-600 dark:text-green-400" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">
-                      Popular Plan
-                    </p>
-                    <p className="text-2xl font-bold capitalize">
-                      {stats.popular_plans?.[0]?.plan__plan || "N/A"}
-                    </p>
-                  </div>
-                  <div className="p-3 bg-purple-100 dark:bg-purple-950 rounded-xl">
-                    <DollarSign className="h-6 w-6 text-purple-600 dark:text-purple-400" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {[
+               { 
+                  label: "Total Requests", 
+                  value: stats.total_requests, 
+                  icon: BarChart3, 
+                  color: "text-blue-400", bg: "bg-blue-500/10", border: "border-blue-500/20" 
+               },
+               { 
+                  label: "Pending", 
+                  value: stats.pending_requests, 
+                  icon: Clock, 
+                  color: "text-amber-500", bg: "bg-amber-500/10", border: "border-amber-500/20" 
+               },
+               { 
+                  label: "Completed", 
+                  value: stats.completed_requests, 
+                  icon: CheckCircle, 
+                  color: "text-emerald-400", bg: "bg-emerald-500/10", border: "border-emerald-500/20" 
+               },
+               { 
+                  label: "Popular Plan", 
+                  value: stats.popular_plans?.[0]?.plan__plan || "N/A", 
+                  icon: DollarSign, 
+                  color: "text-purple-400", bg: "bg-purple-500/10", border: "border-purple-500/20",
+                  isText: true
+               }
+            ].map((stat, i) => (
+              <SpotlightCard key={i} className="p-6 relative overflow-hidden bg-white dark:bg-white/5 border-gray-200 dark:border-white/10 h-full shadow-sm dark:shadow-none" spotlightColor="rgba(255,255,255,0.05)">
+                 <div className="flex flex-col h-full justify-between relative z-10 gap-6">
+                    <div className="flex justify-between items-start">
+                       <div className="text-[11px] font-semibold text-gray-500 dark:text-muted-foreground/70 uppercase tracking-wider">{stat.label}</div>
+                       <div className={`h-10 w-10 flex items-center justify-center rounded-xl border ${stat.bg} ${stat.border} ${stat.color}`}>
+                          <stat.icon className="h-5 w-5" />
+                       </div>
+                    </div>
+                    <div className={`font-bold text-gray-900 dark:text-white tracking-tight ${stat.isText ? 'text-3xl capitalize' : 'text-4xl'}`}>
+                       {stat.value}
+                    </div>
+                 </div>
+              </SpotlightCard>
+            ))}
           </div>
         )}
 
-        {/* Search and Filters */}
-        <Card className="mb-6">
-          <CardContent className="p-6">
-            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
-              <div className="flex flex-col sm:flex-row gap-4 flex-1 w-full">
-                <div className="relative flex-1 max-w-md">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                  <Input
-                    placeholder="Search by user, email, subject, or plan..."
-                    value={searchTerm}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                      setSearchTerm(e.target.value)
-                    }
-                    className="pl-10"
-                  />
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <Filter className="h-4 w-4 text-muted-foreground" />
-                  <Select
-                    value={statusFilter}
-                    onValueChange={(value: StatusFilter) =>
-                      setStatusFilter(value)
-                    }
-                  >
-                    <SelectTrigger className="w-[180px]">
-                      <SelectValue placeholder="Filter by status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Status</SelectItem>
-                      <SelectItem value="PENDING">Pending</SelectItem>
-                      <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
-                      <SelectItem value="COMPLETED">Completed</SelectItem>
-                      <SelectItem value="CANCELLED">Cancelled</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+        {/* Search and Filters Bar */}
+        <div className="p-1 rounded-2xl bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 backdrop-blur-md shadow-sm dark:shadow-none">
+           <div className="flex flex-col md:flex-row items-center p-4 gap-4">
+              <div className="relative flex-1 w-full">
+                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-muted-foreground h-4 w-4" />
+                 <Input
+                   placeholder="Search by user, email, subject, or plan..."
+                   value={searchTerm}
+                   onChange={(e) => setSearchTerm(e.target.value)}
+                   className="pl-10 bg-gray-50 dark:bg-black/20 border-gray-200 dark:border-white/10 focus:border-primary/50 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-muted-foreground/50"
+                 />
               </div>
 
-              <div className="text-sm text-muted-foreground bg-muted px-3 py-2 rounded-md">
-                <span className="font-medium">{filteredRequests.length}</span>{" "}
-                of <span className="font-medium">{requests.length}</span>{" "}
-                requests
+              <div className="flex items-center gap-3 w-full md:w-auto">
+                 <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-md">
+                    <Filter className="h-4 w-4 text-gray-500 dark:text-muted-foreground" />
+                    <Select value={statusFilter} onValueChange={(v: any) => setStatusFilter(v)}>
+                       <SelectTrigger className="bg-transparent border-none p-0 h-auto w-[130px] text-sm focus:ring-0 [&>svg]:hidden text-gray-900 dark:text-white">
+                          <SelectValue placeholder="All Status" />
+                       </SelectTrigger>
+                       <SelectContent className="bg-white dark:bg-gray-900 border-gray-200 dark:border-white/10 text-gray-900 dark:text-white">
+                          <SelectItem value="all">All Status</SelectItem>
+                          <SelectItem value="PENDING">Pending</SelectItem>
+                          <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
+                          <SelectItem value="COMPLETED">Completed</SelectItem>
+                          <SelectItem value="CANCELLED">Cancelled</SelectItem>
+                       </SelectContent>
+                    </Select>
+                 </div>
+                 
+                 <div className="px-3 py-2 bg-gray-100 dark:bg-white/10 rounded-md text-sm text-muted-foreground whitespace-nowrap">
+                    <span className="font-semibold text-gray-900 dark:text-white">{filteredRequests.length}</span> of {requests.length} requests
+                 </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
+           </div>
+        </div>
 
         {/* Requests Table */}
-        {filteredRequests.length === 0 ? (
-          <Card>
-            <CardContent className="p-12 text-center">
-              <div className="mx-auto w-24 h-24 bg-muted rounded-full flex items-center justify-center mb-6">
-                <AlertCircle className="h-12 w-12 text-muted-foreground" />
-              </div>
-              <h3 className="text-xl font-semibold mb-3">
-                {searchTerm || statusFilter !== "all"
-                  ? "No requests found"
-                  : "No requests yet"}
-              </h3>
-              <p className="text-muted-foreground mb-8 max-w-md mx-auto text-lg">
-                {searchTerm || statusFilter !== "all"
-                  ? "No requests match your current filters. Try adjusting your search criteria."
-                  : "This service has not received any requests yet. Requests will appear here once users start placing orders."}
-              </p>
-            </CardContent>
-          </Card>
-        ) : (
-          <Card>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>User</TableHead>
-                    <TableHead>Plan</TableHead>
-                    <TableHead>Subject</TableHead>
-                    <TableHead>Price</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Requested</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredRequests.map((request) => (
-                    <TableRow key={request.id} className="group">
-                      <TableCell>
-                        <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
-                            <User className="h-5 w-5 text-primary" />
-                          </div>
-                          <div>
-                            <p className="font-medium">
-                              {request.requested_by.first_name}{" "}
-                              {request.requested_by.last_name}
-                            </p>
-                            <p className="text-sm text-muted-foreground">
-                              {request.requested_by.email}
-                            </p>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className="capitalize">
-                          {request.plan.plan}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="max-w-[200px]">
-                          <p className="font-medium text-sm line-clamp-1">
-                            {request.request_msg.subject}
-                          </p>
-                          <p className="text-sm text-muted-foreground line-clamp-1">
-                            {request.request_msg.body}
-                          </p>
-                        </div>
-                      </TableCell>
-                      <TableCell className="font-semibold text-green-600">
-                        {getPlanCost(request)}
-                      </TableCell>
-                      <TableCell>{getStatusBadge(request.status)}</TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
-                        {formatDate(request.requested_at)}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end space-x-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 w-8 p-0"
-                            onClick={() => handleUpdateClick(request)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            asChild
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 w-8 p-0"
-                          >
-                            <Link
-                              href={`/pages/admin/services/${service?.id}/requests/${request.id}`}
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Link>
-                          </Button>
-                        </div>
-                      </TableCell>
+        <div className="rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-black/20 overflow-hidden shadow-sm dark:shadow-none">
+           <Table>
+              <TableHeader className="bg-gray-50 dark:bg-white/5">
+                 <TableRow className="border-gray-200 dark:border-white/5 hover:bg-transparent">
+                    <TableHead className="text-xs font-semibold text-gray-500 dark:text-muted-foreground uppercase tracking-wider py-4 pl-6">User</TableHead>
+                    <TableHead className="text-xs font-semibold text-gray-500 dark:text-muted-foreground uppercase tracking-wider py-4">Plan</TableHead>
+                    <TableHead className="text-xs font-semibold text-gray-500 dark:text-muted-foreground uppercase tracking-wider py-4">Subject</TableHead>
+                    <TableHead className="text-xs font-semibold text-gray-500 dark:text-muted-foreground uppercase tracking-wider py-4">Price</TableHead>
+                    <TableHead className="text-xs font-semibold text-gray-500 dark:text-muted-foreground uppercase tracking-wider py-4">Status</TableHead>
+                    <TableHead className="text-xs font-semibold text-gray-500 dark:text-muted-foreground uppercase tracking-wider py-4">Requested</TableHead>
+                    <TableHead className="text-xs font-semibold text-gray-500 dark:text-muted-foreground uppercase tracking-wider py-4 text-right pr-6">Actions</TableHead>
+                 </TableRow>
+              </TableHeader>
+              <TableBody>
+                 {filteredRequests.length === 0 ? (
+                    <TableRow>
+                       <TableCell colSpan={7} className="text-center py-20 text-muted-foreground">
+                          <AlertCircle className="w-12 h-12 mx-auto mb-4 opacity-20" />
+                          <p className="text-lg font-medium text-gray-900 dark:text-white mb-1">No requests found</p>
+                          <p className="text-sm">Try adjusting your filters or search terms</p>
+                       </TableCell>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        )}
+                 ) : (
+                    filteredRequests.map((request) => (
+                       <TableRow key={request.id} className="border-gray-100 dark:border-white/5 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
+                          <TableCell className="pl-6 py-4">
+                             <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-white/10 flex items-center justify-center text-xs font-bold text-gray-700 dark:text-white">
+                                   {request.requested_by.first_name[0]}{request.requested_by.last_name[0]}
+                                </div>
+                                <div>
+                                   <div className="font-medium text-gray-900 dark:text-white">
+                                      {request.requested_by.first_name} {request.requested_by.last_name}
+                                   </div>
+                                   <div className="text-xs text-muted-foreground">
+                                      {request.requested_by.email}
+                                   </div>
+                                </div>
+                             </div>
+                          </TableCell>
+                          <TableCell>
+                             <Badge variant="outline" className="bg-gray-50 dark:bg-white/5 border-gray-200 dark:border-white/10 hover:bg-gray-100 dark:hover:bg-white/10 capitalize text-gray-700 dark:text-gray-300 font-normal">
+                                {request.plan.plan}
+                             </Badge>
+                          </TableCell>
+                          <TableCell>
+                             <div className="max-w-[200px]">
+                                <div className="font-medium text-gray-900 dark:text-white truncate mb-0.5">
+                                   {request.request_msg.subject}
+                                </div>
+                                <div className="text-xs text-muted-foreground truncate">
+                                   {request.request_msg.body}
+                                </div>
+                             </div>
+                          </TableCell>
+                          <TableCell className="font-semibold text-emerald-600 dark:text-emerald-400">
+                             {getPlanCost(request)}
+                          </TableCell>
+                          <TableCell>
+                             {getStatusBadge(request.status)}
+                          </TableCell>
+                          <TableCell className="text-sm text-muted-foreground">
+                             {formatDate(request.requested_at)}
+                          </TableCell>
+                          <TableCell className="text-right pr-6">
+                             <div className="flex items-center justify-end gap-1">
+                                <Button
+                                   size="icon"
+                                   variant="ghost"
+                                   className="h-8 w-8 text-muted-foreground hover:text-gray-900 dark:hover:text-white"
+                                   onClick={() => handleUpdateClick(request)}
+                                >
+                                   <Edit className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                   asChild
+                                   size="icon"
+                                   variant="ghost"
+                                   className="h-8 w-8 text-muted-foreground hover:text-gray-900 dark:hover:text-white"
+                                >
+                                   <Link href={`/pages/admin/services/${service?.id}/requests/${request.id}`}>
+                                      <Eye className="h-4 w-4" />
+                                   </Link>
+                                </Button>
+                             </div>
+                          </TableCell>
+                       </TableRow>
+                    ))
+                 )}
+              </TableBody>
+           </Table>
+        </div>
 
         {/* Update Status Dialog */}
         <Dialog open={updateDialogOpen} onOpenChange={setUpdateDialogOpen}>
-          <DialogContent className="sm:max-w-md">
+
+          <DialogContent className="sm:max-w-md bg-white dark:bg-gray-950 border-gray-200 dark:border-white/10 text-gray-900 dark:text-white">
             <DialogHeader>
-              <DialogTitle className="flex items-center space-x-2">
-                <Edit className="h-5 w-5" />
-                <span>Update Request Status</span>
+              <DialogTitle className="flex items-center gap-2 text-xl">
+                <Edit className="h-5 w-5 text-primary" />
+                Update Request Status
               </DialogTitle>
-              <DialogDescription className="pt-4">
+              <DialogDescription className="text-muted-foreground">
                 Update the status and add remarks for this service request.
               </DialogDescription>
             </DialogHeader>
 
             {selectedRequest && (
-              <div className="space-y-4">
+              <div className="space-y-4 py-4">
                 {/* Request Info */}
-                <div className="bg-muted rounded-lg p-4 space-y-2">
+                <div className="bg-gray-50 dark:bg-white/5 rounded-lg p-4 space-y-3 border border-gray-200 dark:border-white/10">
                   <div className="flex justify-between items-start">
                     <div>
-                      <p className="font-medium">
+                      <p className="font-medium text-gray-900 dark:text-white text-sm">
                         {selectedRequest.request_msg.subject}
                       </p>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-xs text-muted-foreground mt-0.5">
                         by {selectedRequest.requested_by.first_name}{" "}
                         {selectedRequest.requested_by.last_name}
                       </p>
                     </div>
+                  </div>
+                  <div className="flex items-center justify-between text-xs pt-2 border-t border-gray-200 dark:border-white/10">
+                    <div className="text-muted-foreground">Current Status:</div>
                     {getStatusBadge(selectedRequest.status)}
                   </div>
-                  <p className="text-sm">
-                    Plan:{" "}
-                    <Badge variant="outline" className="capitalize">
-                      {selectedRequest.plan.plan}
-                    </Badge>
-                  </p>
                 </div>
 
                 {/* Status Select */}
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Status</label>
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">New Status</label>
                   <Select value={newStatus} onValueChange={setNewStatus}>
-                    <SelectTrigger>
+                    <SelectTrigger className="bg-white dark:bg-black/20 border-gray-200 dark:border-white/10 text-gray-900 dark:text-white">
                       <SelectValue placeholder="Select status" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-white dark:bg-gray-900 border-gray-200 dark:border-white/10 text-gray-900 dark:text-white">
                       <SelectItem value="PENDING">Pending</SelectItem>
                       <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
                       <SelectItem value="COMPLETED">Completed</SelectItem>
@@ -651,16 +582,15 @@ const ServiceRequestsPage: React.FC = () => {
 
                 {/* Remark Textarea */}
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                     Remarks (Optional)
                   </label>
                   <Textarea
-                    placeholder="Add any remarks or notes about this request..."
+                    placeholder="Add any remarks or notes..."
                     value={remark}
-                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
-                      setRemark(e.target.value)
-                    }
+                    onChange={(e) => setRemark(e.target.value)}
                     rows={3}
+                    className="bg-white dark:bg-black/20 border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-muted-foreground/50 resize-none"
                   />
                 </div>
               </div>
@@ -671,14 +601,14 @@ const ServiceRequestsPage: React.FC = () => {
                 variant="outline"
                 onClick={() => setUpdateDialogOpen(false)}
                 disabled={updating}
-                className="flex-1"
+                className="flex-1 border-gray-200 dark:border-white/10 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-white/5"
               >
                 Cancel
               </Button>
               <Button
                 onClick={handleStatusUpdate}
                 disabled={updating || !newStatus}
-                className="flex-1"
+                className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90"
               >
                 {updating ? (
                   <>

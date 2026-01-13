@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import api from "@/lib/api";
+import { motion, AnimatePresence } from "framer-motion";
+import clsx from "clsx";
 
 import {
   Card,
@@ -18,7 +20,6 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import {
   User,
@@ -27,12 +28,12 @@ import {
   Edit,
   Save,
   X,
-  Key,
   Shield,
   CheckCircle,
   AlertCircle,
   Clock,
   UserCheck,
+  Lock,
 } from "lucide-react";
 
 /* ---------------- TYPES ---------------- */
@@ -67,6 +68,7 @@ export default function ProfilePage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [isEditing, setIsEditing] = useState(false);
+  const [activeTab, setActiveTab] = useState<"profile" | "security">("profile");
 
   const [editForm, setEditForm] = useState<EditFormData>({
     first_name: "",
@@ -154,7 +156,7 @@ export default function ProfilePage() {
   const displayName =
     user?.first_name && user?.last_name
       ? `${user.first_name} ${user.last_name}`
-      : user?.email;
+      : user?.email?.split("@")[0] || "User";
 
   /* ---------------- GUARDS ---------------- */
 
@@ -186,155 +188,293 @@ export default function ProfilePage() {
   /* ---------------- UI ---------------- */
 
   return (
-    <div className="min-h-screen mt-24 max-w-6xl mx-auto p-8 space-y-8">
-      {/* Alerts */}
-      {error && (
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
+    <div className="min-h-screen bg-gray-50 dark:bg-[#020202] text-gray-900 dark:text-white pt-24 px-4 md:px-8 pb-12 transition-colors duration-300">
+      <div className="max-w-6xl mx-auto space-y-8">
+        {/* Alerts */}
+        <AnimatePresence>
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+            >
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            </motion.div>
+          )}
 
-      {success && (
-        <Alert>
-          <CheckCircle className="h-4 w-4" />
-          <AlertDescription>{success}</AlertDescription>
-        </Alert>
-      )}
+          {success && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+            >
+              <Alert className="border-green-500/50 bg-green-500/10 text-green-600 dark:text-green-400">
+                <CheckCircle className="h-4 w-4 stroke-green-600 dark:stroke-green-400" />
+                <AlertDescription>{success}</AlertDescription>
+              </Alert>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-        {/* SIDEBAR */}
-        <Card className="lg:col-span-1 top-24">
-          <CardHeader className="text-center">
-            <div className="mx-auto w-20 h-20 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 flex items-center justify-center text-white text-2xl font-bold">
-              {initials}
-            </div>
-            <CardTitle className="mt-3">{displayName}</CardTitle>
-            <CardDescription>@{user?.username}</CardDescription>
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+          {/* SIDEBAR */}
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="lg:col-span-1"
+          >
+            <div className="bg-white dark:bg-white/5 backdrop-blur-xl border border-gray-200 dark:border-white/10 rounded-3xl p-6 text-center shadow-lg dark:shadow-none sticky top-24">
+              <div className="mx-auto w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-3xl font-bold shadow-xl mb-4">
+                {initials}
+              </div>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-1">
+                {displayName}
+              </h2>
+              <p className="text-sm text-gray-500 dark:text-muted-foreground mb-4">
+                {user?.email}
+              </p>
+              <p className="text-xs font-mono bg-gray-100 dark:bg-black/20 text-gray-500 dark:text-gray-400 py-1 px-3 rounded-full inline-block mb-4">
+                @{user?.username}
+              </p>
 
-            <div className="flex flex-wrap justify-center gap-2 mt-3">
-              {user?.is_superuser && <Badge variant="destructive">Superuser</Badge>}
-              {user?.is_staff && <Badge>Staff</Badge>}
-              <Badge variant="outline">Verified</Badge>
-            </div>
-          </CardHeader>
-        </Card>
-
-        {/* CONTENT */}
-        <div className="lg:col-span-3">
-          <Tabs defaultValue="profile">
-            <TabsList className="grid grid-cols-2">
-              <TabsTrigger value="profile">
-                <User className="w-4 h-4 mr-2" /> Profile
-              </TabsTrigger>
-              <TabsTrigger value="security">
-                <Shield className="w-4 h-4 mr-2" /> Security
-              </TabsTrigger>
-            </TabsList>
-
-            {/* PROFILE TAB */}
-            <TabsContent value="profile" className="space-y-6">
-              <Card>
-                <CardHeader className="flex flex-row justify-between">
-                  <div>
-                    <CardTitle>Personal Information</CardTitle>
-                    <CardDescription>Edit your details</CardDescription>
-                  </div>
-                  <Button variant={isEditing ? "outline" : "default"} onClick={handleEditToggle}>
-                    {isEditing ? <X className="w-4 h-4 mr-2" /> : <Edit className="w-4 h-4 mr-2" />}
-                    {isEditing ? "Cancel" : "Edit"}
-                  </Button>
-                </CardHeader>
-
-                <CardContent className="space-y-6">
-                  <div className="grid md:grid-cols-2 gap-6">
-                    <div>
-                      <Label className="mb-2">First Name</Label>
-                      <Input
-                        value={editForm.first_name}
-                        disabled={!isEditing}
-                        onChange={(e) => handleChange("first_name", e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <Label className="mb-2">Last Name</Label>
-                      <Input
-                        value={editForm.last_name}
-                        disabled={!isEditing}
-                        onChange={(e) => handleChange("last_name", e.target.value)}
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <Label className="mb-2">Email</Label>
-                    <Input
-                      type="email"
-                      value={editForm.email}
-                      disabled={!isEditing}
-                      onChange={(e) => handleChange("email", e.target.value)}
-                    />
-                  </div>
-
-                  <div>
-                    <Label className="mb-2">Username</Label>
-                    <Input value={user?.username} disabled />
-                  </div>
-                </CardContent>
-
-                {isEditing && (
-                  <CardFooter>
-                    <Button onClick={handleSave} disabled={saving}>
-                      <Save className="w-4 h-4 mr-2" />
-                      {saving ? "Saving..." : "Save Changes"}
-                    </Button>
-                  </CardFooter>
+              <div className="flex flex-wrap justify-center gap-2 mt-2">
+                {user?.is_superuser && (
+                  <Badge className="bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20 hover:bg-red-500/20">
+                    Superuser
+                  </Badge>
                 )}
-              </Card>
+                {user?.is_staff && (
+                  <Badge className="bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20 hover:bg-blue-500/20">
+                    Staff
+                  </Badge>
+                )}
+                <Badge
+                  variant="outline"
+                  className="bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20"
+                >
+                  Verified
+                </Badge>
+              </div>
+            </div>
+          </motion.div>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle>Account Info</CardTitle>
-                </CardHeader>
-                <CardContent className="grid md:grid-cols-2 gap-4">
-                  <Info icon={<Calendar />} label="Joined" value={formatDate(user?.date_joined)} />
-                  <Info icon={<Clock />} label="Last Login" value={formatDate(user?.last_login)} />
-                  <Info icon={<UserCheck />} label="Status" value={user?.is_active ? "Active" : "Inactive"} />
-                </CardContent>
-              </Card>
-            </TabsContent>
+          {/* CONTENT */}
+          <div className="lg:col-span-3 space-y-6">
+            {/* Custom Tabs */}
+            <div className="w-fit bg-gray-100 dark:bg-white/5 backdrop-blur-md rounded-xl p-1 border border-gray-200 dark:border-white/10 flex gap-1">
+              {[
+                { id: "profile", label: "Profile", icon: User },
+                { id: "security", label: "Security", icon: Lock },
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id as any)}
+                  className={clsx(
+                    "relative flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300",
+                    activeTab === tab.id
+                      ? "text-gray-900 dark:text-white"
+                      : "text-gray-500 dark:text-muted-foreground hover:text-gray-900 dark:hover:text-white"
+                  )}
+                >
+                  {activeTab === tab.id && (
+                    <motion.div
+                      layoutId="profile-tab"
+                      className="absolute inset-0 bg-white dark:bg-white/10 shadow-sm rounded-lg -z-10 border border-gray-200 dark:border-white/5"
+                      transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                    />
+                  )}
+                  <tab.icon className="w-4 h-4" />
+                  {tab.label}
+                </button>
+              ))}
+            </div>
 
-            {/* SECURITY TAB */}
-            <TabsContent value="security">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Password</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <Alert>
-                    <Shield className="h-4 w-4" />
-                    <AlertDescription>
-                      Use the <strong>Forgot Password</strong> option on login to reset your password.
-                    </AlertDescription>
-                  </Alert>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
+            <AnimatePresence mode="wait">
+              {activeTab === "profile" ? (
+                <motion.div
+                  key="profile"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.3 }}
+                  className="space-y-6"
+                >
+                  {/* Personal Information */}
+                  <div className="bg-white dark:bg-white/5 backdrop-blur-sm border border-gray-200 dark:border-white/10 rounded-2xl p-6 sm:p-8 relative overflow-hidden">
+                    <div className="flex justify-between items-start mb-6">
+                      <div>
+                        <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                          Personal Information
+                        </h3>
+                        <p className="text-gray-500 dark:text-muted-foreground text-sm">
+                          Edit your personal details
+                        </p>
+                      </div>
+                      <Button
+                        variant={isEditing ? "outline" : "default"}
+                        size="sm"
+                        onClick={handleEditToggle}
+                        className={clsx(isEditing && "text-red-500 hover:text-red-600")}
+                      >
+                        {isEditing ? (
+                          <>
+                            <X className="w-4 h-4 mr-2" /> Cancel
+                          </>
+                        ) : (
+                          <>
+                            <Edit className="w-4 h-4 mr-2" /> Edit
+                          </>
+                        )}
+                      </Button>
+                    </div>
+
+                    <div className="grid md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <Label>First Name</Label>
+                        <Input
+                          value={editForm.first_name}
+                          disabled={!isEditing}
+                          onChange={(e) => handleChange("first_name", e.target.value)}
+                          className="bg-gray-50 dark:bg-black/20 border-gray-200 dark:border-white/10"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Last Name</Label>
+                        <Input
+                          value={editForm.last_name}
+                          disabled={!isEditing}
+                          onChange={(e) => handleChange("last_name", e.target.value)}
+                          className="bg-gray-50 dark:bg-black/20 border-gray-200 dark:border-white/10"
+                        />
+                      </div>
+                      <div className="space-y-2 md:col-span-2">
+                        <Label>Email Address</Label>
+                        <Input
+                          type="email"
+                          value={editForm.email}
+                          disabled={!isEditing}
+                          onChange={(e) => handleChange("email", e.target.value)}
+                          className="bg-gray-50 dark:bg-black/20 border-gray-200 dark:border-white/10"
+                        />
+                      </div>
+                      <div className="space-y-2 md:col-span-2">
+                        <Label>Username</Label>
+                        <Input
+                          value={user?.username}
+                          disabled
+                          className="bg-gray-100 dark:bg-black/40 border-gray-200 dark:border-white/5 opacity-70"
+                        />
+                      </div>
+                    </div>
+
+                    {isEditing && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        className="mt-6 flex justify-end"
+                      >
+                        <Button
+                          onClick={handleSave}
+                          disabled={saving}
+                          className="bg-indigo-600 hover:bg-indigo-700 text-white"
+                        >
+                          <Save className="w-4 h-4 mr-2" />
+                          {saving ? "Saving..." : "Save Changes"}
+                        </Button>
+                      </motion.div>
+                    )}
+                  </div>
+
+                  {/* Account Info */}
+                  <div className="bg-white dark:bg-white/5 backdrop-blur-sm border border-gray-200 dark:border-white/10 rounded-2xl p-6 sm:p-8">
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-6">
+                      Account Info
+                    </h3>
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <InfoBlock
+                        icon={<Calendar className="w-5 h-5 text-indigo-500" />}
+                        label="Member Since"
+                        value={formatDate(user?.date_joined)}
+                      />
+                      <InfoBlock
+                        icon={<Clock className="w-5 h-5 text-purple-500" />}
+                        label="Last Login"
+                        value={formatDate(user?.last_login)}
+                      />
+                      <InfoBlock
+                        icon={<UserCheck className="w-5 h-5 text-emerald-500" />}
+                        label="Account Status"
+                        value={user?.is_active ? "Active" : "Inactive"}
+                        className="md:col-span-2"
+                      />
+                    </div>
+                  </div>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="security"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <div className="bg-white dark:bg-white/5 backdrop-blur-sm border border-gray-200 dark:border-white/10 rounded-2xl p-6 sm:p-8 relative overflow-hidden">
+                    <div className="flex items-center gap-4 mb-6">
+                      <div className="w-12 h-12 rounded-full bg-orange-500/10 flex items-center justify-center">
+                        <Shield className="w-6 h-6 text-orange-500" />
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                          Security Settings
+                        </h3>
+                        <p className="text-gray-500 dark:text-muted-foreground text-sm">
+                          Manage your password and security preferences
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="p-4 rounded-xl bg-orange-50 dark:bg-orange-500/10 border border-orange-100 dark:border-orange-500/20 text-orange-800 dark:text-orange-200 text-sm">
+                      <p className="font-medium mb-1 flex items-center gap-2">
+                        <Lock className="w-4 h-4" /> Change Password
+                      </p>
+                      <p>
+                        To ensure account security, please use the{" "}
+                        <span className="font-bold underline">Forgot Password</span>{" "}
+                        option on the login page to reset your password. We do not support
+                        direct password changes from the profile dashboard at this time.
+                      </p>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
       </div>
     </div>
   );
 }
 
-/* ---------------- SMALL COMPONENT ---------------- */
+/* ---------------- SMALL COMPONENTS ---------------- */
 
-const Info = ({ icon, label, value }: any) => (
-  <div className="flex items-center gap-3 p-3 rounded-lg border">
-    {icon}
+const InfoBlock = ({ icon, label, value, className }: any) => (
+  <div
+    className={clsx(
+      "flex items-center gap-4 p-4 rounded-xl bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/5",
+      className
+    )}
+  >
+    <div className="bg-white dark:bg-white/10 p-2 rounded-lg shadow-sm">
+      {icon}
+    </div>
     <div>
-      <p className="text-sm font-medium">{label}</p>
-      <p className="text-sm text-muted-foreground">{value}</p>
+      <p className="text-xs font-semibold uppercase text-gray-400 dark:text-muted-foreground tracking-wider mb-0.5">
+        {label}
+      </p>
+      <p className="text-sm font-medium text-gray-900 dark:text-white">{value}</p>
     </div>
   </div>
 );

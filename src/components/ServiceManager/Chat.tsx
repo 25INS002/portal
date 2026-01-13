@@ -58,20 +58,20 @@ export default function ServiceRequestRemarks({
   };
 
   return (
-    <div className="flex flex-col h-full max-h-[500px] bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+    <div className="flex flex-col h-full max-h-[500px] bg-white dark:bg-black/20 rounded-xl border border-gray-200 dark:border-white/10 overflow-hidden backdrop-blur-sm">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-white/10 bg-transparent">
         <div className="flex items-center gap-2">
           <h3 className="font-semibold text-gray-900 dark:text-white">
             Remarks
           </h3>
-          <span className="px-2 py-1 text-xs bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200 rounded-full">
+          <span className="px-2 py-1 text-xs bg-indigo-100 dark:bg-indigo-500/20 text-indigo-800 dark:text-indigo-300 rounded-full border border-indigo-200 dark:border-indigo-500/30">
             {remarks.length} messages
           </span>
         </div>
         <button
           onClick={() => setIsExpanded(!isExpanded)}
-          className="p-1.5 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+          className="p-1.5 rounded-lg hover:bg-gray-200 dark:hover:bg-white/10 transition-colors text-gray-500 dark:text-gray-400"
           aria-label={isExpanded ? "Collapse" : "Expand"}
         >
           {isExpanded ? (
@@ -92,12 +92,12 @@ export default function ServiceRequestRemarks({
           )}
         >
           {remarks.length === 0 ? (
-            <div className="h-full flex flex-col items-center justify-center text-gray-500 dark:text-gray-400">
-              <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-3">
-                <Send className="w-6 h-6 text-gray-400" />
+            <div className="h-full flex flex-col items-center justify-center text-gray-500 dark:text-muted-foreground">
+              <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-white/5 flex items-center justify-center mb-3">
+                <Send className="w-6 h-6 text-gray-400 dark:text-white/20" />
               </div>
               <p className="text-sm">No messages yet</p>
-              <p className="text-xs mt-1 text-center">
+              <p className="text-xs mt-1 text-center opacity-70">
                 Start the conversation by sending a message
               </p>
             </div>
@@ -151,9 +151,9 @@ export default function ServiceRequestRemarks({
                         isMine
                           ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-br-none"
                           : isAdmin
-                          ? "bg-emerald-100 dark:bg-emerald-900/30 text-gray-900 dark:text-emerald-100 rounded-bl-none"
+                          ? "bg-emerald-100 dark:bg-emerald-500/10 text-gray-900 dark:text-emerald-100 border border-transparent dark:border-emerald-500/20 rounded-bl-none"
                           : isSystem
-                          ? "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 rounded-bl-none"
+                          ? "bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-gray-300 rounded-bl-none border border-transparent dark:border-white/5"
                           : "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-bl-none"
                       )}
                     >
@@ -171,7 +171,7 @@ export default function ServiceRequestRemarks({
                       new Date(r.timestamp).toDateString() !==
                         new Date(remarks[i - 1].timestamp).toDateString()) && (
                       <div className="text-center my-4">
-                        <span className="px-3 py-1 text-xs bg-gray-200 dark:bg-gray-700 rounded-full text-gray-600 dark:text-gray-400">
+                        <span className="px-3 py-1 text-xs bg-gray-200 dark:bg-white/5 rounded-full text-gray-600 dark:text-gray-400 border border-transparent dark:border-white/5">
                           {new Date(r.timestamp).toLocaleDateString([], {
                             weekday: "long",
                             month: "short",
@@ -189,7 +189,7 @@ export default function ServiceRequestRemarks({
         </div>
       )}
       {isExpanded && (
-        <div className="border-t border-gray-200 dark:border-gray-700 p-3 md:p-4">
+        <div className="border-t border-gray-200 dark:border-white/10 p-3 md:p-4">
           <div className="flex gap-2">
             {/* Message input */}
             <div className="flex-1 relative">
@@ -200,11 +200,11 @@ export default function ServiceRequestRemarks({
                 onChange={(e) => setMessage(e.target.value)}
                 onKeyDown={handleKeyPress}
                 placeholder="Remark"
-                className="w-full resize-none rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2.5 pr-20 text-sm bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                className="w-full resize-none rounded-lg border border-gray-200 dark:border-white/10 px-3 py-2.5 pr-20 text-sm bg-gray-50 dark:bg-black/40 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent placeholder:text-gray-400 dark:placeholder:text-white/30"
                 style={{ minHeight: "44px", maxHeight: "120px" }}
               />
               <div className="absolute right-2 bottom-2 flex items-center gap-1">
-                <span className="text-xs text-gray-400">
+                <span className="text-xs text-gray-400 dark:text-white/30">
                   {message.length}/500
                 </span>
               </div>
@@ -217,8 +217,8 @@ export default function ServiceRequestRemarks({
               className={clsx(
                 "p-2 rounded-lg flex-shrink-0 transition-all duration-200",
                 message.trim() && !loading
-                  ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-700 hover:to-purple-700"
-                  : "bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-500"
+                  ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-700 hover:to-purple-700 shadow-lg shadow-indigo-500/20"
+                  : "bg-gray-200 dark:bg-white/5 text-gray-400 dark:text-white/20"
               )}
               aria-label="Send message"
             >

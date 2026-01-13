@@ -248,161 +248,117 @@ const ServiceRequestDetailPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen py-8 px-4">
-      <div className="container mx-auto space-y-6">
-        {/* Header with proper theming */}
-        <div className="flex items-center space-x-4 mb-6 p-4 rounded-lg bg-card border border-border shadow-sm">
+    <div className="min-h-screen w-full bg-background py-8 px-4 md:px-8 space-y-6">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 p-6 rounded-2xl bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 backdrop-blur-md shadow-sm dark:shadow-none">
+        <div className="flex items-center gap-4">
           <Button
             variant="ghost"
             size="sm"
             onClick={() => router.back()}
-            className="flex items-center space-x-2 text-card-foreground hover:bg-accent hover:text-accent-foreground"
+            className="text-muted-foreground hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/10"
           >
-            <ArrowLeft className="h-4 w-4" />
-            <span>Back</span>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back
           </Button>
-          <div className="flex-1">
-            <h1 className="text-3xl font-bold text-card-foreground">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
               Service Request Detail
             </h1>
             <p className="text-muted-foreground mt-1">
-              Request ID: {request.id} • Service: {request.service.name}
+              Request ID: <span className="text-gray-900 dark:text-white">{request.id}</span> • Service: <span className="text-gray-900 dark:text-white">{request.service.name}</span>
             </p>
           </div>
-          {request.media_url && (
+        </div>
+        
+        {request.media_url && (
             <Button
               onClick={handleDownloadMedia}
               disabled={downloading}
-              variant="outline"
-              className="flex items-center space-x-2 border-border text-card-foreground hover:bg-accent hover:text-accent-foreground"
+              className="bg-white dark:bg-white/10 hover:bg-gray-50 dark:hover:bg-white/20 text-gray-900 dark:text-white border border-gray-200 dark:border-white/10 shadow-sm"
             >
               {downloading ? (
-                <RefreshCw className="h-4 w-4 animate-spin" />
+                <RefreshCw className="h-4 w-4 animate-spin mr-2" />
               ) : (
-                <Download className="h-4 w-4" />
+                <Download className="h-4 w-4 mr-2" />
               )}
               <span>{downloading ? "Downloading..." : "Download Media"}</span>
             </Button>
-          )}
+        )}
+      </div>
+
+      {/* User & Service Information */}
+      <div className="rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 p-6 md:p-8 shadow-sm dark:shadow-none">
+        <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-1">User & Service Information</h2>
+        <p className="text-sm text-muted-foreground mb-8">Details about the user and requested service</p>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-y-8 gap-x-12">
+          {/* Row 1 */}
+          <div>
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">User</p>
+            <div className="text-gray-900 dark:text-white font-medium">{request.requested_by.first_name} {request.requested_by.last_name}</div>
+            <div className="text-sm text-muted-foreground">{request.requested_by.email}</div>
+          </div>
+          <div>
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Service</p>
+            <div className="text-gray-900 dark:text-white font-bold text-lg">{request.service.name}</div>
+            <div className="text-sm text-muted-foreground">{request.service.description}</div>
+          </div>
+
+          {/* Row 2 */}
+          <div>
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Plan</p>
+            <div className="text-gray-900 dark:text-white font-bold text-lg capitalize">{request.plan.plan}</div>
+            <div className="text-sm text-muted-foreground">
+               ${request.plan.cost} {request.plan.discount > 0 && <span className="text-emerald-600 dark:text-green-400">(-${request.plan.discount} discount)</span>}
+            </div>
+          </div>
+          <div>
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Final Price</p>
+            <div className="text-2xl font-bold text-emerald-600 dark:text-green-400">
+               ${request.final_price}
+            </div>
+          </div>
         </div>
 
-        {/* User & Service Info */}
-        <Card className="border-border bg-card">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-card-foreground">
-              User & Service Information
-            </CardTitle>
-            <CardDescription className="text-muted-foreground">
-              Details about the user and requested service
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4 text-card-foreground">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <p className="font-semibold text-sm text-muted-foreground">
-                  User
-                </p>
-                <p>
-                  {request.requested_by.first_name}{" "}
-                  {request.requested_by.last_name}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  {request.requested_by.email}
-                </p>
-              </div>
+        {/* Footer Row */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pt-8 mt-8 border-t border-gray-200 dark:border-white/10">
+          <div>
+             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Status</p>
+             {getStatusBadge(request.status)}
+          </div>
+          <div>
+             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Requested At</p>
+             <p className="text-gray-900 dark:text-white font-medium">{formatDate(request.requested_at)}</p>
+          </div>
+          <div>
+             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Last Updated</p>
+             <p className="text-gray-900 dark:text-white font-medium">{formatDate(request.updated_at)}</p>
+          </div>
+        </div>
+      </div>
 
-              <div>
-                <p className="font-semibold text-sm text-muted-foreground">
-                  Service
-                </p>
-                <p>{request.service.name}</p>
-                <p className="text-sm text-muted-foreground">
-                  {request.service.description}
-                </p>
-              </div>
+      {/* Request Message */}
+      <div className="rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 p-6 md:p-8 shadow-sm dark:shadow-none">
+        <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-1">Request Message</h2>
+        <p className="text-sm text-muted-foreground mb-6">Message submitted by the user</p>
 
-              <div>
-                <p className="font-semibold text-sm text-muted-foreground">
-                  Plan
-                </p>
-                <p>{request.plan.plan}</p>
-                <p className="text-sm">
-                  ${request.plan.cost} (-${request.plan.discount} discount)
-                </p>
-                {request.plan.description && (
-                  <p className="text-sm text-muted-foreground mt-1">
-                    {request.plan.description}
-                  </p>
-                )}
-              </div>
+        <div className="space-y-6">
+          <div>
+             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Subject</p>
+             <p className="text-gray-900 dark:text-white font-medium text-lg">{request.request_msg.subject}</p>
+          </div>
+          <div>
+             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Message</p>
+             <p className="text-gray-700 dark:text-white/90 leading-relaxed whitespace-pre-wrap">{request.request_msg.body}</p>
+          </div>
+        </div>
+      </div>
 
-              <div>
-                <p className="font-semibold text-sm text-muted-foreground">
-                  Final Price
-                </p>
-                <p className="text-lg font-bold text-green-600">
-                  ${request.final_price}
-                </p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-border">
-              <div>
-                <p className="font-semibold text-sm text-muted-foreground">
-                  Status
-                </p>
-                <div className="mt-1">{getStatusBadge(request.status)}</div>
-              </div>
-
-              <div>
-                <p className="font-semibold text-sm text-muted-foreground">
-                  Requested At
-                </p>
-                <p className="text-sm">{formatDate(request.requested_at)}</p>
-              </div>
-
-              <div>
-                <p className="font-semibold text-sm text-muted-foreground">
-                  Last Updated
-                </p>
-                <p className="text-sm">{formatDate(request.updated_at)}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Request Message */}
-        <Card className="border-border bg-card">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-card-foreground">
-              Request Message
-            </CardTitle>
-            <CardDescription className="text-muted-foreground">
-              Message submitted by the user
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4 text-card-foreground">
-            <div>
-              <p className="font-semibold text-sm text-muted-foreground">
-                Subject
-              </p>
-              <p className="mt-1">{request.request_msg.subject}</p>
-            </div>
-            <div>
-              <p className="font-semibold text-sm text-muted-foreground">
-                Message
-              </p>
-              <p className="mt-1 whitespace-pre-wrap">
-                {request.request_msg.body}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="border-border bg-card">
-          <CardHeader className="pb-1">
-            <CardTitle className="text-card-foreground">Reamarks</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
+      {/* Remarks */}
+      <div className="rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 p-6 md:p-8 shadow-sm dark:shadow-none">
+         <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-6">Remarks</h2>
+         <div className="bg-gray-50 dark:bg-black/20 rounded-xl border border-gray-200 dark:border-white/5 overflow-hidden">
             <ServiceRequestRemarks
               requestId={request.id}
               rawRemark={request.remark}
@@ -412,104 +368,82 @@ const ServiceRequestDetailPage: React.FC = () => {
                   : JSON.stringify(newRemark);
               }}
             />
-          </CardContent>
-        </Card>
+         </div>
+      </div>
 
-        {/* Remarks & Status Update */}
-        <Card className="border-border bg-card">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-card-foreground">
-              Update Request
-            </CardTitle>
-            <CardDescription className="text-muted-foreground">
-              Update the status and add remarks for this request
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-card-foreground">
-                Status
-              </label>
-              <Select value={newStatus} onValueChange={setNewStatus}>
-                <SelectTrigger className="border-border text-foreground">
-                  <SelectValue placeholder="Select status" />
-                </SelectTrigger>
-                <SelectContent className="bg-card border-border text-card-foreground">
-                  <SelectItem value="PENDING">Pending</SelectItem>
-                  <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
-                  <SelectItem value="COMPLETED">Completed</SelectItem>
-                  <SelectItem value="CANCELLED">Cancelled</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <Button
-              onClick={handleStatusUpdate}
-              disabled={updating}
-              className="w-full sm:w-auto"
-            >
-              {updating ? (
-                <>
-                  <RefreshCw className="h-4 w-4 animate-spin mr-2" />
-                  Updating...
-                </>
-              ) : (
-                "Update Status"
-              )}
-            </Button>
-          </CardContent>
-        </Card>
+      {/* Update Request */}
+      <div className="rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 p-6 md:p-8 shadow-sm dark:shadow-none">
+         <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-1">Update Request</h2>
+         <p className="text-sm text-muted-foreground mb-6">Update the status and add remarks for this request</p>
 
-        {/* Attachment */}
-        {request.media_url && (
-          <Card className="border-border bg-card">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-card-foreground">Attachment</CardTitle>
-              <CardDescription className="text-muted-foreground">
-                Media file attached to this request
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-between p-4 border border-border rounded-lg">
-                <div className="flex items-center space-x-3">
-                  {getFileIcon(request.media_url)}
-                  <div>
-                    <p className="font-medium text-card-foreground">
-                      {getFileName(request.media_url)}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      Click to download or view
-                    </p>
-                  </div>
+         <div className="space-y-4">
+             <div>
+                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">Status</label>
+                <Select value={newStatus} onValueChange={setNewStatus}>
+                  <SelectTrigger className="w-full md:w-[200px] h-11 bg-white dark:bg-black/20 border-gray-200 dark:border-white/10 text-gray-900 dark:text-white rounded-xl focus:ring-0 focus:border-gray-300 dark:focus:border-white/20">
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white dark:bg-[#0A0A0A] border-gray-200 dark:border-white/10 text-gray-900 dark:text-white">
+                    <SelectItem value="PENDING">Pending</SelectItem>
+                    <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
+                    <SelectItem value="COMPLETED">Completed</SelectItem>
+                    <SelectItem value="CANCELLED">Cancelled</SelectItem>
+                  </SelectContent>
+                </Select>
+             </div>
+             <Button
+                onClick={handleStatusUpdate}
+                disabled={updating}
+                className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl h-11 px-6 font-medium"
+             >
+                {updating ? (
+                  <>
+                    <RefreshCw className="h-4 w-4 animate-spin mr-2" />
+                    Updating...
+                  </>
+                ) : (
+                  "Update Status"
+                )}
+             </Button>
+         </div>
+      </div>
+
+      {/* Attachment */}
+      {request.media_url && (
+        <div className="rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 p-6 md:p-8 shadow-sm dark:shadow-none">
+           <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-1">Attachment</h2>
+           <p className="text-sm text-muted-foreground mb-6">Media file attached to this request</p>
+
+           <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-xl">
+             <div className="flex items-center space-x-4">
+                <div className="p-3 bg-white dark:bg-white/5 rounded-lg border border-gray-200 dark:border-white/5">
+                   {getFileIcon(request.media_url)}
                 </div>
-                <div className="flex space-x-2">
-                  <Button
+                <div>
+                   <p className="font-semibold text-gray-900 dark:text-white">{getFileName(request.media_url)}</p>
+                   <p className="text-xs text-muted-foreground">Click to download or view</p>
+                </div>
+             </div>
+             <div className="flex space-x-2">
+                <Button
                     onClick={handleDownloadMedia}
                     disabled={downloading}
                     variant="outline"
-                    size="sm"
-                    className="flex items-center space-x-2 border-border text-card-foreground hover:bg-accent hover:text-accent-foreground"
-                  >
-                    {downloading ? (
-                      <RefreshCw className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Download className="h-4 w-4" />
-                    )}
-                    <span>{downloading ? "Downloading" : "Download"}</span>
-                  </Button>
-                  <Button
+                    className="h-9 border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-white/10 hover:text-gray-900 dark:hover:text-white"
+                >
+                    {downloading ? "Downloading" : "Download"}
+                </Button>
+                <Button
                     onClick={() => window.open(request.media_url, "_blank")}
                     variant="ghost"
-                    size="sm"
-                    className="text-card-foreground hover:bg-accent hover:text-accent-foreground"
-                  >
+                    className="h-9 text-muted-foreground hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5"
+                >
                     View
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-      </div>
+                </Button>
+             </div>
+           </div>
+        </div>
+      )}
     </div>
   );
 };
