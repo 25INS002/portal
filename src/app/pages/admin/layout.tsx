@@ -9,6 +9,7 @@ const tabs = [
     { name: "Assign Access", href: "access" },
     { name: "Feedback", href: "feedback" },
     { name: "Media", href: "media" },
+    { name: "Content", href: "content" },
 ];
 
 export default function SuperAdminLayout({
