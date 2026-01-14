@@ -9,6 +9,8 @@ import React, {
   ReactNode,
 } from "react";
 
+import api from "@/lib/api";
+
 interface AllContent {
   hero: any;
   about: any;
@@ -45,32 +47,33 @@ export function ContentProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // ... imports
+
   const fetchContent = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      // Define all content files to fetch
+      // Define all content files to fetch with their API params
       const contentFiles = [
-        { key: "hero", path: "/content/home/hero.json" },
-        { key: "about", path: "/content/home/about.json" },
-        { key: "services", path: "/content/home/services.json" },
-        { key: "history", path: "/content/home/history.json" },
-        { key: "prototypes", path: "/content/home/prototypes.json" },
-        { key: "all_prototypes", path: "/content/prototype/main.json" },
-        { key: "team", path: "/content/home/team.json" },
-        { key: "full_team", path: "/content/about/full_team.json" },
-        { key: "aboutpg", path: "/content/about/main.json" },
+        { key: "hero", category: "home", file: "hero.json" },
+        { key: "about", category: "home", file: "about.json" },
+        { key: "services", category: "home", file: "services.json" },
+        { key: "history", category: "home", file: "history.json" },
+        { key: "prototypes", category: "home", file: "prototypes.json" },
+        { key: "all_prototypes", category: "prototype", file: "main.json" },
+        { key: "team", category: "home", file: "team.json" },
+        { key: "full_team", category: "about", file: "full_team.json" },
+        { key: "aboutpg", category: "about", file: "main.json" },
       ];
 
       // Fetch all content files in parallel
-      const fetchPromises = contentFiles.map(async ({ key, path }) => {
+      const fetchPromises = contentFiles.map(async ({ key, category, file }) => {
         try {
-          const response = await fetch(path);
-          if (!response.ok) {
-            throw new Error(`Failed to load ${key} content`);
-          }
-          return { key, data: await response.json() };
+          const response = await api.get(`/content/read/`, {
+            params: { category, file }
+          });
+          return { key, data: response.data.content };
         } catch (err) {
           console.error(`Error loading ${key}:`, err);
           return { key, data: null, error: err };

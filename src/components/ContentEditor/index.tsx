@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import api from "@/lib/api";
 import SpotlightCard from "@/components/ui/SpotlightCard";
 import { Button } from "@/components/ui/button";
@@ -30,6 +30,7 @@ import {
   Type,
   Link as LinkIcon,
   Pencil,
+  Upload,
 } from "lucide-react";
 import { motion, AnimatePresence, Reorder, useDragControls, LayoutGroup } from "framer-motion";
 import { toast } from "sonner";
@@ -372,6 +373,8 @@ const ContentEditor: React.FC = () => {
   // Edit Dialog
   const EditDialog = () => {
     const [formData, setFormData] = useState<Record<string, any>>({});
+    const [uploadingField, setUploadingField] = useState<string | null>(null);
+    const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
     useEffect(() => {
       if (editingItem) {
@@ -391,7 +394,40 @@ const ContentEditor: React.FC = () => {
       setEditingItem(null);
     };
 
+    // Handle image upload
+    const handleImageUpload = async (key: string, file: File) => {
+      setUploadingField(key);
+      
+      const uploadFormData = new FormData();
+      uploadFormData.append("file", file);
+      uploadFormData.append("media_type", "image");
+
+      try {
+        const response = await api.post("/media/upload/", uploadFormData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+        
+        // Get the uploaded file URL from the response
+        const uploadedUrl = response.data.file || response.data.url;
+        if (uploadedUrl) {
+          setFormData(prev => ({ ...prev, [key]: uploadedUrl }));
+          toast.success("Image uploaded successfully!");
+        }
+      } catch (error) {
+        toast.error("Failed to upload image");
+        console.error("Upload error:", error);
+      } finally {
+        setUploadingField(null);
+      }
+    };
+
     if (!editingItem) return null;
+
+    // Check if a field is an image field
+    const isImageField = (fieldKey: string) => {
+      const key = fieldKey.toLowerCase();
+      return key.includes("image") || key.includes("icon") || key.includes("avatar") || key.includes("photo");
+    };
 
     return (
       <Dialog open={!!editingItem} onOpenChange={(open) => !open && setEditingItem(null)}>
@@ -443,6 +479,78 @@ const ContentEditor: React.FC = () => {
                       >
                         <Plus className="w-4 h-4 mr-2" /> Add Item
                       </Button>
+                    </div>
+                  </div>
+                );
+              }
+
+              // Image Upload Field
+              if (isImageField(key) && typeof value === "string") {
+                return (
+                  <div key={key} className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">{label}</label>
+                    <div className="space-y-3">
+                      {/* Image Preview */}
+                      {value && (
+                        <div className="relative w-24 h-24 rounded-lg overflow-hidden border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5">
+                          <img 
+                            src={value} 
+                            alt="Preview" 
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).style.display = 'none';
+                            }}
+                          />
+                        </div>
+                      )}
+                      
+                      {/* Upload Button */}
+                      <div className="flex gap-2">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          ref={(el) => { fileInputRefs.current[key] = el; }}
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) handleImageUpload(key, file);
+                          }}
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => fileInputRefs.current[key]?.click()}
+                          disabled={uploadingField === key}
+                          className="border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5"
+                        >
+                          {uploadingField === key ? (
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          ) : (
+                            <Upload className="w-4 h-4 mr-2" />
+                          )}
+                          {uploadingField === key ? "Uploading..." : "Upload Image"}
+                        </Button>
+                        {value && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setFormData(prev => ({ ...prev, [key]: "" }))}
+                            className="text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
+                          >
+                            <X className="w-4 h-4 mr-1" /> Remove
+                          </Button>
+                        )}
+                      </div>
+                      
+                      {/* URL fallback input */}
+                      <Input
+                        value={value || ""}
+                        onChange={(e) => setFormData(prev => ({ ...prev, [key]: e.target.value }))}
+                        placeholder="Or paste image URL..."
+                        className="bg-gray-50 dark:bg-white/5 border-gray-200 dark:border-white/10 text-xs"
+                      />
                     </div>
                   </div>
                 );
