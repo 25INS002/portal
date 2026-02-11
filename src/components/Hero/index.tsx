@@ -50,7 +50,7 @@ export const HeroSection = () => {
   const { theme } = useTheme();
   const mounted = useMounted();
   const isDark = mounted && theme === "dark";
-  
+
   const heroRef = useRef<HTMLElement>(null);
   const subtitleRef = useRef<HTMLParagraphElement>(null);
   const descRef = useRef<HTMLParagraphElement>(null);
@@ -110,10 +110,9 @@ export const HeroSection = () => {
       <div
         className={`
           absolute inset-0
-          ${
-            isDark
-              ? "bg-[radial-gradient(ellipse_at_top_left,rgba(99,102,241,0.15),transparent_60%)]"
-              : "bg-[radial-gradient(ellipse_at_top_left,rgba(99,102,241,0.1),transparent_60%)]"
+          ${isDark
+            ? "bg-[radial-gradient(ellipse_at_top_left,rgba(99,102,241,0.15),transparent_60%)]"
+            : "bg-[radial-gradient(ellipse_at_top_left,rgba(99,102,241,0.1),transparent_60%)]"
           }
         `}
       />
@@ -123,9 +122,8 @@ export const HeroSection = () => {
         {mounted && [...Array(12)].map((_, i) => (
           <motion.div
             key={i}
-            className={`absolute rounded-full ${
-              isDark ? "bg-indigo-400/15" : "bg-indigo-500/10"
-            }`}
+            className={`absolute rounded-full ${isDark ? "bg-indigo-400/15" : "bg-indigo-500/10"
+              }`}
             style={{
               left: `${10 + (i * 7) % 80}%`,
               top: `${20 + (i * 8) % 60}%`,
@@ -166,7 +164,7 @@ export const HeroSection = () => {
           {/* TextPressure Title - FIXED: Increased height to prevent overlap */}
           <div className="relative w-full py-2 mb-12" style={{ height: 'clamp(140px, 20vw, 300px)' }}>
             <TextPressure
-              text="INNOVATE"
+              text={heroData.headline?.parts?.[0]?.text?.replace('.', '') || "INNOVATE"}
               flex={true}
               alpha={false}
               stroke={false}
@@ -192,10 +190,10 @@ export const HeroSection = () => {
                 ${isDark ? "text-white" : "text-gray-900"}
               `}
             >
-              Create.{" "}
+              {heroData.headline?.parts?.[1]?.text || "Create."}{" "}
             </span>
             <span className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">
-              Transform.
+              {heroData.headline?.parts?.[2]?.text || "Transform."}
             </span>
           </motion.h2>
 
@@ -221,7 +219,7 @@ export const HeroSection = () => {
             transition={{ duration: 0.5, delay: 0.5 }}
             className="flex flex-col sm:flex-row gap-4 justify-center items-center"
           >
-             <motion.button
+            <motion.button
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.98 }}
               onClick={() =>
@@ -247,10 +245,9 @@ export const HeroSection = () => {
                 className={`
                   px-8 py-4 rounded-full font-semibold border-2 
                   transition-all duration-300
-                  ${
-                    isDark
-                      ? "border-white/20 text-white hover:border-white/40 hover:bg-white/5"
-                      : "border-gray-300 text-gray-900 hover:border-gray-400 hover:bg-gray-50"
+                  ${isDark
+                    ? "border-white/20 text-white hover:border-white/40 hover:bg-white/5"
+                    : "border-gray-300 text-gray-900 hover:border-gray-400 hover:bg-gray-50"
                   }
                 `}
               >
@@ -260,29 +257,26 @@ export const HeroSection = () => {
           </motion.div>
         </div>
 
-      {/* Scroll indicator - Positioned absolutely at bottom */}
+        {/* Scroll indicator - Positioned absolutely at bottom */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1.2 }}
-          className={`absolute bottom-12 left-1/2 transform -translate-x-1/2 flex flex-col items-center ${
-            isDark ? "text-white/50" : "text-gray-400"
-          }`}
+          className={`absolute bottom-12 left-1/2 transform -translate-x-1/2 flex flex-col items-center ${isDark ? "text-white/50" : "text-gray-400"
+            }`}
         >
           <span className="text-xs tracking-widest mb-3">SCROLL</span>
           <motion.div
             animate={{ y: [0, 5, 0] }}
             transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
-            className={`w-5 h-8 border-2 rounded-full flex justify-center ${
-              isDark ? "border-white/25" : "border-gray-300"
-            }`}
+            className={`w-5 h-8 border-2 rounded-full flex justify-center ${isDark ? "border-white/25" : "border-gray-300"
+              }`}
           >
             <motion.div
               animate={{ y: [0, 8, 0], opacity: [1, 0.4, 1] }}
               transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
-              className={`w-1 h-2 rounded-full mt-1.5 ${
-                isDark ? "bg-white/50" : "bg-gray-400"
-              }`}
+              className={`w-1 h-2 rounded-full mt-1.5 ${isDark ? "bg-white/50" : "bg-gray-400"
+                }`}
             />
           </motion.div>
         </motion.div>
@@ -351,7 +345,7 @@ const AboutSection = () => {
 
     const ctx = gsap.context(() => {
       const cards = cardsRef.current?.querySelectorAll(".offering-card");
-      
+
       if (cards) {
         gsap.fromTo(
           cards,
@@ -392,7 +386,7 @@ const AboutSection = () => {
           {about.title}
         </motion.h2>
 
-        <motion.p 
+        <motion.p
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.1 }}

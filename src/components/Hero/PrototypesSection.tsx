@@ -56,7 +56,7 @@ export default function PrototypesSection() {
 
     const ctx = gsap.context(() => {
       const cards = cardsRef.current?.querySelectorAll(".prototype-card");
-      
+
       if (cards) {
         gsap.fromTo(
           cards,
@@ -69,12 +69,14 @@ export default function PrototypesSection() {
             stagger: 0.1,
             scrollTrigger: {
               trigger: cardsRef.current,
-              start: "top 85%",
+              start: "top 95%",
               toggleActions: "play none none reverse",
             },
           }
         );
       }
+
+      ScrollTrigger.refresh();
     }, sectionRef);
 
     return () => ctx.revert();

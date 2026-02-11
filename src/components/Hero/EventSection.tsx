@@ -47,7 +47,7 @@ export default function EventsSection() {
 
     const ctx = gsap.context(() => {
       const cards = cardsRef.current?.querySelectorAll(".event-card");
-      
+
       if (cards && cards.length > 0) {
         gsap.fromTo(
           cards,
@@ -75,7 +75,21 @@ export default function EventsSection() {
     try {
       setLoading(true);
       const res = await api.get("/events/list/");
-      setEvents(Array.isArray(res.data) ? res.data : []);
+      const allEvents = Array.isArray(res.data) ? res.data : [];
+
+      // Filter for upcoming events
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const upcomingEvents = allEvents.filter((event: Event) => {
+        const eventDate = new Date(event.date);
+        return eventDate >= today;
+      });
+
+      // Sort by date (nearest first)
+      upcomingEvents.sort((a: Event, b: Event) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+      setEvents(upcomingEvents);
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
       toast.error("Failed to load events", {
@@ -97,6 +111,10 @@ export default function EventsSection() {
   const handleEventClick = (id: number) => {
     router.push(`/pages/events/${id}`);
   };
+
+  if (!loading && events.length === 0) {
+    return null;
+  }
 
   return (
     <section ref={sectionRef} className="relative w-full bg-background overflow-hidden">
@@ -132,10 +150,6 @@ export default function EventsSection() {
               className="w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full"
             />
           </div>
-        ) : events.length === 0 ? (
-          <p className="text-center text-muted-foreground py-10">
-            No events available right now. Check back later!
-          </p>
         ) : (
           <div ref={cardsRef} className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {events.slice(0, 6).map((event) => (
