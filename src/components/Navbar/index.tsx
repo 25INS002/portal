@@ -15,6 +15,7 @@ const navItems = [
   { label: "Services", href: "/pages/services" },
   { label: "Events", href: "/pages/events" },
   { label: "Prototypes", href: "/pages/prototypes" },
+  { label: "PIGA", href: "/pages/piga" },
   { label: "Contact", href: "/pages/contact" },
   { label: "Login", href: "/auth?action=login" },
 ];
@@ -94,16 +95,16 @@ export default function Header() {
           <div className="relative flex items-center justify-between">
             {/* LOGO */}
             {/* Logo Section - Replace in your Header component */}
-            <a href="/" className="flex items-center gap-2 font-bold group">
+            <a href="https://www.iitjammu.ac.in/" className="flex items-center gap-2 font-bold group">
               {/* Logo Container */}
               <div className="relative">
                 {/* Logo with next/image for optimization */}
-                <div className="relative w-8 h-8 md:w-10 md:h-10 rounded-lg overflow-hidden bg-white/10 backdrop-blur-sm border border-white/20">
+                <div className="relative w-15 h-15 md:w-20 md:h-20 rounded-lg overflow-hidden">
                   <Image
-                    src="/logo.png"
-                    alt="I2EDC Logo"
-                    width={40}
-                    height={40}
+                    src="/iitj_logo.png"
+                    alt="IIt jammu logo"
+                    width={150}
+                    height={150}
                     className="w-full h-full object-contain p-1"
                     priority
                   />
@@ -115,9 +116,9 @@ export default function Header() {
 
               {/* Logo Text */}
               <div className="hidden sm:flex flex-col">
-                <span className="text-sm font-bold text-gray-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                {/* <span className="text-sm font-bold text-gray-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
                   I2EDC
-                </span>
+                </span> */}
                 <span className="text-[9px] text-gray-500 dark:text-gray-400 uppercase tracking-widest">
                   IIT Jammu
                 </span>
@@ -144,7 +145,7 @@ export default function Header() {
                     key={item.label}
                     href={item.href}
                     className={`
-                      relative px-5 py-2 rounded-full
+                      relative px-2 py-2 rounded-full
                       text-[11px] uppercase tracking-widest font-semibold
                       transition-colors duration-200
                       ${isActive 
@@ -167,7 +168,7 @@ export default function Header() {
             </div>
 
             {/* ACTIONS */}
-            <div className="flex items-center gap-6">
+            <div className="flex items-center gap-3">
               {/* THEME TOGGLE (FIXED CENTERING) */}
               <button
                 onClick={toggleTheme}
@@ -206,7 +207,16 @@ export default function Header() {
                   Get Started <ArrowRight className="w-3 h-3" />
                 </a>
               )}
-
+               <div className="relative w-15 h-15 md:w-20 md:h-20 rounded-lg overflow-hidden">
+                  <Image
+                    src="/logo.png"
+                    alt="I2EDC Logo"
+                    width={150}
+                    height={150}
+                    className="w-full h-full object-contain p-1"
+                    priority
+                  />
+                </div>
               {/* MOBILE TOGGLE */}
               <button
                 className="md:hidden w-9 h-9 flex items-center justify-center rounded-full hover:bg-white/10"
@@ -216,7 +226,9 @@ export default function Header() {
               </button>
             </div>
           </div>
+          
         </div>
+        
       </motion.nav>
 
       {/* ================= MOBILE MENU ================= */}
@@ -229,7 +241,7 @@ export default function Header() {
             transition={{ duration: 0.35, ease: "easeOut" }}
             className={`
         fixed inset-0 z-40
-        flex flex-col items-center justify-center gap-8
+        flex flex-col items-center justify-center gap-6
 
         backdrop-blur-2xl
         transition-colors duration-300

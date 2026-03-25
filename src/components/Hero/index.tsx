@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef,useState } from "react";
 import SectionDivider from "../SectionDivider";
 import { motion } from "framer-motion";
 import Link from "next/link";
@@ -7,15 +7,16 @@ import { useContent } from "@/context/ContentContext";
 import BackgroundVideo from "@/components/animations/BackgroundVideo/BackgroundVideo";
 import { useTheme } from "next-themes";
 import ServicesSection from "./ServicesSection";
-import PrototypesSection from "./PrototypesSection";
+// import PrototypesSection from "./PrototypesSection";
 import TeamSection from "./TeamSection";
-import HistorySection from "./HistorySection";
+// import HistorySection from "./HistorySection";
 import EventsSection from "./EventSection";
 import { useMounted } from "@/hooks/useMounted";
 import TextPressure from "@/components/ui/TextPressure";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import SpotlightCard from "@/components/ui/SpotlightCard";
+import Image from "next/image";
 
 // Register GSAP plugins
 if (typeof window !== "undefined") {
@@ -30,11 +31,7 @@ export default function HomePage() {
       <SectionDivider />
       <ServicesSection />
       <SectionDivider />
-      <HistorySection />
-      <SectionDivider />
       <EventsSection />
-      <SectionDivider />
-      <PrototypesSection />
       <SectionDivider />
       <TeamSection />
     </div>
@@ -154,7 +151,7 @@ export const HeroSection = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.1 }}
             className={`
-              uppercase tracking-[0.2em] text-xs sm:text-sm mb-12
+              uppercase tracking-[0.2em] text-xs sm:text-sm mb-12 mt-10
               ${isDark ? "text-indigo-400" : "text-indigo-600"}
             `}
           >
@@ -307,6 +304,7 @@ const AboutSection = () => {
   const sectionRef = useRef<HTMLElement>(null);
   const cardsRef = useRef<HTMLDivElement>(null);
   const mounted = useMounted();
+  const [selectedOffering, setSelectedOffering] = useState<any>(null);
 
   const about = content.about ?? {
     title: "Explore I2EDC",
@@ -314,32 +312,55 @@ const AboutSection = () => {
     offerings: [
       {
         title: "Protospace",
-        description: "A collaborative workspace equipped with tools and resources for prototyping and development.",
-        gradient: "from-blue-500 to-cyan-400",
-        icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>'
+        image: "/Prototyping-Lab.webp",
+        description:
+          "Protospace is a collaborative workspace designed for students, innovators, and entrepreneurs to build prototypes and transform ideas into functional products.",
+        features: [
+          "Rapid prototyping workspace",
+          "Access to fabrication tools",
+          "Collaboration with innovators",
+          "Supports startup development",
+        ],
       },
       {
         title: "Tinkering Lab",
-        description: "A hands-on lab for experimenting with electronics, robotics, and IoT.",
-        gradient: "from-pink-500 to-rose-400",
-        icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a2 2 0 0 1-2 2H10a2 2 0 0 1-2-2v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7z"></path><path d="M9 21h6"></path></svg>'
+        image: "/Tl_lab.webp",
+        description:
+          "The Tinkering Lab provides a hands-on environment where students can experiment with electronics, robotics, embedded systems, and IoT technologies.",
+        features: [
+          "Electronics experimentation",
+          "Robotics development kits",
+          "IoT project support",
+          "Hands-on learning environment",
+        ],
       },
       {
         title: "Machine Services",
-        description: "Access to a range of specialized machines for fabrication and manufacturing.",
-        gradient: "from-orange-500 to-amber-400",
-        icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path></svg>'
+        image: "/equipment.webp",
+        description:
+          "Machine Services provide access to advanced fabrication machines and tools that help in building mechanical components and manufacturing prototypes.",
+        features: [
+          "3D printing services",
+          "Laser cutting facilities",
+          "CNC machining access",
+          "Precision manufacturing tools",
+        ],
       },
       {
         title: "Lab Visit",
-        description: "Book a guided visit to explore our innovation labs and interact with mentors.",
-        gradient: "from-green-500 to-emerald-400",
-        icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>'
+        image: "/equipment.webp",
+        description:
+          "Lab Visit allows students and visitors to explore our innovation labs, interact with mentors, and understand how ideas are transformed into prototypes.",
+        features: [
+          "Guided innovation lab tours",
+          "Interaction with mentors",
+          "Exposure to startup ecosystem",
+          "Hands-on technology demonstrations",
+        ],
       },
     ],
   };
 
-  // GSAP scroll animations
   useEffect(() => {
     if (!mounted || !cardsRef.current) return;
 
@@ -376,6 +397,7 @@ const AboutSection = () => {
       className="relative py-24 lg:py-32 px-6 bg-background"
     >
       <div className="max-w-7xl mx-auto w-full text-center">
+
         <motion.h2
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -397,38 +419,139 @@ const AboutSection = () => {
         </motion.p>
 
         <div ref={cardsRef} className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {about.offerings.map((item: { title: string; description: string; gradient?: string; icon?: string }, i: number) => (
-            <SpotlightCard key={i} className="offering-card text-left p-6">
-              {/* ICON BADGE */}
-              <div
-                className={`
-                  mb-5
-                  inline-flex
-                  h-12 w-12
-                  items-center justify-center
-                  rounded-xl
-                  bg-gradient-to-br ${item.gradient || 'from-indigo-500 to-purple-500'}
-                  shadow-lg
-                  text-white
-                  transition-transform duration-500 group-hover:scale-110 group-hover:rotate-6
-                `}
-              >
-                {renderSVG(item.icon)}
+          {about.offerings.map((item: any, i: number) => (
+            <SpotlightCard
+              key={i}
+              className="offering-card text-left p-6 flex flex-col"
+            >
+              <div className="relative w-full h-36 rounded-lg overflow-hidden mb-4 bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                {item.image ? (
+                   <img
+                    src={item.image.startsWith('http') ? item.image : item.image.startsWith('/') ? `http://localhost:8000${item.image}` : `http://${item.image}`}
+                    alt={item.title}
+                    className="w-full h-full object-cover"
+                  />
+                ) : item.icon ? (
+                  item.icon.trim().startsWith("<svg") ? (
+                    <div className="flex items-center justify-center w-full h-full bg-gradient-to-br from-indigo-500/20 to-purple-500/20">
+                      {renderSVG(item.icon)}
+                    </div>
+                  ) : (
+                    <img
+                      src={item.icon.startsWith('http') ? item.icon : item.icon.startsWith('/') ? `http://localhost:8000${item.icon}` : `http://${item.icon}`}
+                      alt={item.title}
+                      className="w-full h-full object-cover"
+                    />
+                  )
+                ) : (
+                  <div className="flex items-center justify-center w-full h-full">
+                     <svg className="w-12 h-12 text-slate-400 opacity-20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                     </svg>
+                  </div>
+                )}
               </div>
 
-              {/* TITLE */}
-              <h3 className={`text-lg font-bold mb-2 group-hover:text-indigo-400 transition-colors duration-300 ${isDark ? "text-white" : "text-gray-900"}`}>
+              <h3
+                className={`text-lg font-bold mb-2 ${
+                  isDark ? "text-white" : "text-gray-900"
+                }`}
+              >
                 {item.title}
               </h3>
 
-              {/* DESCRIPTION */}
-              <p className={`text-sm leading-relaxed ${isDark ? "text-slate-400" : "text-gray-600"}`}>
-                {item.description}
+              <p
+                className={`text-sm leading-relaxed mb-4 ${
+                  isDark ? "text-slate-400" : "text-gray-600"
+                }`}
+              >
+                {item.description.slice(0, 80)}...
               </p>
+
+              <button
+                onClick={() => setSelectedOffering(item)}
+                className="mt-auto px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-500 transition"
+              >
+                View More
+              </button>
             </SpotlightCard>
           ))}
         </div>
       </div>
+
+      {selectedOffering && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-6"
+          onClick={() => setSelectedOffering(null)}
+        >
+          <div
+            className="bg-white dark:bg-slate-900 max-w-2xl w-full rounded-2xl p-8 relative"
+            onClick={(e) => e.stopPropagation()}
+          >
+
+            <button
+  onClick={() => setSelectedOffering(null)}
+  className="
+    absolute top-4 right-4 z-50
+    flex items-center justify-center
+    w-10 h-10
+    rounded-full
+    bg-white dark:bg-slate-800
+    text-gray-700 dark:text-white
+    shadow-lg
+    hover:bg-gray-100 dark:hover:bg-slate-700
+    transition
+  "
+>
+  ✕
+</button>
+
+            <div className="relative w-full h-60 rounded-lg overflow-hidden mb-6 bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+              {selectedOffering.image ? (
+                 <img
+                  src={selectedOffering.image.startsWith('http') ? selectedOffering.image : selectedOffering.image.startsWith('/') ? `http://localhost:8000${selectedOffering.image}` : `http://${selectedOffering.image}`}
+                  alt={selectedOffering.title}
+                  className="w-full h-full object-cover"
+                />
+              ) : selectedOffering.icon ? (
+                 selectedOffering.icon.trim().startsWith("<svg") ? (
+                  <div className="flex items-center justify-center w-full h-full bg-gradient-to-br from-indigo-500/20 to-purple-500/20 scale-150">
+                    {renderSVG(selectedOffering.icon)}
+                  </div>
+                 ) : (
+                   <img
+                    src={selectedOffering.icon.startsWith('http') ? selectedOffering.icon : selectedOffering.icon.startsWith('/') ? `http://localhost:8000${selectedOffering.icon}` : `http://${selectedOffering.icon}`}
+                    alt={selectedOffering.title}
+                    className="w-full h-full object-cover"
+                  />
+                 )
+              ) : (
+                 <svg className="w-20 h-20 text-slate-400 opacity-20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                 </svg>
+              )}
+            </div>
+
+            <h3 className="text-2xl font-bold mb-4">
+              {selectedOffering.title}
+            </h3>
+
+            <p className="text-muted-foreground mb-6">
+              {selectedOffering.description}
+            </p>
+
+            <div>
+              <h4 className="font-semibold mb-3">Key Features</h4>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                {selectedOffering.features.map((f: string, index: number) => (
+                  <li key={index}>• {f}</li>
+                ))}
+              </ul>
+            </div>
+
+          </div>
+        </div>
+      )}
     </section>
   );
-};
+};  

@@ -257,7 +257,7 @@ const AboutHeroSection = ({ title, subtitle, cta }: Hero) => {
       {/* CONTENT - Matching homepage layout */}
       <div className="relative z-10 w-full max-w-7xl px-6 md:px-12 flex flex-col items-center text-center">
          <div ref={textRef} className="max-w-4xl mx-auto">
-            <div className="overflow-hidden mb-2">
+            <div className="overflow-hidden mb-2 mt-4">
               <p
                 className={`
                   hero-text-reveal uppercase tracking-[0.2em] text-sm font-semibold mb-6 inline-block

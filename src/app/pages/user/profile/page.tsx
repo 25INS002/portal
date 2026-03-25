@@ -188,8 +188,8 @@ export default function ProfilePage() {
   /* ---------------- UI ---------------- */
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#020202] text-gray-900 dark:text-white pt-24 px-4 md:px-8 pb-12 transition-colors duration-300">
-      <div className="max-w-6xl mx-auto space-y-8">
+    <div className="  min-h-screen bg-gray-50 dark:bg-[#020202] text-gray-900 dark:text-white pt-24 px-4 md:px-8 pb-12 transition-colors duration-300">
+      <div className=" mt-15 max-w-6xl mx-auto space-y-8">
         {/* Alerts */}
         <AnimatePresence>
           {error && (

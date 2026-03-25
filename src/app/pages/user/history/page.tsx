@@ -33,6 +33,11 @@ import {
   IndianRupee,
   Download,
   Eye,
+  Rocket,
+  CheckCircle2,
+  XCircle,
+  RotateCcw,
+  AlertTriangle,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import clsx from "clsx";
@@ -87,6 +92,40 @@ interface EventParticipation {
   is_participating: boolean;
 }
 
+interface PigaApplication {
+  id: number;
+  applicant: { id: number; username: string; email: string; first_name: string; last_name: string } | null;
+  project_title: string;
+  date: string;
+  full_name: string;
+  email: string;
+  phone: string;
+  organisation: string;
+  elevator_pitch: string;
+  team: string;
+  problem_opportunity: string;
+  solution_technology: string;
+  current_status: string;
+  unique_value_proposition: string;
+  cost_budget: string;
+  key_metrics: string;
+  customer_segments: string;
+  twelve_month_plan: string;
+  status: "PENDING" | "UNDER_REVIEW" | "APPROVED" | "REJECTED" | "REVIEW_BACK";
+  review_feedback: string;
+  remark: string | null;
+  submitted_at: string;
+  updated_at: string;
+}
+
+const pigaStatusConfig: Record<string, { label: string; color: string }> = {
+  PENDING: { label: "Pending", color: "text-yellow-400 bg-yellow-400/10 border-yellow-400/20" },
+  UNDER_REVIEW: { label: "Under Review", color: "text-blue-400 bg-blue-400/10 border-blue-400/20" },
+  APPROVED: { label: "Approved", color: "text-emerald-400 bg-emerald-400/10 border-emerald-400/20" },
+  REJECTED: { label: "Rejected", color: "text-red-400 bg-red-400/10 border-red-400/20" },
+  REVIEW_BACK: { label: "Revision Needed", color: "text-orange-400 bg-orange-400/10 border-orange-400/20" },
+};
+
 const HistoryPage: React.FC = () => {
   const { isAuthenticated, isLoading, user } = useAuth();
   const [serviceRequests, setServiceRequests] = useState<ServiceRequest[]>([]);
@@ -94,14 +133,17 @@ const HistoryPage: React.FC = () => {
   const [eventParticipations, setEventParticipations] = useState<
     Record<number, EventParticipation>
   >({});
+  const [pigaApplications, setPigaApplications] = useState<PigaApplication[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState("services");
 
   const [selectedRequest, setSelectedRequest] = useState<ServiceRequest | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [selectedPiga, setSelectedPiga] = useState<PigaApplication | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [eventDetailsOpen, setEventDetailsOpen] = useState(false);
+  const [pigaDetailsOpen, setPigaDetailsOpen] = useState(false);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -121,6 +163,15 @@ const HistoryPage: React.FC = () => {
 
       // Fetch events and check participation
       await fetchEventsWithParticipation();
+
+      // Fetch PIGA applications
+      try {
+        const pigaResponse = await api.get<PigaApplication[]>("/piga/my-applications/");
+        setPigaApplications(pigaResponse.data);
+      } catch (pigaErr) {
+        console.error("Error fetching PIGA applications:", pigaErr);
+        setPigaApplications([]);
+      }
 
       setError("");
     } catch (err: any) {
@@ -638,8 +689,8 @@ For queries: events@i2edc.com
         
         {/* Header */}
         <div>
-           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">My History</h1>
-           <p className="text-gray-500 dark:text-muted-foreground">Manage your service requests and event registrations</p>
+           
+           <p className=" mt-15 text-gray-500 dark:text-muted-foreground">Manage your service requests and event registrations</p>
         </div>
 
         {/* Tabs */}
@@ -647,7 +698,8 @@ For queries: events@i2edc.com
            <div className="flex bg-gray-100 dark:bg-white/5 backdrop-blur-md rounded-xl p-1 border border-gray-200 dark:border-white/10 shadow-sm dark:shadow-none mb-6">
               {[
                 { id: "services", label: "Services", icon: Package, count: serviceRequests.length },
-                { id: "events", label: "Events", icon: Calendar, count: participatingEvents.length }
+                { id: "events", label: "Events", icon: Calendar, count: participatingEvents.length },
+                { id: "piga", label: "PIGA", icon: Rocket, count: pigaApplications.length }
               ].map((tab) => (
                 <button
                   key={tab.id}
@@ -822,7 +874,79 @@ For queries: events@i2edc.com
                  ))
               )}
            </TabsContent>
-        </Tabs>
+
+            <TabsContent value="piga" className="space-y-4">
+               {pigaApplications.length === 0 ? (
+                  <div className="text-center py-20 bg-white dark:bg-white/5 rounded-2xl border border-dashed border-gray-200 dark:border-white/10">
+                     <Rocket className="w-12 h-12 mx-auto text-gray-400 dark:text-muted-foreground mb-4 opacity-50" />
+                     <h3 className="text-lg font-medium text-gray-900 dark:text-white">No PIGA applications</h3>
+                     <p className="text-sm text-gray-500 dark:text-muted-foreground">Apply through the PIGA page to see your applications here.</p>
+                  </div>
+               ) : (
+                  pigaApplications.map(app => {
+                     const cfg = pigaStatusConfig[app.status] || { label: app.status, color: "text-gray-400 bg-gray-400/10 border-gray-400/20" };
+                     return (
+                        <motion.div
+                           initial={{ opacity: 0, y: 10 }}
+                           animate={{ opacity: 1, y: 0 }}
+                           transition={{ duration: 0.3 }}
+                           key={app.id}
+                        >
+                        <Card className="bg-white dark:bg-[#0A0A0A] border-gray-200 dark:border-white/10 text-gray-900 dark:text-white hover:border-gray-300 dark:hover:border-white/20 transition-all shadow-sm dark:shadow-none">
+                           <CardHeader className="pb-3 border-b border-gray-100 dark:border-white/5 mb-3">
+                             <div className="flex justify-between items-start">
+                                <div>
+                                   <CardTitle className="text-gray-900 dark:text-white text-lg font-semibold">{app.project_title}</CardTitle>
+                                   <CardDescription className="text-gray-500 dark:text-muted-foreground mt-1 flex items-center gap-2">
+                                     <Clock className="w-3 h-3" /> {formatDate(app.submitted_at)}
+                                   </CardDescription>
+                                </div>
+                                <Badge variant="outline" className={`${cfg.color} border py-0.5 px-3 uppercase text-[10px] tracking-wider font-semibold rounded-full`}>
+                                  {cfg.label}
+                                </Badge>
+                             </div>
+                           </CardHeader>
+                          <CardContent className="space-y-4">
+                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                   <p className="text-xs font-semibold text-gray-500 dark:text-muted-foreground uppercase mb-1">Organisation</p>
+                                   <p className="text-sm font-medium text-gray-900 dark:text-white">{app.organisation}</p>
+                                </div>
+                                <div>
+                                   <p className="text-xs font-semibold text-gray-500 dark:text-muted-foreground uppercase mb-1">Applicant</p>
+                                   <p className="text-sm font-medium text-gray-900 dark:text-white">{app.full_name}</p>
+                                </div>
+                             </div>
+                             <div>
+                                <p className="text-xs font-semibold text-gray-500 dark:text-muted-foreground uppercase mb-1">Elevator Pitch</p>
+                                <p className="text-sm text-gray-600 dark:text-muted-foreground line-clamp-2">{app.elevator_pitch || "(Not provided)"}</p>
+                             </div>
+
+                             {/* Review feedback */}
+                             {app.status === "REVIEW_BACK" && app.review_feedback && (
+                                <div className="p-3 rounded-xl bg-orange-50 dark:bg-orange-500/10 border border-orange-200 dark:border-orange-500/20">
+                                   <p className="text-xs text-orange-700 dark:text-orange-300 flex items-start gap-2">
+                                      <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+                                      <span>{app.review_feedback}</span>
+                                   </p>
+                                </div>
+                             )}
+                          </CardContent>
+                          <CardFooter className="flex justify-between pt-4 border-t border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-white/[0.02]">
+                             <div className="text-xs text-gray-500 dark:text-muted-foreground flex items-center gap-1">
+                                <Clock className="w-3 h-3" /> Updated: {formatDate(app.updated_at)}
+                             </div>
+                             <Button size="sm" onClick={() => { setSelectedPiga(app); setPigaDetailsOpen(true); }} className="bg-black dark:bg-white text-white dark:text-black hover:bg-black/90 dark:hover:bg-white/90 h-9">
+                                <Eye className="w-3 h-3 mr-2" /> Details
+                             </Button>
+                          </CardFooter>
+                       </Card>
+                       </motion.div>
+                     );
+                  })
+               )}
+            </TabsContent>
+         </Tabs>
 
         {/* Dialogs */}
         <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
@@ -863,6 +987,89 @@ For queries: events@i2edc.com
                          </div>
                      )}
                  </div>
+              )}
+           </DialogContent>
+        </Dialog>
+
+        {/* PIGA Details Dialog */}
+        <Dialog open={pigaDetailsOpen} onOpenChange={setPigaDetailsOpen}>
+           <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto border-gray-200 dark:border-white/10 bg-white dark:bg-[#0A0A0A] backdrop-blur-xl p-0">
+              {selectedPiga && (
+                 <>
+                    {/* Header */}
+                    <div className="sticky top-0 z-20 bg-white dark:bg-[#0A0A0A] border-b border-gray-200 dark:border-white/10 px-6 py-5">
+                       <DialogHeader>
+                          <div className="flex items-start justify-between">
+                             <div>
+                                <DialogTitle className="text-xl font-bold text-gray-900 dark:text-white mb-1">
+                                   {selectedPiga.project_title}
+                                </DialogTitle>
+                                <DialogDescription className="text-gray-500 dark:text-muted-foreground">
+                                   Submitted {formatDate(selectedPiga.submitted_at)}
+                                </DialogDescription>
+                             </div>
+                             {pigaStatusConfig[selectedPiga.status] && (
+                                <Badge variant="outline" className={`${pigaStatusConfig[selectedPiga.status].color} border py-0.5 px-3 uppercase text-[10px] tracking-wider font-semibold rounded-full`}>
+                                   {pigaStatusConfig[selectedPiga.status].label}
+                                </Badge>
+                             )}
+                          </div>
+                       </DialogHeader>
+                    </div>
+
+                    <div className="px-6 py-6 space-y-6">
+                       {/* Basic info Grid */}
+                       <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                          {[
+                             { label: "Name", value: selectedPiga.full_name },
+                             { label: "Email", value: selectedPiga.email },
+                             { label: "Phone", value: selectedPiga.phone },
+                             { label: "Organisation", value: selectedPiga.organisation },
+                             { label: "Date", value: formatDate(selectedPiga.date) },
+                             { label: "Last Updated", value: formatDate(selectedPiga.updated_at) },
+                          ].map((item, i) => (
+                             <div key={i} className="p-3 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5">
+                                <p className="text-[10px] uppercase tracking-wider text-gray-500 dark:text-muted-foreground font-semibold mb-1">{item.label}</p>
+                                <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{item.value || "N/A"}</p>
+                             </div>
+                          ))}
+                       </div>
+
+                       {/* Review feedback */}
+                       {selectedPiga.review_feedback && (
+                          <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20">
+                             <p className="text-xs uppercase tracking-wider text-amber-600 dark:text-amber-400 font-semibold mb-2 flex items-center gap-1.5">
+                                <AlertTriangle className="w-3.5 h-3.5" /> Review Feedback
+                             </p>
+                             <p className="text-sm text-amber-800 dark:text-amber-300 whitespace-pre-wrap">{selectedPiga.review_feedback}</p>
+                          </div>
+                       )}
+
+                       {/* Pitch sections */}
+                       <div className="space-y-4 pt-2">
+                          <h3 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider">Pitch Details</h3>
+                          {[
+                             { label: "Elevator Pitch", value: selectedPiga.elevator_pitch },
+                             { label: "Team", value: selectedPiga.team },
+                             { label: "Problem / Opportunity", value: selectedPiga.problem_opportunity },
+                             { label: "Solution / Technology", value: selectedPiga.solution_technology },
+                             { label: "Current Status", value: selectedPiga.current_status },
+                             { label: "Unique Value Proposition", value: selectedPiga.unique_value_proposition },
+                             { label: "Cost & Budget Bifurcation", value: selectedPiga.cost_budget },
+                             { label: "Key Metrics", value: selectedPiga.key_metrics },
+                             { label: "Customer Segments", value: selectedPiga.customer_segments },
+                             { label: "12-Month Plan", value: selectedPiga.twelve_month_plan },
+                          ].map((sec, i) => (
+                             <div key={i} className="p-4 rounded-xl bg-gray-50 dark:bg-white/[0.03] border border-gray-100 dark:border-white/5">
+                                <p className="text-xs uppercase tracking-wider text-gray-500 dark:text-muted-foreground font-semibold mb-2">{sec.label}</p>
+                                <p className="text-sm text-gray-800 dark:text-gray-300 leading-relaxed whitespace-pre-wrap">
+                                   {sec.value || "(Not provided)"}
+                                </p>
+                             </div>
+                          ))}
+                       </div>
+                    </div>
+                 </>
               )}
            </DialogContent>
         </Dialog>
