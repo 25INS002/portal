@@ -1,85 +1,109 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import { motion } from "framer-motion";
-import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import Image from "next/image";
 import { useTheme } from "next-themes";
-import { useContent } from "@/context/ContentContext";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useMounted } from "@/hooks/useMounted";
 import SpotlightCard from "@/components/ui/SpotlightCard";
+import { X } from "lucide-react";
 
-// Register GSAP plugins
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
 }
 
-const renderSVG = (svg?: string) => {
-  if (!svg) return null;
-  const fixed = svg.replace(/className=/g, "class=");
-  return (
-    <span
-      className="pointer-events-none"
-      dangerouslySetInnerHTML={{ __html: fixed }}
-    />
-  );
-};
-
-import { Printer, Scissors, Settings, Lightbulb } from "lucide-react";
-
 interface Service {
   title: string;
-  description: string;
-  color: string;
-  Icon: any;
+  shortDesc: string;
+  fullDesc: string;
+  features: string[];
+  image: string;
 }
 
 const ServicesSection = () => {
   const { theme } = useTheme();
   const isDark = theme === "dark";
-  const { content } = useContent();
+
   const sectionRef = useRef<HTMLElement>(null);
   const cardsRef = useRef<HTMLDivElement>(null);
-  const ctaRef = useRef<HTMLDivElement>(null);
   const mounted = useMounted();
+
+  const [selectedService, setSelectedService] = useState<Service | null>(null);
 
   const servicesData: Service[] = [
     {
       title: "3D Printing",
-      description:
-        "High-precision additive manufacturing for prototypes and production parts",
-      color: "from-blue-500 to-cyan-400",
-      Icon: Printer
+      shortDesc: "High-precision additive manufacturing for prototypes.",
+      fullDesc:
+        "Our 3D printing service enables rapid prototyping and complex part production using advanced additive manufacturing technologies.",
+      features: [
+        "PLA, ABS, PETG and engineering materials",
+        "Rapid prototyping and product iteration",
+        "Complex geometry manufacturing",
+        "High dimensional accuracy"
+      ],
+      image: "/3d_printing.webp"
     },
     {
       title: "Laser Cutting",
-      description:
-        "Precision laser cutting services for various materials with clean edges",
-      color: "from-purple-500 to-pink-500",
-      Icon: Scissors
+      shortDesc: "Precision laser cutting for multiple materials.",
+      fullDesc:
+        "Laser cutting provides highly accurate cutting for acrylic, wood, plastics and sheet metals with smooth and clean edges.",
+      features: [
+        "High precision edge finishing",
+        "Works on acrylic, wood, leather and metals",
+        "Minimal material wastage",
+        "Fast turnaround time"
+      ],
+      image: "/lazer-cut.webp"
     },
     {
       title: "CNC Machining",
-      description:
-        "Computer-controlled machining for high-accuracy parts and components",
-      color: "from-amber-500 to-orange-500",
-      Icon: Settings
+      shortDesc: "High-accuracy machining for engineering components.",
+      fullDesc:
+        "CNC machining delivers precision components with tight tolerances using computer-controlled milling and turning machines.",
+      features: [
+        "High precision industrial machining",
+        "Aluminum, steel and plastic machining",
+        "Tight tolerance manufacturing",
+        "Complex mechanical part fabrication"
+      ],
+      image: "/cnc.webp"
     },
     {
       title: "Design Consultation",
-      description: "Expert guidance to optimize your designs for manufacturing",
-      color: "from-green-500 to-emerald-400",
-      Icon: Lightbulb
-    },
+      shortDesc: "Expert support to optimize product designs.",
+      fullDesc:
+        "Our design consultation helps convert your idea into a manufacturable product with improved efficiency and reduced production cost.",
+      features: [
+        "Product design optimization",
+        "Material selection guidance",
+        "Manufacturability analysis",
+        "Cost-efficient production planning"
+      ],
+      image: "/design.webp"
+    }
   ];
 
-  // GSAP scroll animations
+  // ESC key close
+  useEffect(() => {
+   
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setSelectedService(null);
+    };
+    window.addEventListener("keydown", handleEsc);
+    return () => window.removeEventListener("keydown", handleEsc);
+  }, []);
+
+  // GSAP animation
   useEffect(() => {
     if (!mounted) return;
 
     const ctx = gsap.context(() => {
       const cards = cardsRef.current?.querySelectorAll(".service-card");
+
       if (cards) {
         gsap.fromTo(
           cards,
@@ -87,32 +111,13 @@ const ServicesSection = () => {
           {
             opacity: 1,
             y: 0,
-            duration: 0.5,
+            duration: 0.6,
+            stagger: 0.15,
             ease: "power2.out",
-            stagger: 0.1,
             scrollTrigger: {
               trigger: cardsRef.current,
-              start: "top 85%",
-              toggleActions: "play none none reverse",
-            },
-          }
-        );
-      }
-
-      if (ctaRef.current) {
-        gsap.fromTo(
-          ctaRef.current,
-          { opacity: 0, y: 30 },
-          {
-            opacity: 1,
-            y: 0,
-            duration: 0.5,
-            ease: "power2.out",
-            scrollTrigger: {
-              trigger: ctaRef.current,
-              start: "top 90%",
-              toggleActions: "play none none reverse",
-            },
+              start: "top 85%"
+            }
           }
         );
       }
@@ -122,98 +127,127 @@ const ServicesSection = () => {
   }, [mounted]);
 
   return (
-    <section ref={sectionRef} className="relative w-full bg-background overflow-hidden">
-      <div className="relative z-10 max-w-7xl mx-auto px-6 md:px-16 py-24 lg:py-32">
-        {/* SECTION HEADER */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          viewport={{ once: true }}
-          className="text-center mb-16"
-        >
-          <span className={`
-            inline-block px-4 py-1.5 rounded-full text-xs font-medium tracking-wider uppercase mb-6
-            ${isDark ? "bg-indigo-500/10 text-indigo-400" : "bg-indigo-100 text-indigo-600"}
-          `}>
-            Manufacturing Excellence
-          </span>
-          <h2 className="h2 mb-4">
+    <section ref={sectionRef} className="w-full bg-background">
+      <div className="max-w-7xl mx-auto px-6 md:px-16 py-24">
+
+        {/* HEADER */}
+        <div className="text-center mb-16">
+          <h2 className="text-4xl font-bold mb-4">
             Advanced Manufacturing Services
           </h2>
-          <p className="p max-w-3xl mx-auto">
-            From prototyping to production, we provide cutting-edge manufacturing
-            solutions with state-of-the-art equipment and expert guidance.
+          <p className="max-w-3xl mx-auto text-muted-foreground">
+            From prototyping to production, we provide cutting-edge
+            manufacturing solutions with expert guidance.
           </p>
-        </motion.div>
+        </div>
 
         {/* SERVICES GRID */}
-        <div ref={cardsRef} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-20">
+        <div
+          ref={cardsRef}
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
+        >
           {servicesData.map((service, index) => (
             <SpotlightCard
               key={index}
-              className="service-card p-6 h-full flex flex-col"
-              spotlightColor={isDark ? "rgba(99, 102, 241, 0.15)" : "rgba(99, 102, 241, 0.08)"}
+              className="service-card p-6 flex flex-col group"
+              spotlightColor={
+                isDark
+                  ? "rgba(99,102,241,0.15)"
+                  : "rgba(99,102,241,0.08)"
+              }
             >
-              <div
-                className={`
-                  mb-5
-                  inline-flex
-                  h-14 w-14
-                  items-center justify-center
-                  rounded-2xl
-                  bg-gradient-to-br ${service.color}
-                  text-white
-                  shadow-lg
-                  transition-transform duration-500 group-hover:scale-110 group-hover:rotate-6
-                `}
-              >
-                <service.Icon className="w-7 h-7" />
+              <div className="relative w-full h-40 rounded-xl overflow-hidden mb-5">
+                <Image
+                  src={service.image}
+                  alt={service.title}
+                  fill
+                  className="object-cover transition duration-500 group-hover:scale-105"
+                />
               </div>
 
-              <h3 className={`text-lg font-bold mb-3 ${isDark ? "text-white" : "text-gray-900"}`}>
-                {service.title}
-              </h3>
-              <p className={`text-sm leading-relaxed ${isDark ? "text-slate-400" : "text-gray-600"}`}>
-                {service.description}
+              <h3 className="text-lg font-bold mb-2">{service.title}</h3>
+
+              <p className="text-sm text-muted-foreground mb-4">
+                {service.shortDesc}
               </p>
+
+              <button
+                onClick={() => setSelectedService(service)}
+                className="mt-auto px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-500 transition"
+              >
+                View More
+              </button>
             </SpotlightCard>
           ))}
         </div>
-
-        {/* CTA */}
-        <div
-          ref={ctaRef}
-          className={`
-            rounded-2xl p-10 max-w-3xl mx-auto text-center border relative overflow-hidden
-            ${isDark ? "bg-slate-900/50 border-white/[0.08]" : "bg-white border-slate-200"}
-          `}
-        >
-          {/* Background glow */}
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full max-w-lg bg-indigo-500/5 blur-3xl rounded-full pointer-events-none" />
-          
-          <h3 className="h3 mb-4 relative z-10">Ready to Bring Your Ideas to Life?</h3>
-          <p className="text-muted-foreground mb-8 relative z-10">
-            Get a free consultation and quote for your project today.
-          </p>
-
-          <Link href="/pages/contact#form" className="relative z-10">
-            <motion.button 
-              whileHover={{ scale: 1.02 }} 
-              whileTap={{ scale: 0.98 }}
-              className="
-                px-8 py-4 rounded-full font-semibold
-                bg-gradient-to-r from-indigo-600 to-purple-600 text-white
-                hover:from-indigo-500 hover:to-purple-500 
-                transition-all duration-300
-                shadow-lg shadow-indigo-500/25
-              "
-            >
-              Get a Free Quote
-            </motion.button>
-          </Link>
-        </div>
       </div>
+
+      {/* POPUP MODAL */}
+      <AnimatePresence>
+        {selectedService && (
+          <motion.div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-6"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setSelectedService(null)}
+          >
+            <motion.div
+              onClick={(e) => e.stopPropagation()}
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              transition={{ duration: 0.25 }}
+              className="bg-white dark:bg-slate-900 max-w-3xl w-full rounded-2xl p-6 relative"
+            >
+              {/* CLOSE BUTTON */}
+             <button
+  onClick={() => setSelectedService(null)}
+  className="
+    absolute top-4 right-4 z-20
+    flex items-center justify-center
+    w-10 h-10
+    rounded-full
+    bg-white dark:bg-slate-800
+    shadow-md
+    hover:bg-gray-100 dark:hover:bg-slate-700
+    transition
+  "
+>
+  <X size={18} />
+</button>
+
+              {/* IMAGE */}
+              <div className="relative w-full h-64 rounded-xl overflow-hidden mb-6">
+                <Image
+                  src={selectedService.image}
+                  alt={selectedService.title}
+                  fill
+                  className="object-cover"
+                />
+              </div>
+
+              <h3 className="text-2xl font-bold mb-3">
+                {selectedService.title}
+              </h3>
+
+              <p className="text-muted-foreground mb-6">
+                {selectedService.fullDesc}
+              </p>
+
+              {/* FEATURES */}
+              <div>
+                <h4 className="font-semibold mb-2">Key Features</h4>
+                <ul className="list-disc pl-5 space-y-1 text-sm text-muted-foreground">
+                  {selectedService.features.map((f, i) => (
+                    <li key={i}>{f}</li>
+                  ))}
+                </ul>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </section>
   );
 };

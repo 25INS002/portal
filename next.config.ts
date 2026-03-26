@@ -18,6 +18,23 @@ const nextConfig: NextConfig = {
     ];
   },
 
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+        port: '8000',
+        pathname: '/media/**',
+      },
+      {
+        protocol: 'http',
+        hostname: '72.60.102.111',
+        port: '8000',
+        pathname: '/media/**',
+      },
+    ],
+  },
+
   // Uncomment ONLY if you know you need it (usually not required)
   // experimental: {
   //   allowedDevOrigins: [

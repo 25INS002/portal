@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 const tabs = [
     { name: "Events", href: "events" },
     { name: "Services", href: "services" },
+    { name: "PIGA", href: "piga" },
     { name: "Assign Access", href: "access" },
     { name: "Feedback", href: "feedback" },
     { name: "Media", href: "media" },
@@ -32,9 +33,9 @@ export default function SuperAdminLayout({
 
     return (
         <div className="min-h-screen text-white bg-background">
-            <div className="max-w-7xl mx-auto px-6 pt-32 pb-12">
+            <div className="max-w-7xl mx-auto px-6 pt-32 pb-12 ">
                 {/* Tabs */}
-                <div className="flex gap-2 mb-8 overflow-x-auto pb-2 scrollbar-hide">
+                <div className="flex gap-2 mb-8 overflow-x-auto pb-2 scrollbar-hide mt-10">
                     {tabs.map((tab) => {
                         // Replace the current tab with the new tab, or append if no tab exists
                         const tabHref = currentTabIndex !== -1 

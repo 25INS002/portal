@@ -251,7 +251,7 @@ const ContentEditor: React.FC = () => {
     if (fieldName.includes("image") || fieldName.includes("icon")) {
       return <ImageIcon className="w-3 h-3 text-purple-400" />;
     }
-    if (fieldName.includes("url") || fieldName.includes("href") || fieldName.includes("action")) {
+    if (fieldName.includes("url") || fieldName.includes("href") || fieldName.includes("action") || fieldName.includes("click_here")) {
       return <LinkIcon className="w-3 h-3 text-blue-400" />;
     }
     return <Type className="w-3 h-3 text-gray-400" />;
@@ -378,7 +378,12 @@ const ContentEditor: React.FC = () => {
 
     useEffect(() => {
       if (editingItem) {
-        setFormData(JSON.parse(JSON.stringify(editingItem.item)));
+        const data = JSON.parse(JSON.stringify(editingItem.item));
+        // Ensure click_here is available for faculty if not present
+        if (editingItem.sectionKey === "faculty" && data.click_here === undefined) {
+          data.click_here = "";
+        }
+        setFormData(data);
       }
     }, [editingItem]);
 
@@ -611,6 +616,11 @@ const ContentEditor: React.FC = () => {
             template[k] = "";
           }
         });
+
+        // Ensure certain fields are present in the template for specific sections
+        if ((key === "faculty" || key === "team" || key === "staff") && !template.hasOwnProperty("click_here")) {
+          template.click_here = "";
+        }
 
         return (
           <div key={key} className="mb-8">
