@@ -8,6 +8,7 @@ import BackgroundVideo from "@/components/animations/BackgroundVideo/BackgroundV
 import { useTheme } from "next-themes";
 import ServicesSection from "./ServicesSection";
 // import PrototypesSection from "./PrototypesSection";
+import ProgramsSection from "./ProgramsSection";
 import TeamSection from "./TeamSection";
 // import HistorySection from "./HistorySection";
 import EventsSection from "./EventSection";
@@ -27,6 +28,8 @@ export default function HomePage() {
   return (
     <div className="relative w-full overflow-x-hidden">
       <HeroSection />
+      <ProgramsSection />
+      <SectionDivider />
       <AboutSection />
       <SectionDivider />
       <ServicesSection />

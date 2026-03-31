@@ -31,6 +31,7 @@ import {
   Link as LinkIcon,
   Pencil,
   Upload,
+  ExternalLink,
 } from "lucide-react";
 import { motion, AnimatePresence, Reorder, useDragControls, LayoutGroup } from "framer-motion";
 import { toast } from "sonner";
@@ -287,6 +288,7 @@ const ContentEditor: React.FC = () => {
     const title = item.title || item.name || item.heading || "Untitled Item";
     const subtitle = item.role || item.description || item.category || "";
     const image = item.image || item.icon || item.avatar;
+    const applyUrl = sectionKey === "programs" ? (item.apply_url as string) : "";
 
     return (
       <Reorder.Item
@@ -331,6 +333,20 @@ const ContentEditor: React.FC = () => {
                 {String(subtitle).slice(0, 50)}
                 {String(subtitle).length > 50 ? "..." : ""}
               </p>
+            )}
+            {/* Clickable Apply URL for programs */}
+            {applyUrl && (
+              <a
+                href={applyUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 mt-1 text-xs text-blue-500 hover:text-blue-400 hover:underline truncate max-w-[250px]"
+                title={applyUrl}
+              >
+                <LinkIcon className="w-3 h-3 shrink-0" />
+                <span className="truncate">{applyUrl}</span>
+                <ExternalLink className="w-3 h-3 shrink-0" />
+              </a>
             )}
           </div>
 
@@ -382,6 +398,9 @@ const ContentEditor: React.FC = () => {
         // Ensure click_here is available for faculty if not present
         if (editingItem.sectionKey === "faculty" && data.click_here === undefined) {
           data.click_here = "";
+        }
+        if (editingItem.sectionKey === "programs" && data.apply_url === undefined) {
+          data.apply_url = "";
         }
         setFormData(data);
       }
@@ -561,6 +580,34 @@ const ContentEditor: React.FC = () => {
                 );
               }
 
+              // URL fields (apply_url, click_here, etc.) — input + clickable preview
+              if ((key === "apply_url" || key === "click_here") && typeof value === "string") {
+                return (
+                  <div key={key} className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">{label}</label>
+                    <div className="flex gap-2">
+                      <Input
+                        value={value || ""}
+                        onChange={(e) => setFormData(prev => ({ ...prev, [key]: e.target.value }))}
+                        placeholder="https://example.com/apply"
+                        className="bg-gray-50 dark:bg-white/5 border-gray-200 dark:border-white/10"
+                      />
+                    </div>
+                    {value && (
+                      <a
+                        href={value}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-500/20 hover:bg-blue-100 dark:hover:bg-blue-500/20 transition-colors"
+                      >
+                        <ExternalLink className="w-3 h-3" />
+                        Open: {value.length > 40 ? value.slice(0, 40) + "..." : value}
+                      </a>
+                    )}
+                  </div>
+                );
+              }
+
               // Long Text
               if (key.toLowerCase().includes("description") || (typeof value === "string" && value.length > 50)) {
                 return (
@@ -620,6 +667,9 @@ const ContentEditor: React.FC = () => {
         // Ensure certain fields are present in the template for specific sections
         if ((key === "faculty" || key === "team" || key === "staff") && !template.hasOwnProperty("click_here")) {
           template.click_here = "";
+        }
+        if (key === "programs" && !template.hasOwnProperty("apply_url")) {
+          template.apply_url = "";
         }
 
         return (
