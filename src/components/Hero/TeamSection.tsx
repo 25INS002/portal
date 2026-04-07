@@ -31,8 +31,9 @@ const TeamSection = () => {
   const staffCardsRef = useRef<HTMLDivElement>(null);
   const clubCardsRef = useRef<HTMLDivElement>(null);
 
-  const teamData = content.team ?? {
-    faculty: [
+  const rawTeamData = content.team ?? {};
+  const teamData = {
+    faculty: rawTeamData.faculty ?? [
       {
         name: "Dr. Navneet Kumar",
         role: "PIC, I2EDC",
@@ -46,7 +47,7 @@ const TeamSection = () => {
         click_here:"qwerty"
       },
     ],
-    staff: [
+    staff: rawTeamData.staff ?? [
       {
         name: "Mohammad Israil",
         role: "OIC, ProtoSpace",
@@ -58,7 +59,7 @@ const TeamSection = () => {
         image: "",
       },
     ],
-    club_heads: [
+    club_heads: rawTeamData.club_heads ?? [
       {
         name: "Drish Mahajan",
         role: "Student Lead",

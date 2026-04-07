@@ -66,6 +66,17 @@ const PigaHero = ({ onApply }: { onApply: () => void }) => {
   const { theme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const heroRef = useRef<HTMLElement>(null);
+  const { isAuthenticated } = useAuth();
+  const router = useRouter();
+
+  const handleMyStatus = () => {
+    if (!isAuthenticated) {
+      toast.error("Please login first to view your status");
+      router.push("/auth?action=login");
+      return;
+    }
+    router.push("/pages/user/history");
+  };
 
   useEffect(() => { setMounted(true); }, []);
   const isDark = mounted && theme === "dark";
@@ -170,7 +181,35 @@ const PigaHero = ({ onApply }: { onApply: () => void }) => {
       >
         Apply Now <ArrowRight className="w-4 h-4" />
       </motion.button>
+      <motion.button
+        whileHover={{ scale: 1.03, y: -2 }}
+        whileTap={{ scale: 0.98 }}
+        onClick={handleMyStatus}
+        className="px-8 py-4 rounded-full font-semibold 
+          bg-gradient-to-r from-indigo-600 to-purple-600 
+          dark:from-indigo-500 dark:to-purple-500
+          text-white 
+          shadow-lg dark:shadow-[0_0_40px_rgba(99,102,241,0.25)]
+          hover:shadow-xl transition-all duration-300 flex items-center gap-2"
+      >
+        My Status <ArrowRight className="w-4 h-4" />
+      </motion.button>
 
+      <motion.button
+        whileHover={{ scale: 1.03, y: -2 }}
+        whileTap={{ scale: 0.98 }}
+        onClick={() =>
+          document
+            .getElementById("goals")
+            ?.scrollIntoView({ behavior: "smooth" })
+        }
+        className="px-8 py-4 rounded-full font-semibold border transition-all duration-300
+          border-gray-300 text-gray-900 hover:bg-gray-50
+          dark:border-white/10 dark:text-white dark:hover:bg-white/10 dark:hover:border-white/30"
+      >
+       Brochure
+       
+      </motion.button>
       <motion.button
         whileHover={{ scale: 1.03, y: -2 }}
         whileTap={{ scale: 0.98 }}
@@ -402,7 +441,7 @@ const ProcessSection = () => {
         <div className="space-y-6">
           <div className={`p-6 rounded-2xl border ${isDark ? "bg-white/5 border-white/10" : "bg-indigo-50 border-indigo-100"}`}>
             <h4 className={`text-lg font-bold mb-4 ${isDark ? "text-white" : "text-gray-900"}`}>
-              Submit Proposal via SARAL Portal or I2EDC
+              Submit Proposal via SARAL Portal or I2EDC Website
             </h4>
             <p className={`mb-4 text-sm ${isDark ? "text-slate-300" : "text-gray-600"}`}>Your proposal should include:</p>
             <div className="grid sm:grid-cols-2 gap-3">
