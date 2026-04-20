@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef,useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import SectionDivider from "../SectionDivider";
 import { motion } from "framer-motion";
 import Link from "next/link";
@@ -426,8 +426,8 @@ const AboutSection = () => {
             >
               <div className="relative w-full h-36 rounded-lg overflow-hidden mb-4 bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
                 {item.image ? (
-                   <img
-                    src={item.image.startsWith('http') ? item.image : item.image.startsWith('/') ? `http://localhost:8000${item.image}` : `http://${item.image}`}
+                  <img
+                    src={item.image.startsWith('http') ? item.image : item.image.startsWith('/') ? `${process.env.NEXT_PUBLIC_BACKEND_URL}${item.image}` : `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.image}`}
                     alt={item.title}
                     className="w-full h-full object-cover"
                   />
@@ -438,32 +438,30 @@ const AboutSection = () => {
                     </div>
                   ) : (
                     <img
-                      src={item.icon.startsWith('http') ? item.icon : item.icon.startsWith('/') ? `http://localhost:8000${item.icon}` : `http://${item.icon}`}
+                      src={item.icon.startsWith('http') ? item.icon : item.icon.startsWith('/') ? `${process.env.NEXT_PUBLIC_BACKEND_URL}${item.icon}` : `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.icon}`}
                       alt={item.title}
                       className="w-full h-full object-cover"
                     />
                   )
                 ) : (
                   <div className="flex items-center justify-center w-full h-full">
-                     <svg className="w-12 h-12 text-slate-400 opacity-20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                     </svg>
+                    <svg className="w-12 h-12 text-slate-400 opacity-20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
                   </div>
                 )}
               </div>
 
               <h3
-                className={`text-lg font-bold mb-2 ${
-                  isDark ? "text-white" : "text-gray-900"
-                }`}
+                className={`text-lg font-bold mb-2 ${isDark ? "text-white" : "text-gray-900"
+                  }`}
               >
                 {item.title}
               </h3>
 
               <p
-                className={`text-sm leading-relaxed mb-4 ${
-                  isDark ? "text-slate-400" : "text-gray-600"
-                }`}
+                className={`text-sm leading-relaxed mb-4 ${isDark ? "text-slate-400" : "text-gray-600"
+                  }`}
               >
                 {item.description.slice(0, 80)}...
               </p>
@@ -490,8 +488,8 @@ const AboutSection = () => {
           >
 
             <button
-  onClick={() => setSelectedOffering(null)}
-  className="
+              onClick={() => setSelectedOffering(null)}
+              className="
     absolute top-4 right-4 z-50
     flex items-center justify-center
     w-10 h-10
@@ -502,33 +500,33 @@ const AboutSection = () => {
     hover:bg-gray-100 dark:hover:bg-slate-700
     transition
   "
->
-  ✕
-</button>
+            >
+              ✕
+            </button>
 
             <div className="relative w-full h-60 rounded-lg overflow-hidden mb-6 bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
               {selectedOffering.image ? (
-                 <img
-                  src={selectedOffering.image.startsWith('http') ? selectedOffering.image : selectedOffering.image.startsWith('/') ? `http://localhost:8000${selectedOffering.image}` : `http://${selectedOffering.image}`}
+                <img
+                  src={selectedOffering.image.startsWith('http') ? selectedOffering.image : selectedOffering.image.startsWith('/') ? `${process.env.NEXT_PUBLIC_BACKEND_URL}${selectedOffering.image}` : `${process.env.NEXT_PUBLIC_BACKEND_URL}/${selectedOffering.image}`}
                   alt={selectedOffering.title}
                   className="w-full h-full object-cover"
                 />
               ) : selectedOffering.icon ? (
-                 selectedOffering.icon.trim().startsWith("<svg") ? (
+                selectedOffering.icon.trim().startsWith("<svg") ? (
                   <div className="flex items-center justify-center w-full h-full bg-gradient-to-br from-indigo-500/20 to-purple-500/20 scale-150">
                     {renderSVG(selectedOffering.icon)}
                   </div>
-                 ) : (
-                   <img
-                    src={selectedOffering.icon.startsWith('http') ? selectedOffering.icon : selectedOffering.icon.startsWith('/') ? `http://localhost:8000${selectedOffering.icon}` : `http://${selectedOffering.icon}`}
+                ) : (
+                  <img
+                    src={selectedOffering.icon.startsWith('http') ? selectedOffering.icon : selectedOffering.icon.startsWith('/') ? `${process.env.NEXT_PUBLIC_BACKEND_URL}${selectedOffering.icon}` : `${process.env.NEXT_PUBLIC_BACKEND_URL}/${selectedOffering.icon}`}
                     alt={selectedOffering.title}
                     className="w-full h-full object-cover"
                   />
-                 )
+                )
               ) : (
-                 <svg className="w-20 h-20 text-slate-400 opacity-20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                 </svg>
+                <svg className="w-20 h-20 text-slate-400 opacity-20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
               )}
             </div>
 

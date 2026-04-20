@@ -31,22 +31,22 @@ const TeamSection = () => {
   const staffCardsRef = useRef<HTMLDivElement>(null);
   const clubCardsRef = useRef<HTMLDivElement>(null);
 
-  const teamData = content.team ?? {
-    faculty: [
+  const teamData = {
+    faculty: content.team?.faculty ?? [
       {
         name: "Dr. Navneet Kumar",
         role: "PIC, I2EDC",
         image: "",
-        click_here:"qwerty"
+        click_here: "qwerty"
       },
       {
         name: "Dr. Arvind",
         role: "CIO, I2EDC",
         image: "",
-        click_here:"qwerty"
+        click_here: "qwerty"
       },
     ],
-    staff: [
+    staff: content.team?.staff ?? [
       {
         name: "Mohammad Israil",
         role: "OIC, ProtoSpace",
@@ -58,7 +58,7 @@ const TeamSection = () => {
         image: "",
       },
     ],
-    club_heads: [
+    club_heads: content.team?.club_heads ?? [
       {
         name: "Drish Mahajan",
         role: "Student Lead",
@@ -183,15 +183,15 @@ const TeamSection = () => {
 
           {/* Action Button (Faculty Only) */}
           {member.click_here && (
-            <a 
+            <a
               href={member.click_here.startsWith('http') ? member.click_here : `https://${member.click_here}`}
               target="_blank"
               rel="noopener noreferrer"
               className={`
                 mt-4 px-4 py-1.5 rounded-full text-xs font-semibold tracking-wide
                 transition-all duration-300 border inline-block
-                ${isDark 
-                  ? "bg-blue-500/10 text-blue-400 border-blue-500/20 hover:bg-blue-500 hover:text-white" 
+                ${isDark
+                  ? "bg-blue-500/10 text-blue-400 border-blue-500/20 hover:bg-blue-500 hover:text-white"
                   : "bg-blue-50 text-blue-600 border-blue-100 hover:bg-blue-600 hover:text-white"}
               `}
             >
