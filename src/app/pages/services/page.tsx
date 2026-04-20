@@ -47,6 +47,7 @@ import {
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import Script from "next/script";
 
 // Register GSAP plugins
 if (typeof window !== "undefined") {
@@ -83,6 +84,7 @@ interface BookingFormData {
 const ServicesPage: React.FC = () => {
   return (
     <div className="relative w-full overflow-x-hidden">
+      <Script src="https://checkout.razorpay.com/v1/checkout.js" />
       <ServicesHeroSection />
       <SectionDivider />
       <ServicesGridSection />
@@ -235,7 +237,7 @@ const ServicesHeroSection = () => {
 -------------------------------------------------- */
 
 const ServicesGridSection = () => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -459,34 +461,54 @@ const ServicesGridSection = () => {
       setSubmitting(true);
       setError("");
 
-      const formData = new FormData();
-      formData.append("service", selectedService.id.toString());
-      formData.append("plan", JSON.stringify(bookingFormData.selectedPlan));
-      formData.append(
-        "request_msg",
-        JSON.stringify({
+      const response = await api.post("/services/payment/create-order/", {
+        service_id: selectedService.id,
+        plan: bookingFormData.selectedPlan,
+        request_msg: {
           subject: bookingFormData.subject.trim(),
           body: bookingFormData.body.trim(),
-        })
-      );
-
-      if (bookingFormData.files) {
-        for (let i = 0; i < bookingFormData.files.length; i++) {
-          formData.append("media_url", bookingFormData.files[i]);
-        }
-      }
-      formData.append("service_id", String(selectedService.id));
-
-      await api.post("/services/requests/create/", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
         },
       });
 
-      alert(
-        `Service request submitted for ${selectedService.name}! We'll contact you soon.`
-      );
-      closeOverlay();
+      const resData = response.data;
+      
+      const options = {
+        key: resData.key_id,
+        amount: resData.amount,
+        currency: resData.currency,
+        name: "I2EDC Services",
+        description: `Payment for ${resData.service_name} - ${resData.plan_name}`,
+        order_id: resData.order_id,
+        prefill: {
+          name: user?.first_name ? `${user.first_name} ${user.last_name}` : user?.username,
+          email: user?.email,
+        },
+        handler: async function (response: any) {
+          try {
+            await api.post("/services/payment/verify/", {
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+            });
+            alert(`Payment successful! Service request submitted for ${selectedService.name}.`);
+            closeOverlay();
+          } catch (verifyError: any) {
+            console.error("Payment verification error:", verifyError);
+            setError("Payment verification failed. Please contact support.");
+          }
+        },
+        theme: {
+          color: "#4f46e5",
+        },
+      };
+
+      const rzp = new (window as any).Razorpay(options);
+      rzp.on('payment.failed', function (response: any) {
+        console.error("Payment failed", response.error);
+        setError(`Payment failed: ${response.error.description}`);
+      });
+      rzp.open();
+
     } catch (err: any) {
       console.error("Service request error:", err);
       const errorMessage =
@@ -1066,22 +1088,7 @@ const BookingOverlay: React.FC<BookingOverlayProps> = ({
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-2">
-              <Upload className="w-4 h-4 inline mr-2" />
-              Supporting Files (Optional)
-            </label>
-            <Input
-              type="file"
-              multiple
-              accept=".jpg,.jpeg,.png,.pdf,.doc,.docx,.zip,.rar"
-              onChange={(e) => onInputChange("files", e.target.files)}
-              className="w-full glass"
-            />
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-              Supported formats: JPG, PNG, PDF, DOC, ZIP (Max 10MB per file)
-            </p>
-          </div>
+          
 
           <div className="flex gap-3 pt-4">
             <Button
@@ -1099,7 +1106,7 @@ const BookingOverlay: React.FC<BookingOverlayProps> = ({
               disabled={submitting || !formData.selectedPlan}
             >
               <Bookmark className="w-4 h-4 mr-2" />
-              {submitting ? "Submitting..." : "Submit Request"}
+              {submitting ? "Submitting..." : "Payment"}
             </Button>
           </div>
         </form>

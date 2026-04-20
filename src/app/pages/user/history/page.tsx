@@ -56,6 +56,7 @@ interface ServiceRequest {
     description?: string;
   };
   status:
+    | "AWAITING_PAYMENT"
     | "PENDING"
     | "APPROVED"
     | "IN_QUEUE"
@@ -71,6 +72,8 @@ interface ServiceRequest {
   remark: string | null;
   requested_at: string;
   updated_at: string;
+  payment_status?: string;
+  payment_id?: string;
 }
 
 interface Event {
@@ -378,6 +381,7 @@ const HistoryPage: React.FC = () => {
 
       const details = [
         `Receipt ID: SR-${request.id}`,
+        `Transaction ID: ${request.payment_id || "N/A"}`,
         `Date: ${formatDate(request.requested_at)}`,
         `Status: ${request.status}`,
         "",
@@ -439,9 +443,11 @@ const HistoryPage: React.FC = () => {
   const downloadTextReceipt = (request: ServiceRequest) => {
     const receiptContent = `
 I2EDC SERVICES - SERVICE REQUEST RECEIPT
+=
 =========================================
 
 Receipt ID: SR-${request.id}
+Transaction ID: ${request.payment_id || "N/A"}
 Date: ${formatDate(request.requested_at)}
 Status: ${request.status}
 
@@ -788,9 +794,11 @@ For queries: events@i2edc.com
                              {request.plan.discount > 0 && <span className="text-xs text-muted-foreground line-through">₹{request.plan.cost}</span>}
                          </div>
                          <div className="flex gap-2">
-                             <Button variant="outline" size="sm" onClick={() => downloadPDFReceipt(request)} className="border-white/10 bg-black/20 hover:bg-white/10 text-white h-9">
-                                <Download className="w-3 h-3 mr-2" /> Receipt
-                             </Button>
+                             {request.status === "COMPLETED" && (
+                               <Button variant="outline" size="sm" onClick={() => downloadPDFReceipt(request)} className="border-white/10 bg-black/20 hover:bg-white/10 text-white h-9">
+                                  <Download className="w-3 h-3 mr-2" /> Invoice / Receipt
+                               </Button>
+                             )}
                              <Button size="sm" onClick={() => { setSelectedRequest(request); setDetailsOpen(true); }} className="bg-white text-black hover:bg-white/90 h-9">
                                 <Eye className="w-3 h-3 mr-2" /> Details
                              </Button>
