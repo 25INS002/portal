@@ -59,7 +59,7 @@ interface ServiceRequestType {
     discount: number;
     description?: string;
   };
-  status: "PENDING" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
+  status: "AWAITING_PAYMENT" | "PENDING" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
   request_msg: {
     subject: string;
     body: string;
@@ -69,6 +69,8 @@ interface ServiceRequestType {
   requested_at: string;
   updated_at: string;
   final_price: number;
+  payment_id?: string;
+  payment_status?: string;
 }
 
 const ServiceRequestDetailPage: React.FC = () => {
@@ -161,6 +163,72 @@ const ServiceRequestDetailPage: React.FC = () => {
     }
   };
 
+  const downloadPDFInvoice = async () => {
+    if (!request) return;
+    try {
+      const { jsPDF } = await import("jspdf");
+
+      const doc = new jsPDF();
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+
+      doc.setFontSize(20);
+      doc.setTextColor(41, 128, 185);
+      doc.text("I2EDC SERVICES", pageWidth / 2, 20, { align: "center" });
+
+      doc.setFontSize(16);
+      doc.setTextColor(0, 0, 0);
+      doc.text("SERVICE INVOICE", pageWidth / 2, 30, { align: "center" });
+
+      doc.setFontSize(10);
+      let yPosition = 50;
+
+      const details = [
+        `Invoice ID: INV-${request.id}`,
+        `Date: ${formatDate(request.requested_at)}`,
+        `Status: ${request.status}`,
+        ...(request.payment_id ? [`Transaction ID: ${request.payment_id}`] : []),
+        "",
+        `Customer: ${request.requested_by.first_name} ${request.requested_by.last_name}`,
+        `Username: ${request.requested_by.username}`,
+        `Email: ${request.requested_by.email}`,
+        "",
+        `Service: ${request.service.name}`,
+        `Plan: ${request.plan.plan}`,
+        `Original Cost: INR ${request.plan.cost}`,
+        `Discount: ${request.plan.discount}%`,
+        `Final Amount: INR ${request.final_price}`,
+        "",
+        `Subject: ${request.request_msg.subject}`
+      ];
+
+      details.forEach((line) => {
+        if (yPosition > pageHeight - 50) {
+          doc.addPage();
+          yPosition = 20;
+        }
+        doc.text(line, 20, yPosition);
+        yPosition += 6;
+      });
+
+      yPosition += 10;
+      doc.setFontSize(8);
+      doc.setTextColor(128, 128, 128);
+      doc.text(
+        "I2EDC Services Official Invoice",
+        pageWidth / 2,
+        pageHeight - 10,
+        { align: "center" }
+      );
+
+      doc.save(`invoice-${request.id}.pdf`);
+      toast.success("Invoice downloaded successfully");
+    } catch (error) {
+      console.error("Error generating invoice PDF:", error);
+      toast.error("Failed to generate invoice PDF");
+    }
+  };
+
   const getFileIcon = (url: string) => {
     const extension = url.split(".").pop()?.toLowerCase();
     const isImage = ["jpg", "jpeg", "png", "gif", "bmp", "webp"].includes(
@@ -181,15 +249,35 @@ const ServiceRequestDetailPage: React.FC = () => {
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
+      AWAITING_PAYMENT: {
+        variant: "secondary" as const,
+        icon: Clock,
+        color: "text-orange-600",
+      },
       PENDING: {
         variant: "secondary" as const,
         icon: Clock,
         color: "text-yellow-600",
       },
+      APPROVED: {
+        variant: "default" as const,
+        icon: CheckCircle,
+        color: "text-emerald-600",
+      },
+      IN_QUEUE: {
+        variant: "secondary" as const,
+        icon: Clock,
+        color: "text-blue-500",
+      },
       IN_PROGRESS: {
         variant: "default" as const,
         icon: RefreshCw,
         color: "text-blue-600",
+      },
+      REJECTED: {
+        variant: "destructive" as const,
+        icon: XCircle,
+        color: "text-red-500",
       },
       COMPLETED: {
         variant: "default" as const,
@@ -271,20 +359,31 @@ const ServiceRequestDetailPage: React.FC = () => {
           </div>
         </div>
         
-        {request.media_url && (
+        <div className="flex items-center gap-3">
+          {request.status !== "AWAITING_PAYMENT" && (
             <Button
-              onClick={handleDownloadMedia}
-              disabled={downloading}
-              className="bg-white dark:bg-white/10 hover:bg-gray-50 dark:hover:bg-white/20 text-gray-900 dark:text-white border border-gray-200 dark:border-white/10 shadow-sm"
+              onClick={downloadPDFInvoice}
+              className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm"
             >
-              {downloading ? (
-                <RefreshCw className="h-4 w-4 animate-spin mr-2" />
-              ) : (
-                <Download className="h-4 w-4 mr-2" />
-              )}
-              <span>{downloading ? "Downloading..." : "Download Media"}</span>
+              <Download className="h-4 w-4 mr-2" />
+              Invoice
             </Button>
-        )}
+          )}
+          {request.media_url && (
+              <Button
+                onClick={handleDownloadMedia}
+                disabled={downloading}
+                className="bg-white dark:bg-white/10 hover:bg-gray-50 dark:hover:bg-white/20 text-gray-900 dark:text-white border border-gray-200 dark:border-white/10 shadow-sm"
+              >
+                {downloading ? (
+                  <RefreshCw className="h-4 w-4 animate-spin mr-2" />
+                ) : (
+                  <Download className="h-4 w-4 mr-2" />
+                )}
+                <span>{downloading ? "Downloading..." : "Download Media"}</span>
+              </Button>
+          )}
+        </div>
       </div>
 
       {/* User & Service Information */}
@@ -384,8 +483,12 @@ const ServiceRequestDetailPage: React.FC = () => {
                     <SelectValue placeholder="Select status" />
                   </SelectTrigger>
                   <SelectContent className="bg-white dark:bg-[#0A0A0A] border-gray-200 dark:border-white/10 text-gray-900 dark:text-white">
+                    <SelectItem value="AWAITING_PAYMENT">Awaiting Payment</SelectItem>
                     <SelectItem value="PENDING">Pending</SelectItem>
+                    <SelectItem value="APPROVED">Approved</SelectItem>
+                    <SelectItem value="IN_QUEUE">In Queue</SelectItem>
                     <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
+                    <SelectItem value="REJECTED">Rejected</SelectItem>
                     <SelectItem value="COMPLETED">Completed</SelectItem>
                     <SelectItem value="CANCELLED">Cancelled</SelectItem>
                   </SelectContent>
