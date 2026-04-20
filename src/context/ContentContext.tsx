@@ -21,6 +21,7 @@ interface AllContent {
   team: any;
   full_team: any;
   aboutpg: any;
+  programs: any;
 }
 
 interface ContentContextType {
@@ -43,6 +44,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
     team: null,
     full_team: null,
     aboutpg: null,
+    programs: null,
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -65,6 +67,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
         { key: "team", category: "home", file: "team.json" },
         { key: "full_team", category: "about", file: "full_team.json" },
         { key: "aboutpg", category: "about", file: "main.json" },
+        { key: "programs", category: "home", file: "programs.json" },
       ];
 
       // Fetch all content files in parallel

@@ -41,6 +41,35 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 gsap.registerPlugin(ScrollTrigger);
 
+// Helper: safely extract image URLs from prototype data
+// Handles cases where `images` is a string instead of an array, and filters out non-image URLs (e.g. PDFs)
+const getImageUrls = (images: any): string[] => {
+  if (!images) return [];
+  const arr = Array.isArray(images) ? images : [images];
+  return arr.filter((url: string) => {
+    if (typeof url !== 'string') return false;
+    const lower = url.toLowerCase();
+    // filter out PDFs and other non-image files
+    return !lower.endsWith('.pdf') && !lower.endsWith('.doc') && !lower.endsWith('.docx');
+  });
+};
+
+const getFirstImageUrl = (images: any): string | null => {
+  const urls = getImageUrls(images);
+  return urls.length > 0 ? urls[0] : null;
+};
+
+// Fallback handler for broken images
+const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
+  const target = e.currentTarget;
+  target.style.display = 'none';
+  // Show the fallback sibling
+  const fallback = target.nextElementSibling as HTMLElement | null;
+  if (fallback && fallback.classList.contains('img-fallback')) {
+    fallback.style.display = 'flex';
+  }
+};
+
 export default function PrototypesPage() {
   const { content, loading, error } = useContent();
 
@@ -413,11 +442,29 @@ const FeaturedPrototypesSection = () => {
 
                     {/* Image Area */}
                     <div className="relative h-64 overflow-hidden rounded-t-xl bg-black/5">
-                        <img
-                            src={prototype.images?.[0]}
-                            alt={prototype.title}
-                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 group-hover:rotate-1"
-                        />
+                        {getFirstImageUrl(prototype.images) ? (
+                          <>
+                            <img
+                                src={getFirstImageUrl(prototype.images)!}
+                                alt={prototype.title}
+                                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 group-hover:rotate-1"
+                                onError={handleImageError}
+                            />
+                            <div className="img-fallback hidden w-full h-full items-center justify-center bg-gradient-to-br from-indigo-500/10 to-purple-500/10">
+                              <div className="text-center">
+                                <Rocket className="w-10 h-10 text-indigo-400 mx-auto mb-2" />
+                                <span className="text-xs text-muted-foreground font-medium">Image unavailable</span>
+                              </div>
+                            </div>
+                          </>
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-indigo-500/10 to-purple-500/10">
+                            <div className="text-center">
+                              <Rocket className="w-10 h-10 text-indigo-400 mx-auto mb-2" />
+                              <span className="text-xs text-muted-foreground font-medium">No image</span>
+                            </div>
+                          </div>
+                        )}
                         <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent opacity-80" />
                     </div>
 
@@ -526,11 +573,29 @@ const FeaturedPrototypesSection = () => {
                 
                 {/* Hero Image Section */}
                 <div className="relative h-64 md:h-96 w-full shrink-0 group">
-                    <img
-                        src={selectedPrototype.images?.[0]}
-                        alt={selectedPrototype.title}
-                        className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
-                    />
+                    {getFirstImageUrl(selectedPrototype.images) ? (
+                      <>
+                        <img
+                            src={getFirstImageUrl(selectedPrototype.images)!}
+                            alt={selectedPrototype.title}
+                            className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
+                            onError={handleImageError}
+                        />
+                        <div className="img-fallback hidden w-full h-full items-center justify-center bg-gradient-to-br from-indigo-500/10 to-purple-500/10">
+                          <div className="text-center">
+                            <Rocket className="w-12 h-12 text-indigo-400 mx-auto mb-2" />
+                            <span className="text-sm text-muted-foreground">Image unavailable</span>
+                          </div>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-indigo-500/10 to-purple-500/10">
+                        <div className="text-center">
+                          <Rocket className="w-12 h-12 text-indigo-400 mx-auto mb-2" />
+                          <span className="text-sm text-muted-foreground">No image available</span>
+                        </div>
+                      </div>
+                    )}
                     {/* Gradient Overlay - Always Dark for Contrast */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-90" />
                     
@@ -590,11 +655,14 @@ const FeaturedPrototypesSection = () => {
                             </div>
 
                             {/* Image Grid (if more than 1 image) */}
-                            {selectedPrototype.images?.length > 1 && (
+                            {getImageUrls(selectedPrototype.images).length > 1 && (
                                 <div className="grid grid-cols-2 gap-4 mt-8">
-                                    {selectedPrototype.images.slice(1).map((img, i) => (
+                                    {getImageUrls(selectedPrototype.images).slice(1).map((img, i) => (
                                         <div key={i} className="rounded-xl overflow-hidden border border-border/50 shadow-sm">
-                                            <img src={img} alt="" className="w-full h-40 object-cover hover:scale-105 transition-transform duration-500" />
+                                            <img src={img} alt="" className="w-full h-40 object-cover hover:scale-105 transition-transform duration-500" onError={handleImageError} />
+                                            <div className="img-fallback hidden w-full h-40 items-center justify-center bg-gradient-to-br from-indigo-500/10 to-purple-500/10">
+                                              <Rocket className="w-8 h-8 text-indigo-400" />
+                                            </div>
                                         </div>
                                     ))}
                                 </div>
