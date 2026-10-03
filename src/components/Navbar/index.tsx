@@ -99,10 +99,9 @@ export default function Header() {
               {/* Logo Container */}
               <div className="relative">
                 {/* Logo with next/image for optimization */}
-                <div className="relative w-15 h-15 md:w-20 md:h-20 rounded-lg overflow-hidden">
+                <div className="relative w-15 h-15 md:w-45 md:h-20 rounded-lg overflow-hidden">
                   <Image
-                    src="/iitj_logo.png"
-                    alt="IIt jammu logo"
+                    src="/iitj_logo3.png"
                     width={150}
                     height={150}
                     className="w-full h-full object-contain p-1"
@@ -119,9 +118,6 @@ export default function Header() {
                 {/* <span className="text-sm font-bold text-gray-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
                   I2EDC
                 </span> */}
-                <span className="text-[9px] text-gray-500 dark:text-gray-400 uppercase tracking-widest">
-                  IIT Jammu
-                </span>
               </div>
             </a>
 
