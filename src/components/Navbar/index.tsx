@@ -101,7 +101,7 @@ export default function Header() {
                 {/* Logo with next/image for optimization */}
                 <div className="relative w-15 h-15 md:w-45 md:h-20 rounded-lg overflow-hidden">
                   <Image
-                    src="/iitj_logo3.png"
+                    src="/iitj_logo.png"
                     width={150}
                     height={150}
                     className="w-full h-full object-contain p-1"
