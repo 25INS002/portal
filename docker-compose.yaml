@@ -1,0 +1,47 @@
+services:
+  backend:
+    build:
+      context: ./backend
+    container_name: ins002-backend
+    restart: always
+    command: sh ./entrypoint.sh
+    # ports:
+    #   - "8010:8010"
+    environment:
+      - ALLOWED_HOSTS=i2edc.iitjammu.ac.in,i2edcapi.navrobotec.com,localhost,127.0.0.1,10.10.11.61
+      - DEBUG=True
+    env_file:
+      - backend/.env
+    networks:
+      - gateway-net
+    volumes:
+      - ./backend/server/data:/app/server/data
+      - ./backend/server/media:/app/server/media
+      - ./backend/server/content:/app/server/content
+
+  portal:
+    build:
+      context: ./portal
+    container_name: ins002-portal
+    restart: always
+    # ports:
+    #   - "4000:4000"
+    networks:
+      - gateway-net
+
+  nginx:
+    image: nginx:latest
+    container_name: ins002-gateway
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/certs:/etc/nginx/certs
+    networks:
+      - gateway-net
+
+networks:
+  gateway-net:
+    external: true
