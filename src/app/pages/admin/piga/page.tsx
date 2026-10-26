@@ -48,6 +48,9 @@ import {
   TrendingUp,
   BarChart3,
   X,
+  FileDown,
+  FileSpreadsheet,
+  Calendar,
 } from "lucide-react";
 import clsx from "clsx";
 import { useTheme } from "next-themes";
@@ -142,6 +145,8 @@ const AdminPigaPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
 
   // Detail modal
   const [selectedApp, setSelectedApp] = useState<PigaApplication | null>(null);
@@ -213,17 +218,384 @@ const AdminPigaPage: React.FC = () => {
     setActionOpen(true);
   };
 
-  // Filtered list
+  // Filtered list by search term, status, and date range
   const filtered = applications.filter((app) => {
     const term = searchTerm.toLowerCase();
     const matchesSearch =
       (app.project_title || "").toLowerCase().includes(term) ||
-      (app.full_name || "").toLowerCase().includes(term) ||
+      (app.full_name || app.applicant_name || "").toLowerCase().includes(term) ||
       (app.email || "").toLowerCase().includes(term) ||
       (app.organisation || "").toLowerCase().includes(term);
     const matchesStatus = statusFilter === "all" || app.status === statusFilter;
-    return matchesSearch && matchesStatus;
+
+    // Date range filter (checks submitted_at or date)
+    let matchesDate = true;
+    if (startDate || endDate) {
+      const dateString = app.submitted_at || app.date;
+      if (dateString) {
+        const itemDate = new Date(dateString);
+        if (!isNaN(itemDate.getTime())) {
+          if (startDate) {
+            const start = new Date(startDate);
+            start.setHours(0, 0, 0, 0);
+            if (itemDate < start) matchesDate = false;
+          }
+          if (endDate) {
+            const end = new Date(endDate);
+            end.setHours(23, 59, 59, 999);
+            if (itemDate > end) matchesDate = false;
+          }
+        }
+      }
+    }
+
+    return matchesSearch && matchesStatus && matchesDate;
   });
+
+  /* --------------------------------------------------------
+     EXPORT TO PDF (All Filtered Applications)
+  -------------------------------------------------------- */
+  const exportPDF = async () => {
+    if (filtered.length === 0) {
+      toast.error("No applications to export");
+      return;
+    }
+
+    try {
+      toast.info("Generating PDF report...");
+      const { jsPDF } = await import("jspdf");
+      const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const margin = 14;
+      let y = 16;
+
+      // Header Banner
+      doc.setFillColor(30, 41, 59);
+      doc.roundedRect(margin, y, pageWidth - margin * 2, 22, 2, 2, "F");
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(14);
+      doc.setTextColor(255, 255, 255);
+      doc.text("I2EDC — PIGA Applications Report", margin + 6, y + 9);
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8.5);
+      doc.setTextColor(203, 213, 225);
+      const dateRangeStr =
+        startDate || endDate
+          ? `Date: ${startDate || "Earliest"} to ${endDate || "Latest"}`
+          : "Date: All Time";
+      const summaryText = `Generated: ${new Date().toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}  |  Status: ${statusFilter === "all" ? "All" : statusFilter}  |  ${dateRangeStr}  |  Total: ${filtered.length}`;
+      doc.text(summaryText, margin + 6, y + 17);
+
+      y += 28;
+
+      // Entries list
+      filtered.forEach((app, idx) => {
+        const entryHeight = 26;
+        if (y + entryHeight > pageHeight - 16) {
+          doc.addPage();
+          y = 16;
+        }
+
+        // Row Card Background
+        doc.setFillColor(idx % 2 === 0 ? 248 : 255, idx % 2 === 0 ? 250 : 255, idx % 2 === 0 ? 252 : 255);
+        doc.setDrawColor(226, 232, 240);
+        doc.roundedRect(margin, y, pageWidth - margin * 2, entryHeight, 1.5, 1.5, "FD");
+
+        // Index & Project Title
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(9.5);
+        doc.setTextColor(15, 23, 42);
+        const title = `${idx + 1}. ${app.project_title || "(Untitled Project)"}`;
+        const titleLines = doc.splitTextToSize(title, pageWidth - margin * 2 - 45);
+        doc.text(titleLines[0] || title, margin + 4, y + 6);
+
+        // Status Tag
+        doc.setFontSize(8);
+        doc.setFont("helvetica", "bold");
+        let statusColor: [number, number, number] = [100, 116, 139];
+        if (app.status === "APPROVED") statusColor = [16, 185, 129];
+        else if (app.status === "REJECTED") statusColor = [239, 68, 68];
+        else if (app.status === "UNDER_REVIEW") statusColor = [59, 130, 246];
+        else if (app.status === "PENDING") statusColor = [234, 179, 8];
+        else if (app.status === "REVIEW_BACK") statusColor = [249, 115, 22];
+
+        doc.setTextColor(...statusColor);
+        doc.text(`[${app.status}]`, pageWidth - margin - 4, y + 6, { align: "right" });
+
+        // Metadata line 1: Applicant, Org, Date
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8);
+        doc.setTextColor(71, 85, 105);
+        doc.text(
+          `Applicant: ${app.full_name || app.applicant_name || "N/A"}   |   Organisation: ${app.organisation || "N/A"}   |   Submitted: ${formatDate(app.submitted_at || app.date)}`,
+          margin + 4,
+          y + 12
+        );
+
+        // Metadata line 2: Email, Phone, Budget
+        doc.text(
+          `Email: ${app.email || "N/A"}   |   Phone: ${app.phone || "N/A"}   |   Budget: ${app.cost_budget ? app.cost_budget.slice(0, 40) : "N/A"}`,
+          margin + 4,
+          y + 18
+        );
+
+        // Metadata line 3: Pitch Snippet
+        if (app.elevator_pitch) {
+          doc.setFontSize(7.5);
+          doc.setTextColor(100, 116, 139);
+          const pitch = `Pitch: ${app.elevator_pitch.replace(/\s+/g, " ").slice(0, 130)}${app.elevator_pitch.length > 130 ? "..." : ""}`;
+          doc.text(pitch, margin + 4, y + 23);
+        }
+
+        y += entryHeight + 3;
+      });
+
+      // Page numbers footer
+      const totalPages = doc.getNumberOfPages();
+      for (let p = 1; p <= totalPages; p++) {
+        doc.setPage(p);
+        doc.setFontSize(8);
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(148, 163, 184);
+        doc.text(
+          `I2EDC Portal  •  Page ${p} of ${totalPages}`,
+          pageWidth / 2,
+          pageHeight - 8,
+          { align: "center" }
+        );
+      }
+
+      const dateStr = new Date().toISOString().slice(0, 10);
+      doc.save(`piga-applications-report-${dateStr}.pdf`);
+      toast.success("PDF report downloaded successfully!");
+    } catch (err) {
+      console.error("Error generating PDF:", err);
+      toast.error("Failed to generate PDF report");
+    }
+  };
+
+  /* --------------------------------------------------------
+     EXPORT TO EXCEL (CSV with UTF-8 BOM)
+  -------------------------------------------------------- */
+  const exportExcel = () => {
+    if (filtered.length === 0) {
+      toast.error("No applications to export");
+      return;
+    }
+
+    try {
+      const headers = [
+        "Application ID",
+        "Project Title",
+        "Applicant Full Name",
+        "Email",
+        "Phone",
+        "Organisation",
+        "Status",
+        "Date",
+        "Submitted At",
+        "Last Updated",
+        "Elevator Pitch",
+        "Team",
+        "Problem / Opportunity",
+        "Solution / Technology",
+        "Current Status",
+        "Unique Value Proposition",
+        "Cost & Budget",
+        "Key Metrics",
+        "Customer Segments",
+        "12-Month Plan",
+        "Review Feedback",
+      ];
+
+      const escapeCSV = (val: any) => {
+        if (val === null || val === undefined) return '""';
+        const str = String(val).replace(/"/g, '""');
+        return `"${str}"`;
+      };
+
+      const rows = filtered.map((app) => [
+        app.id,
+        app.project_title || "",
+        app.full_name || app.applicant_name || "",
+        app.email || "",
+        app.phone || "",
+        app.organisation || "",
+        app.status || "",
+        app.date || "",
+        app.submitted_at || "",
+        app.updated_at || "",
+        app.elevator_pitch || "",
+        app.team || "",
+        app.problem_opportunity || "",
+        app.solution_technology || "",
+        app.current_status || "",
+        app.unique_value_proposition || "",
+        app.cost_budget || "",
+        app.key_metrics || "",
+        app.customer_segments || "",
+        app.twelve_month_plan || "",
+        app.review_feedback || "",
+      ]);
+
+      const csvContent =
+        headers.map(escapeCSV).join(",") +
+        "\r\n" +
+        rows.map((row) => row.map(escapeCSV).join(",")).join("\r\n");
+
+      // UTF-8 BOM so Microsoft Excel correctly reads non-ASCII characters
+      const blob = new Blob(["\uFEFF" + csvContent], {
+        type: "text/csv;charset=utf-8;",
+      });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      const dateStr = new Date().toISOString().slice(0, 10);
+      link.href = url;
+      link.setAttribute("download", `piga-applications-${dateStr}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      toast.success("Excel/CSV file downloaded successfully!");
+    } catch (err) {
+      console.error("Error exporting to Excel:", err);
+      toast.error("Failed to export Excel file");
+    }
+  };
+
+  /* --------------------------------------------------------
+     EXPORT SINGLE APPLICATION DOSSIER TO PDF
+  -------------------------------------------------------- */
+  const exportSingleAppPDF = async (app: PigaApplication) => {
+    try {
+      toast.info("Generating Application Dossier...");
+      const { jsPDF } = await import("jspdf");
+      const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const margin = 14;
+      let y = 16;
+
+      // Header Banner
+      doc.setFillColor(30, 41, 59);
+      doc.roundedRect(margin, y, pageWidth - margin * 2, 22, 2, 2, "F");
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(14);
+      doc.setTextColor(255, 255, 255);
+      doc.text("PIGA Application Dossier", margin + 6, y + 9);
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8.5);
+      doc.setTextColor(203, 213, 225);
+      doc.text(
+        `Application ID: #${app.id}   |   Status: ${app.status}   |   Submitted: ${formatDate(app.submitted_at || app.date)}`,
+        margin + 6,
+        y + 17
+      );
+
+      y += 28;
+
+      // Project Title Banner
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(13);
+      doc.setTextColor(15, 23, 42);
+      const splitTitle = doc.splitTextToSize(app.project_title || "(Untitled Project)", pageWidth - margin * 2);
+      splitTitle.forEach((line: string) => {
+        doc.text(line, margin, y);
+        y += 6;
+      });
+      y += 2;
+
+      // Summary Details Box
+      doc.setFillColor(248, 250, 252);
+      doc.setDrawColor(226, 232, 240);
+      doc.roundedRect(margin, y, pageWidth - margin * 2, 24, 1.5, 1.5, "FD");
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8.5);
+      doc.setTextColor(51, 65, 85);
+      doc.text(`Applicant: ${app.full_name || "N/A"}`, margin + 4, y + 6);
+      doc.text(`Email: ${app.email || "N/A"}`, margin + 4, y + 12);
+      doc.text(`Phone: ${app.phone || "N/A"}`, margin + 4, y + 18);
+
+      doc.text(`Organisation: ${app.organisation || "N/A"}`, pageWidth / 2, y + 6);
+      doc.text(`Date: ${formatDate(app.date)}`, pageWidth / 2, y + 12);
+      doc.text(`Status: ${app.status}`, pageWidth / 2, y + 18);
+
+      y += 30;
+
+      // Sections
+      const sections = [
+        { title: "Elevator Pitch", text: app.elevator_pitch },
+        { title: "Team", text: app.team },
+        { title: "Problem / Opportunity", text: app.problem_opportunity },
+        { title: "Solution / Technology", text: app.solution_technology },
+        { title: "Current Status", text: app.current_status },
+        { title: "Unique Value Proposition", text: app.unique_value_proposition },
+        { title: "Cost & Budget", text: app.cost_budget },
+        { title: "Key Metrics & Validation", text: app.key_metrics },
+        { title: "Customer Segments & Market Size", text: app.customer_segments },
+        { title: "12-Month Plan", text: app.twelve_month_plan },
+        ...(app.review_feedback ? [{ title: "Review Feedback", text: app.review_feedback }] : []),
+      ];
+
+      sections.forEach((sec) => {
+        if (!sec.text) return;
+
+        if (y > pageHeight - 30) {
+          doc.addPage();
+          y = 16;
+        }
+
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(10);
+        doc.setTextColor(30, 41, 59);
+        doc.text(sec.title, margin, y);
+        y += 5;
+
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8.5);
+        doc.setTextColor(71, 85, 105);
+        const splitText = doc.splitTextToSize(sec.text, pageWidth - margin * 2);
+
+        splitText.forEach((line: string) => {
+          if (y > pageHeight - 16) {
+            doc.addPage();
+            y = 16;
+          }
+          doc.text(line, margin, y);
+          y += 4.5;
+        });
+
+        y += 4;
+      });
+
+      // Page numbers footer
+      const totalPages = doc.getNumberOfPages();
+      for (let p = 1; p <= totalPages; p++) {
+        doc.setPage(p);
+        doc.setFontSize(8);
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(148, 163, 184);
+        doc.text(`Page ${p} of ${totalPages}`, pageWidth / 2, pageHeight - 8, { align: "center" });
+      }
+
+      const safeTitle = (app.project_title || "application")
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, "-")
+        .slice(0, 30);
+      doc.save(`piga-${app.id}-${safeTitle}.pdf`);
+      toast.success("Application PDF downloaded successfully!");
+    } catch (err) {
+      console.error("Error generating single PDF:", err);
+      toast.error("Failed to generate PDF");
+    }
+  };
 
   const formatDate = (d: string | null | undefined) => {
     if (!d) return "N/A";
@@ -284,6 +656,28 @@ const AdminPigaPage: React.FC = () => {
               Review and manage Pre-Incubation Grant Applications
             </motion.p>
           </div>
+
+          {/* Export Action Buttons */}
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <Button
+              onClick={exportPDF}
+              variant="outline"
+              disabled={filtered.length === 0}
+              className="rounded-xl border-gray-200 dark:border-white/10 hover:bg-gray-100 dark:hover:bg-white/5 text-gray-800 dark:text-gray-200 shadow-sm transition-all"
+            >
+              <FileDown className="w-4 h-4 mr-2 text-rose-500" />
+              Download PDF ({filtered.length})
+            </Button>
+            <Button
+              onClick={exportExcel}
+              variant="outline"
+              disabled={filtered.length === 0}
+              className="rounded-xl border-gray-200 dark:border-white/10 hover:bg-gray-100 dark:hover:bg-white/5 text-gray-800 dark:text-gray-200 shadow-sm transition-all"
+            >
+              <FileSpreadsheet className="w-4 h-4 mr-2 text-emerald-500" />
+              Download Excel ({filtered.length})
+            </Button>
+          </div>
         </div>
 
         {/* Stats */}
@@ -313,33 +707,80 @@ const AdminPigaPage: React.FC = () => {
         )}
 
         {/* Search & Filter */}
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="relative flex-1">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground h-5 w-5" />
-            <Input
-              placeholder="Search by title, name, email, or organisation..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="h-12 pl-12 rounded-xl bg-white dark:bg-white/5 border-gray-200 dark:border-white/10 focus:border-gray-300 dark:focus:border-white/20 focus:ring-0 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-muted-foreground/60 transition-all hover:bg-gray-50 dark:hover:bg-white/[0.07]"
-            />
+        <div className="flex flex-col gap-3">
+          <div className="flex flex-col md:flex-row gap-3">
+            <div className="relative flex-1">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground h-5 w-5" />
+              <Input
+                placeholder="Search by title, name, email, or organisation..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="h-12 pl-12 rounded-xl bg-white dark:bg-white/5 border-gray-200 dark:border-white/10 focus:border-gray-300 dark:focus:border-white/20 focus:ring-0 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-muted-foreground/60 transition-all hover:bg-gray-50 dark:hover:bg-white/[0.07]"
+              />
+            </div>
+            <div className="flex items-center gap-3">
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="h-12 px-4 rounded-xl bg-white dark:bg-white/5 border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/[0.07] text-sm text-gray-700 dark:text-white focus:ring-0 w-[180px] flex items-center gap-2 transition-all">
+                  <Filter className="h-4 w-4 text-gray-500 dark:text-muted-foreground" />
+                  <SelectValue placeholder="All Status" />
+                </SelectTrigger>
+                <SelectContent className="bg-white dark:bg-[#0A0A0A] border-gray-200 dark:border-white/10 text-gray-900 dark:text-white">
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="PENDING">Pending</SelectItem>
+                  <SelectItem value="UNDER_REVIEW">Under Review</SelectItem>
+                  <SelectItem value="REVIEW_BACK">Sent Back</SelectItem>
+                  <SelectItem value="APPROVED">Approved</SelectItem>
+                  <SelectItem value="REJECTED">Rejected</SelectItem>
+                </SelectContent>
+              </Select>
+              <div className="px-3 py-2 bg-gray-100 dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-xl text-sm text-muted-foreground flex items-center h-12">
+                <span><strong className="text-gray-900 dark:text-white">{filtered.length}</strong> results</span>
+              </div>
+            </div>
           </div>
-          <div className="flex items-center gap-3">
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="h-12 px-4 rounded-xl bg-white dark:bg-white/5 border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/[0.07] text-sm text-gray-700 dark:text-white focus:ring-0 w-[180px] flex items-center gap-2 transition-all">
-                <Filter className="h-4 w-4 text-gray-500 dark:text-muted-foreground" />
-                <SelectValue placeholder="All Status" />
-              </SelectTrigger>
-              <SelectContent className="bg-white dark:bg-[#0A0A0A] border-gray-200 dark:border-white/10 text-gray-900 dark:text-white">
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="PENDING">Pending</SelectItem>
-                <SelectItem value="UNDER_REVIEW">Under Review</SelectItem>
-                <SelectItem value="REVIEW_BACK">Sent Back</SelectItem>
-                <SelectItem value="APPROVED">Approved</SelectItem>
-                <SelectItem value="REJECTED">Rejected</SelectItem>
-              </SelectContent>
-            </Select>
-            <div className="px-3 py-2 bg-gray-100 dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-md text-sm text-muted-foreground">
-              <span className="font-semibold text-gray-900 dark:text-white">{filtered.length}</span> results
+
+          {/* Date Range Filter Bar */}
+          <div className="flex flex-wrap items-center gap-3 p-3 rounded-xl bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10">
+            <div className="flex items-center gap-1.5 text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
+              <Calendar className="w-4 h-4 text-primary" /> Filter by Date:
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-gray-500 dark:text-muted-foreground">From</span>
+              <Input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="h-9 w-auto text-xs rounded-lg bg-gray-50 dark:bg-black/20 border-gray-200 dark:border-white/10 text-gray-900 dark:text-white focus:ring-0"
+              />
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-gray-500 dark:text-muted-foreground">To</span>
+              <Input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="h-9 w-auto text-xs rounded-lg bg-gray-50 dark:bg-black/20 border-gray-200 dark:border-white/10 text-gray-900 dark:text-white focus:ring-0"
+              />
+            </div>
+
+            {(startDate || endDate) && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setStartDate("");
+                  setEndDate("");
+                }}
+                className="h-8 px-2.5 text-xs text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg"
+              >
+                <X className="w-3.5 h-3.5 mr-1" /> Clear Dates
+              </Button>
+            )}
+
+            <div className="ml-auto text-xs text-muted-foreground hidden sm:flex items-center gap-1.5">
+              <span>Date range filters by submission date</span>
             </div>
           </div>
         </div>
@@ -530,6 +971,15 @@ const AdminPigaPage: React.FC = () => {
                       </Button>
                     </>
                   )}
+
+                  <Button
+                    onClick={() => exportSingleAppPDF(selectedApp)}
+                    variant="outline"
+                    className="ml-auto rounded-xl border-gray-200 dark:border-white/10 hover:bg-gray-100 dark:hover:bg-white/5 text-gray-700 dark:text-gray-300"
+                  >
+                    <FileDown className="w-4 h-4 mr-2 text-rose-500" />
+                    Download Dossier (PDF)
+                  </Button>
                 </div>
               </div>
             </>
