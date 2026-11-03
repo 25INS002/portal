@@ -152,7 +152,7 @@ function ContactInfoSection() {
     },
     {
       title: "Phone",
-      value: "+917259925490",
+      value: "+918847596632 \n +919877465118",
       icon: <Phone className="w-6 h-6" />,
       gradient: "from-emerald-500 to-teal-500",
     },
