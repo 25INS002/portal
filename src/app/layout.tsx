@@ -6,6 +6,7 @@ import ClientLayout from "./ClientLayout";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "sonner";
 import { AuthProvider } from "@/context/AuthContext";
+import LatestUpdatesBar from "@/components/LatestUpdatesBar"; // 👈 Import ticker bar
 
 /* ---------------- FONTS ---------------- */
 
@@ -56,6 +57,9 @@ export default function RootLayout({
               position="bottom-right"
               toastOptions={{ className: "glass" }}
             />
+
+            {/* 🚀 Latest Updates Ticker Bar placed above your ClientLayout/Navbar */}
+            <LatestUpdatesBar />
 
             <ClientLayout>{children}</ClientLayout>
           </ThemeProvider>

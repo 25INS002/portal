@@ -18,6 +18,8 @@ import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import SpotlightCard from "@/components/ui/SpotlightCard";
 import Image from "next/image";
+import styles from './hero.module.css';
+import HeroFlyerCard from "./HeroFlyerCard";
 
 // Register GSAP plugins
 if (typeof window !== "undefined") {
@@ -145,116 +147,120 @@ export const HeroSection = () => {
       </div>
 
       {/* CONTENT - Centered vertically with proper spacing */}
-      <div className="relative z-10 flex-1 flex flex-col justify-center items-center px-6 pt-32 pb-40">
-        <div className="w-full max-w-5xl mx-auto text-center">
+      <div className="relative z-10 flex-1 flex flex-col justify-center items-center px-6 pt-20 pb-40">
+        <div className="w-full max-w-7xl mx-auto text-center">
           {/* Subtitle - properly spaced from navbar */}
           <motion.p
             ref={subtitleRef}
             initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
+            animate={{ opacity: 1, y: 15 }}
             transition={{ duration: 0.4, delay: 0.1 }}
             className={`
-              uppercase tracking-[0.2em] text-xs sm:text-sm mb-12 mt-10
+              uppercase tracking-[0.5em] text-xs sm:text-sm mb-12 mt-13
               ${isDark ? "text-indigo-400" : "text-indigo-600"}
             `}
           >
             Institute Innovation Cell · IIT Jammu
           </motion.p>
 
-          {/* TextPressure Title - FIXED: Increased height to prevent overlap */}
-          <div className="relative w-full py-2 mb-12" style={{ height: 'clamp(140px, 20vw, 300px)' }}>
-            <TextPressure
-              text={heroData.headline?.parts?.[0]?.text?.replace('.', '') || "INNOVATE"}
-              flex={true}
-              alpha={false}
-              stroke={false}
-              width={true}
-              weight={true}
-              italic={true}
-              textColor={isDark ? "#ffffff" : "#1a1a2e"}
-              minFontSize={36}
-              scale={false}
-            />
+          {/* Gradient Hero Title with Extra Spacing */}
+          <div className="w-full flex justify-center items-center my-4">
+            <h1 className={styles.innovateTitle}>
+              {heroData.headline?.parts?.[0]?.text?.replace('.', '') || "INNOVATE"}
+            </h1>
           </div>
 
-          {/* Gradient subtitle */}
-          <motion.h2
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-            className="mb-10"
-          >
-            <span
-              className={`
-                text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold
-                ${isDark ? "text-white" : "text-gray-900"}
-              `}
-            >
-              {heroData.headline?.parts?.[1]?.text || "Create."}{" "}
-            </span>
-            <span className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">
-              {heroData.headline?.parts?.[2]?.text || "Transform."}
-            </span>
-          </motion.h2>
+          {/* Two-Column Grid for Content & Floating Card */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start text-left mt-8">
+            
+            {/* Left Column: Create/Transform, description, buttons */}
+            <div className="lg:col-span-7">
+              {/* Gradient subtitle */}
+              <motion.h2
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.3 }}
+                className="mb-10 text-center lg:text-left"
+              >
+                <span
+                  className={`
+                    text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold
+                    ${isDark ? "text-white" : "text-gray-900"}
+                  `}
+                >
+                  {heroData.headline?.parts?.[1]?.text || "Create."}{" "}
+                </span>
+                <span className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">
+                  {heroData.headline?.parts?.[2]?.text || "Transform."}
+                </span>
+              </motion.h2>
 
-          {/* Description */}
-          <motion.p
-            ref={descRef}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.4 }}
-            className={`
-              max-w-2xl mx-auto text-sm sm:text-base md:text-lg mb-12 leading-relaxed
-              ${isDark ? "text-slate-300" : "text-gray-600"}
-            `}
-          >
-            {heroData.description}
-          </motion.p>
-
-          {/* Buttons */}
-          <motion.div
-            ref={buttonsRef}
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.5 }}
-            className="flex flex-col sm:flex-row gap-4 justify-center items-center"
-          >
-            <motion.button
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() =>
-                document
-                  .getElementById("explore")
-                  ?.scrollIntoView({ behavior: "smooth" })
-              }
-              className="
-                px-8 py-4 rounded-full font-semibold
-                bg-gradient-to-r from-indigo-600 to-purple-600 text-white
-                hover:from-indigo-500 hover:to-purple-500 
-                transition-all duration-300
-                shadow-lg shadow-indigo-500/25
-              "
-            >
-              Explore I2EDC
-            </motion.button>
-
-            <Link href="/auth">
-              <motion.button
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.98 }}
+              {/* Description */}
+              <motion.p
+                ref={descRef}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5, delay: 0.4 }}
                 className={`
-                  px-8 py-4 rounded-full font-semibold border-2 
-                  transition-all duration-300
-                  ${isDark
-                    ? "border-white/20 text-white hover:border-white/40 hover:bg-white/5"
-                    : "border-gray-300 text-gray-900 hover:border-gray-400 hover:bg-gray-50"
-                  }
+                  max-w-2xl text-sm sm:text-base md:text-lg mb-12 leading-relaxed mx-auto lg:mx-0 text-center lg:text-left
+                  ${isDark ? "text-slate-300" : "text-gray-600"}
                 `}
               >
-                Join Community
-              </motion.button>
-            </Link>
-          </motion.div>
+                {heroData.description}
+              </motion.p>
+
+              {/* Buttons */}
+              <motion.div
+                ref={buttonsRef}
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.5 }}
+                className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start items-center"
+              >
+                <motion.button
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() =>
+                    document
+                      .getElementById("explore")
+                      ?.scrollIntoView({ behavior: "smooth" })
+                  }
+                  className="
+                    px-8 py-4 rounded-full font-semibold
+                    bg-gradient-to-r from-indigo-600 to-purple-600 text-white
+                    hover:from-indigo-500 hover:to-purple-500 
+                    transition-all duration-300
+                    shadow-lg shadow-indigo-500/25
+                  "
+                >
+                  Explore I2EDC
+                </motion.button>
+
+                <Link href="/auth">
+                  <motion.button
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.98 }}
+                    className={`
+                      px-8 py-4 rounded-full font-semibold border-2 
+                      transition-all duration-300
+                      ${isDark
+                        ? "border-white/20 text-white hover:border-white/40 hover:bg-white/5"
+                        : "border-gray-300 text-gray-900 hover:border-gray-400 hover:bg-gray-50"
+                      }
+                    `}
+                  >
+                    Join Community
+                  </motion.button>
+                </Link>
+              </motion.div>
+            </div>
+
+            {/* Right Column: Floating Flyer Card Component */}
+            <div className="lg:col-span-5 flex justify-center lg:justify-end lg:-mt-15">
+              <HeroFlyerCard />
+            </div>
+
+          </div>
         </div>
 
         {/* Scroll indicator - Positioned absolutely at bottom */}
@@ -545,7 +551,7 @@ const AboutSection = () => {
               <h4 className="font-semibold mb-3">Key Features</h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
                 {selectedOffering.features.map((f: string, index: number) => (
-                  <li key={index}>• {f}</li>
+                  <li key={index}>{f}</li>
                 ))}
               </ul>
             </div>
@@ -555,4 +561,4 @@ const AboutSection = () => {
       )}
     </section>
   );
-};  
+};
