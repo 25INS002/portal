@@ -90,3 +90,20 @@
   line-height: 1.4;
   margin: 0;
 }
+
+.innovateTitle {
+  font-family: 'Playfair Display', serif;
+  font-weight: 900;
+  font-style: italic;
+  font-size: clamp(3.5rem, 12vw, 13rem);
+  line-height: 0.9;
+  text-align: center;
+  text-transform: uppercase;
+  user-select: none;
+  letter-spacing: 0.15em;
+  padding: 0 0.25em;
+  background: linear-gradient(to right, #6366f1, #a855f7, #ec4899);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
