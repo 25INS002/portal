@@ -5,8 +5,8 @@ import { useTheme } from "next-themes";
 import { useMounted } from "@/hooks/useMounted";
 import { useState, useEffect, useRef } from "react";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+// @ts-ignore
 import "leaflet/dist/leaflet.css";
-import type { Icon } from "leaflet";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import SpotlightCard from "@/components/ui/SpotlightCard";
@@ -116,7 +116,7 @@ function ContactInfoSection() {
   const mounted = useMounted();
   const isDark = mounted && theme === "dark";
 
-  const [glowIcon, setGlowIcon] = useState<Icon | null>(null);
+  const [glowIcon, setGlowIcon] = useState<any>(null);
 
   useEffect(() => {
     (async () => {
