@@ -57,10 +57,10 @@ export default function Header() {
     <>
       {/* ================= NAVBAR ================= */}
       <motion.nav
-        initial={{ y: -20, opacity: 0 }}
+        initial={{ y: 10, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.6, ease: "easeOut" }}
-        className={`fixed top-5 left-1/2 -translate-x-1/2 z-50 transition-all duration-500
+        transition={{ duration: 0.4, ease: "easeOut" }}
+        className={`fixed top-9.2 left-1/2 -translate-x-1/2 z-50 transition-all duration-500 bg-white dark:bg-slate-900 rounded-full
           ${scrolled ? "w-[90%] max-w-6xl" : "w-[92%] max-w-7xl"}
         `}
       >
@@ -102,6 +102,7 @@ export default function Header() {
                 <div className="relative w-15 h-15 md:w-45 md:h-20 rounded-lg overflow-hidden">
                   <Image
                     src="/iitj_logo.png"
+                    alt="IIT Jammu Logo"
                     width={150}
                     height={150}
                     className="w-full h-full object-contain p-1"
@@ -200,7 +201,7 @@ export default function Header() {
                   className="hidden md:flex items-center gap-2 px-5 py-2 rounded-full text-xs font-bold uppercase tracking-widest
                     bg-primary text-background hover:scale-105 hover:shadow-lg transition"
                 >
-                  Get Started <ArrowRight className="w-3 h-3" />
+                  Sign In <ArrowRight className="w-3 h-3" />
                 </a>
               )}
                <div className="relative w-15 h-15 md:w-20 md:h-20 rounded-lg overflow-hidden">
@@ -209,7 +210,7 @@ export default function Header() {
                     alt="I2EDC Logo"
                     width={150}
                     height={150}
-                    className="w-full h-full object-contain p-1"
+                    className="w-full h-full object-contain"
                     priority
                   />
                 </div>
